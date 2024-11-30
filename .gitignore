@@ -1,0 +1,4 @@
+/node_modules/
+/deno.lock
+/frontend/node_modules/
+/.idea/
