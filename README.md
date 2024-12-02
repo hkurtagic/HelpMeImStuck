@@ -1,4 +1,4 @@
-deno task [frontend/backend] [command] [parameter]
+deno task [frontend|backend] [command] [parameter]
 
 frontend:
   - dev      Start the development server
@@ -8,3 +8,5 @@ frontend:
 
 backend:
   - start  Start the development server
+
+deno test ./test/[frontend|backend]
