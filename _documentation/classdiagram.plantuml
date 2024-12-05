@@ -1,0 +1,130 @@
+@startuml classDiagram_HelpMe
+'straight lines
+skinparam linetype ortho
+'skinparam linetype polyline
+'skinparam style strictuml
+'no wierd attribute icons
+skinparam classAttributeIconSize 0
+'left to right direction
+'height increase
+skinparam ranksep 60
+'width by increasing node distance
+skinparam nodesep 60
+'skinparam PackageStyle 60
+skinparam packageStyle Rectangle
+<style>
+package {
+    Padding 60
+}
+</style>
+
+
+skinparam TitleFontSize 24
+title HelpMeImStuck
+
+class Tag{
+    + name: string
+    + abbreviation: string
+    + style: string
+    + description: string
+    + visibleInDepartment: boolean
+}
+
+class Department{
+    + id: int
+    + name: string
+    + description: string
+}
+class User {
+    + id: int
+    + name: string
+}
+
+
+class Role{
+    + id: int
+    + name: string
+    + description: string
+}
+class Action {
+    + id: int
+    + name: string
+    + function: Callable
+}
+
+class Admin {
+/'
+    --example Actions--
+    + createUser(name: string, roles: Role[])
+    + deleteUser(user: User)
+    + modifyUser(user: User)
+    + createRole(role: Role)
+    + modifyRole(role: Role)
+    + createDepartment(name: string)
+    + deleteDepartment(department: Department)
+    '/
+}
+class Requester {
+}
+class Supporter {
+}
+class Ticket{
+    + id: int
+    + author: User
+    + title: string {readonly}
+    + description: string {readonly}
+    + images: Image
+    + addDepartment(department: Department)
+    + addEvent(event: Event)
+    + addComment(comment: Comment)
+    + addTag(tag: Tag)
+}
+enum Status{
+    OPEN
+    IN_PROGRESS
+    CLOSED
+}
+class Event {
+    + author: User {readonly}
+    + timestamp: DateTime {readonly}
+    + description: string {readonly}
+}
+
+class Comment {
+    '+ author: User {readonly}
+    '+ timestamp: DateTime {readonly}
+    + content: string {readonly}
+    + images: Image[]
+}
+
+class Timeline {
+    '+ events: Event[]
+    + addEvent(event: Event)
+}
+
+Comment -u-|> Event
+Requester -u-|> Role
+Supporter -u-|> Role
+Admin -u-|> Role
+
+User "*" -- "1..*" Role : roles
+User "*" -- "*" Action : extraActions
+'User "1" o-- "*" Ticket : author
+'User "*" -- "*" Ticket : work on 
+'User "1" -- "*" Event : create Event
+'Permission "*" -- "1..*" Action : allowedActions
+Role "*" -- "*" Action : allowedActions
+Department "1..*" o-- "*" User : users
+Department "1" *-- "1..*" Role : roles
+Department "1" *-- "*" Tag : tags
+'Ticket "0..*" -- "1..*" User 
+Ticket "1" *-d- "1" Timeline : timeline
+Ticket "*" -d- "1" Status : currentStatus
+Ticket "*" -d-* "1..*" Department : department
+'Ticket "1" *-- "*" Image
+Ticket "*" -l- "*" Tag : tag
+'TicketHandler "1" -- "0..*" Ticket
+'Comment "1" *-- "*" Image
+Event "*" --* "1" Timeline
+
+@enduml
