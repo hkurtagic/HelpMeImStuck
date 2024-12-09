@@ -2,3 +2,4 @@
 /deno.lock
 /frontend/node_modules/
 /.idea/
+/.vscode/
