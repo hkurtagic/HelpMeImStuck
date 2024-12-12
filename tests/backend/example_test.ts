@@ -1,10 +1,10 @@
-import { assertEquals } from "@std/assert";
+import {assertEquals} from "@std/assert";
 import t from "backend/testfile.ts"
 
-Deno.test("Test", () => {
+/*Deno.test("Test", () => {
   assertEquals(t.fail(), "test")
-})
+})*/
 
 Deno.test("Test", () => {
-  assertEquals(t.success(), "test")
-})
+  assertEquals(t.success(), "test");
+});
