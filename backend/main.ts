@@ -1,10 +1,3 @@
-import express, { Request, Response} from "npm:express"
+import App from "./App.ts";
 
-const app = express()
-
-app.get("/", (req: Request, res: Response) => {res.send("Hello World!")})
-app.get("/a", (req: Request, res: Response) => {res.send("test!")})
-
-app.listen(Deno.env.get("PORT"), () => {
-    console.log(`Server running on port ${Deno.env.get("PORT")}`)
-})
+Deno.serve({port: Deno.env.get("PORT") || 8000}, App.fetch)

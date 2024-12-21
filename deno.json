@@ -1,5 +1,4 @@
 {
-  "name": "Help Me Im Stuck",
   "description": "A helpdesc software",
   "tasks": {
     "backend": "cd ./backend && deno task",
