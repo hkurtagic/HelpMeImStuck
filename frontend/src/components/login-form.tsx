@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -31,7 +30,7 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   required
                 />
               </div>
@@ -40,25 +39,16 @@ export function LoginForm({
                   <Label htmlFor="password">Password</Label>
                   <a
                     href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline hover:text-gray-500 text-black"
                   >
                     Forgot your password?
                   </a>
                 </div>
                 <Input id="password" type="password" required />
               </div>
-              <Button type="submit" className="w-full">
+              <button type="submit" className="w-full bg-fuchsia-800 hover:bg-fuchsia-900 text-white">
                 Login
-              </Button>
-              <Button variant="outline" className="w-full">
-                Login with Google
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
+              </button>
             </div>
           </form>
         </CardContent>
