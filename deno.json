@@ -3,7 +3,6 @@
   "tasks": {
     "backend": "cd ./backend && deno task",
     "frontend": "cd ./frontend && deno task"
-
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
@@ -12,6 +11,9 @@
     "/": "./",
     "./": "./"
   },
-  "workspace": ["./frontend","./backend"],
+  "workspace": [
+    "./frontend",
+    "./backend"
+  ],
   "nodeModulesDir": "auto"
 }
