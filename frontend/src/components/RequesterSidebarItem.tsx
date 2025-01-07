@@ -7,8 +7,8 @@ type SidebarItemProps = {
     isOpen: boolean;
 };
 
-// Menüelement der Sidebar
-export default function SidebarItem({ icon: Icon, label, isOpen }: SidebarItemProps) {
+// Menüelement der RequesterDashboard
+export default function RequesterSidebarItem({ icon: Icon, label, isOpen }: SidebarItemProps) {
     return (
         <div
             className={`flex items-center p-4 text-black hover:text-fuchsia-900 rounded-xl cursor-pointer 
@@ -17,10 +17,10 @@ export default function SidebarItem({ icon: Icon, label, isOpen }: SidebarItemPr
         >
             {/* Icon Wrapper */}
             <div className="flex items-center justify-center">
-                <Icon size={32} />
+                <Icon size={30} />
             </div>
 
-            {/* Label wird nur angezeigt, wenn die Sidebar offen ist */}
+            {/* Label wird nur angezeigt, wenn die RequesterDashboard offen ist */}
             {isOpen && <span className="ml-4 text-lg font-medium">{label}</span>}
         </div>
     );
