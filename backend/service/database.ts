@@ -118,8 +118,8 @@ function initDB() {
     db_conn.exec(`
         CREATE TABLE IF NOT EXISTS events (
             pk_event_id INTEGER PRIMARY KEY,
-            fk_ticket_id TEXT NOT NULL
-            fk_author_id INTEGER NOT NULL,
+            fk_ticket_id TEXT NOT NULL,
+            fk_author_id TEXT NOT NULL,
             created_at INTEGER NOT NULL,
             fk_event_type INTEGER NOT NULL,
             description TEXT,

@@ -1,4 +1,5 @@
-import {PasswordResetForm} from "@/components/PasswordResetForm.tsx";
+import PasswordResetForm from "@/components/PasswordResetForm.tsx";
+
 
 export default function PasswordResetPage() {
     return (
