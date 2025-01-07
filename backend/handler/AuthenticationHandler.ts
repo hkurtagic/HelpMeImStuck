@@ -19,7 +19,7 @@ function convert_to_seconds(s: string) {
 }
 
 const JWTAuthChecker = createMiddleware(async (c: Context, next: Next) => {
-    const accessToken = c.req.header('authorization');
+    const accessToken = c.req.header('Authorization');
     const refreshToken = getCookie(c, 'refreshToken');
     console.log(`JWT accessToken: ${accessToken}\nJWT refreshToken: ${refreshToken}`);
 
@@ -46,8 +46,8 @@ const JWTAuthChecker = createMiddleware(async (c: Context, next: Next) => {
                 exp: Number(JWT_ACCESS_EXPIRY),
             } as jwt_payload;
             const accessToken = await sign(payload, JWT_SECRET);
-            setCookie(c, 'refreshToken', refreshToken, { sameSite: 'strict' });
-            c.header('authorization', accessToken);
+            setCookie(c, 'refreshToken', refreshToken, { httpOnly: true, sameSite: 'strict' });
+            c.header('Authorization', accessToken);
             console.log('JWT refresh from : ' + JSON.stringify(decoded));
             c.header('user_id', (decoded as jwt_payload).user_id);
             next();

@@ -21,8 +21,9 @@ function convert_to_seconds(s: string) {
 
 login.post('/', async (c) => {
     const { username, password } = (await c.req.json()) as LoginRequestBody;
+    console.log('login attempt with: ' + username + '\nand pw: ' + password);
     const user = db.getUserByUsername(username);
-    console.log();
+    console.log('dbUser: ' + user);
     if (user instanceof Error) {
         c.status(500);
         return c.json({ error: user.message });
@@ -49,8 +50,15 @@ login.post('/', async (c) => {
         },
         JWT_REFRESH_SECRET
     );
-    setCookie(c, 'refreshToken', refreshToken, { sameSite: 'strict' });
-    c.header('authorization', accessToken);
+    setCookie(c, 'refreshToken', refreshToken, {
+        sameSite: 'lax',
+        secure: false,
+        domain: 'localhost',
+    });
+    // c.header('Access-Control-Allow-Origin', 'localhost');
+    // c.header('Access-Control-Allow-Credentials', 'true');
+    // c.header('access-control-expose-headers', 'Set-Cookie');
+    c.header('Authorization', accessToken);
     return c.json({ user_id: user.pk_user_id, username: user.user_name });
 });
 login.get('/', (c) => {
