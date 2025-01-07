@@ -58,7 +58,7 @@ login.post('/', async (c) => {
     // c.header('access-control-expose-headers', 'Set-Cookie');
     */
     c.header('Authorization', accessToken);
-    return c.json({ user_id: user.pk_user_id, username: user.user_name });
+    return c.json({ user_id: user.pk_user_id, username: user.user_name }, 200);
 });
 login.get('/', (c) => {
     return c.text('not bricked', 200);

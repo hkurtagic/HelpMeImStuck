@@ -17,7 +17,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/api/login', {
+            const response = await fetch(import.meta.env.VITE_BACKEND_API + '/login', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
