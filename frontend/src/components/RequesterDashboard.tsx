@@ -30,7 +30,7 @@ export default function RequesterDashboard() {
             }
 
             //localStorage.removeItem('token');
-            navigate('/login');
+            navigate('/');
         } catch (error) {
             console.error('Logout failed:', error);
         }
