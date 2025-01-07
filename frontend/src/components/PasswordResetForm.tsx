@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { useNavigate } from "react-router-dom"
 
 export default function PasswordChangeForm() {
-    // States für Eingaben und Status
+    // states for input
     const [username, setUsername] = useState<string>("");
     const [currentPassword, setCurrentPassword] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
@@ -13,16 +14,18 @@ export default function PasswordChangeForm() {
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
+    const navigate = useNavigate();
 
-
-
+    const handleBackButton = () => {
+        navigate("/");
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Verhindert Seiten-Reload
+        e.preventDefault(); // stops site-reload
         setError(null);
         setSuccess(null);
 
-        // Validierung
+        // validation
         if (!username.trim()) {
             setError("Username is required.");
             return;
@@ -75,7 +78,7 @@ export default function PasswordChangeForm() {
             <CardContent>
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-6">
-                        {/* Benutzername */}
+                        {/* Username */}
                         <div className="grid gap-2">
                             <Label htmlFor="username">Username</Label>
                             <Input
@@ -87,7 +90,7 @@ export default function PasswordChangeForm() {
                             />
                         </div>
 
-                        {/* Altes Passwort */}
+                        {/* Old Password */}
                         <div className="grid gap-2">
                             <Label htmlFor="currentPassword">Current Password</Label>
                             <Input
@@ -99,7 +102,7 @@ export default function PasswordChangeForm() {
                             />
                         </div>
 
-                        {/* Neues Passwort */}
+                        {/* New password */}
                         <div className="grid gap-2">
                             <Label htmlFor="newPassword">New Password</Label>
                             <Input
@@ -139,8 +142,8 @@ export default function PasswordChangeForm() {
                             {loading ? "Changing Password..." : "Change Password"}
                         </button>
 
-                        <button onClick={handleBackButon}
-                                className={"w-full bg-gray-200 hover:bg-gray-400 text-black"}>Back to Login
+                        <button className={"w-full bg-gray-300 hover:bg-gray-400 text-black"} onClick={handleBackButton}>
+                            Back to Login
                         </button>
 
                     </div>
