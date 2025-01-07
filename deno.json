@@ -9,6 +9,7 @@
     "@std/assert": "jsr:@std/assert@1",
     "@stdext/crypto": "jsr:@stdext/crypto@^0.1.0",
     "backend/": "./backend/",
+    "clsx": "npm:clsx@^2.1.1",
     "frontend/": "./frontend/",
     "/": "./",
     "./": "./",
