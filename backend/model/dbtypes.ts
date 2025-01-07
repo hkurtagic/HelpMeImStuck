@@ -1,8 +1,9 @@
 interface dbUser {
-    user_id: string;
-    username: string;
-    password: string;
-    created_at: Date;
+    pk_user_id: string;
+    user_name: string;
+    password_hash: string;
+    created_at: number;
+    updated_at: number;
 }
 interface dbDepartments {
     dept_id: number;
