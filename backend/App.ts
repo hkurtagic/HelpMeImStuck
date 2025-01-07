@@ -18,8 +18,8 @@ app.use(
         origin: (origin, c) => {
             return origin.includes('localhost') ? origin : 'http://localhost';
         },
-        allowMethods: ['POST', 'GET', 'OPTIONS'],
-        exposeHeaders: ['Set-Cookie'],
+        // allowMethods: ['POST', 'GET', 'OPTIONS'],
+        // exposeHeaders: ['Set-Cookie'],
         credentials: true,
     })
 );

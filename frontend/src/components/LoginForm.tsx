@@ -19,9 +19,9 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
         try {
             const response = await fetch('http://localhost:8080/api/login', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
-                    credentials: 'include',
                 },
                 body: JSON.stringify({ username, password }),
             });
@@ -33,7 +33,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
             const data = await response.json();
             console.log('login data' + JSON.stringify(data));
             //localStorage.setItem('token', JSON.stringify(data));
-            //window.location.href = '/dashboard';
+            globalThis.location.href = '/dashboard';
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
             setError(errorMessage);

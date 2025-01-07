@@ -50,14 +50,17 @@ login.post('/', async (c) => {
         },
         JWT_REFRESH_SECRET
     );
+    setCookie(c, 'refreshToken', refreshToken);
+    /*
     setCookie(c, 'refreshToken', refreshToken, {
-        sameSite: 'lax',
-        secure: false,
-        domain: 'localhost',
+        sameSite: 'strict',
+        // secure: true,
+        // domain: 'localhost',
     });
     // c.header('Access-Control-Allow-Origin', 'localhost');
     // c.header('Access-Control-Allow-Credentials', 'true');
     // c.header('access-control-expose-headers', 'Set-Cookie');
+    */
     c.header('Authorization', accessToken);
     return c.json({ user_id: user.pk_user_id, username: user.user_name });
 });
