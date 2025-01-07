@@ -3,4 +3,5 @@
 /frontend/node_modules/
 /.idea/
 /.vscode/
-/_documentation/
+#/_documentation/
+/.local.env

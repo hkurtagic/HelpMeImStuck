@@ -1,0 +1,94 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+table status {
+  pk_status_id INT [pk,unique,not null]
+  name TEXT [not null]
+}
+
+table users {
+  pk_user_id INT [pk,increment,unique,not null]
+  name TEXT [not null]
+  password TEXT [not null]
+  created_at INT [NOT NULL, DEFAULT: "CURRENT_TIMESTAMP"]
+}
+table roles {
+  pk_role_id INT [pk,increment,unique,not null]
+  name TEXT
+  description TEXT
+  fk_department_id INT [not null, ref: > departments.pk_department_id]
+}
+table departments {
+  pk_department_id INT [pk,increment,unique,not null]
+  name TEXT [not null]
+  description TEXT
+}
+
+table user_associations {
+  pk_user_assoc_id INT [increment,pk]
+  fk_user_id TEXT [not null, ref: > users.pk_user_id]
+  fk_department_id INT [not null, ref: - departments.pk_department_id]
+  fk_role_id INT [not null, ref: - roles.pk_role_id]
+}
+
+table user_extra_permissions {
+  pk_user_extra_perm_id INT [increment,pk]
+  fk_user_id INT [not null, ref: > users.pk_user_id]
+  fk_action_id INT [not null, ref: - actions.pk_action_id]
+}
+
+table allowed_role_actions {
+  pk_role_action_assoc_id INT [increment,pk]
+  fk_role_id INT [not null, ref: > roles.pk_role_id]
+  fk_action_id INT [not null, ref: - actions.pk_action_id]
+}
+
+table actions {
+  pk_action_id INT [pk,unique,not null]
+  name TEXT [not null]
+}
+
+table tags {
+  pk_tag_id INT [pk,unique,increment,not null]
+  name TEXT
+  abbreviation TEXT
+  description TEXT
+  fk_department INT [ref: > departments.pk_department_id]
+  style BLOB
+  visible_only_in_department INT [note: '0 = FALSE, 1 = TRUE']
+}
+
+table tickets {
+  pk_ticket_id TEXT [pk,unique,not null]
+  fk_author INT [ref: > users.pk_user_id]
+  title TEXT [not null]
+  description TEXT [not null]
+  fk_status_id INT [not null, ref: - status.pk_status_id]
+  images BLOB
+}
+
+table ticket_associations {
+  pk_ticket_assoc_id INT [increment,pk]
+  fk_ticket_id INT [not null, ref: > tickets.pk_ticket_id]
+  fk_department_id INT [not null, ref: - departments.pk_department_id]
+}
+
+table events {
+  pk_timeline_id INT [pk,not null]
+  fk_author_id INT [not null, ref: - users.pk_user_id]
+  created_at INT [not null, note: 'Unix timestamp']
+  fk_event_type INT [not null,  ref: - event_types.pk_event_id]
+  description TEXT 
+  content TEXT
+  images BLOB
+}
+
+table event_types {
+  pk_event_id INT [pk,unique,not null]
+  name TEXT
+}
+
+table access_tokens {
+  access_token TEXT [not null]
+  fk_user_id TEXT [not null,ref: - users.pk_user_id]
+}

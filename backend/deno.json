@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno run -A --watch-hmr --env-file=../.env main.ts"
+    "start": "deno run -A --watch-hmr --env-file=../.env --env-file=../.local.env main.ts"
   },
   "imports": {
     "@types/express": "npm:@types/express@^5.0.0",
