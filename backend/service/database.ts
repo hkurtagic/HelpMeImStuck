@@ -2,6 +2,7 @@ import { Database } from "jsr:@db/sqlite";
 import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
 import { dbAction, dbDepartments, dbRole, dbUser } from "../model/dbtypes.ts";
 import { assert } from "@std/assert";
+import { Department } from "../../shared_types/communication_types.ts";
 
 const db_conn = new Database("./service/test.db");
 
@@ -453,6 +454,15 @@ function getDepartments(): dbDepartments[] | Error {
   return db_conn.prepare("SELECT * FROM departments").all();
 }
 
+function getDepartmentsOfUser(user_id: string): Department[] | Error {
+  return db_conn.prepare(
+    "SELECT D.pk_department_id as department_id, D.department_name FROM departments D " +
+      "LEFT JOIN user_associations UA on UA.pf_department_id = D.pk_department_id " +
+      "LEFT JOIN users U on U.pk_user_id = UA.fk_user_id " +
+      "WHERE U.pk_user_id= ?",
+  ).all(user_id);
+}
+
 function getDepartmentIdByName(
   department_name: string,
 ): dbDepartments | Error | undefined {
@@ -705,7 +715,12 @@ function addTicket(
   }
 }
 function getTicketById(ticket_id: string) {
-  return db_conn.prepare("SELECT * FROM tickets WHERE pk_ticket_id= ?").get(
+  return db_conn.prepare(
+    "SELECT T.pk_ticket_id as ticket_id, U.user_name as author, T.title, T.description, S.status_name as status, T.images FROM tickets T " +
+      "LEFT JOIN users U on U.pk_user_id = T.fk_author_id" +
+      "LEFT JOIN status S on S.pk_status_id = T.fk_status_id" +
+      "WHERE T.pk_ticket_id= ?",
+  ).get(
     ticket_id,
   );
 }
@@ -962,6 +977,7 @@ export default {
   getDepartments,
   getDepartmentIdByName,
   getDepartmentById,
+  getDepartmentsOfUser,
   deleteDepartment,
   addRole,
   getRoleId,

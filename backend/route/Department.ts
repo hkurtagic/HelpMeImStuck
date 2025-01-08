@@ -29,4 +29,11 @@ department.get("/", JWTAuthChecker, async (c) => {
   }
 });
 
+department.get("/:user_id", JWTAuthChecker, async (c) => {
+  const depts = db.getDepartmentsOfUser(c.req.param("user_id")!);
+  if (!(depts instanceof Error)) {
+    return c.json(depts, 200);
+  }
+});
+
 export default department;
