@@ -8,7 +8,7 @@ interface dbUser {
 interface dbDepartments {
   pk_department_id: number;
   department_name: string;
-  description: string;
+  description?: string;
 }
 interface dbAction {
   pk_action_id: number;
