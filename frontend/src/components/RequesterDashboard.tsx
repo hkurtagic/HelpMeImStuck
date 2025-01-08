@@ -6,6 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 
 export default function RequesterDashboard() {
+
+    const [view, setView] = useState<'overview' | 'create'>('overview');
+
+
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -98,8 +102,8 @@ export default function RequesterDashboard() {
 
             {/* Dashboard Content */}
             <div className={`flex-1 overflow-auto p-5 transition-all duration-300 ${isOpen ? 'md:ml-64' : 'md:ml-16'}`}>
-                <h1 className="text-center text-white mb-7 font-mono">Tickets</h1>
-                <CreateTicketForm/>
+                {view === 'overview' && <RequesterTicketOverview setView={setView} />}
+                {view === 'create' && <CreateTicketForm setView={setView} />}
             </div>
         </div>
     );
