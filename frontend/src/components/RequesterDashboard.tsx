@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RequesterSidebarItem from './RequesterSidebarItem.tsx';
 import { PanelLeftClose, PanelRightClose, Ticket, ChartArea, LogOut } from 'lucide-react';
 import RequesterTicketOverview from '@/components/RequesterTicketOverview.tsx';
@@ -6,40 +6,51 @@ import { useNavigate } from 'react-router-dom';
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 
 export default function RequesterDashboard() {
-
     const [view, setView] = useState<'overview' | 'create'>('overview');
-
-
     const [isOpen, setIsOpen] = useState(false);
+    const [departments, setDepartments] = useState<string[]>([]);
+    const [selectedDepartment, setSelectedDepartment] = useState<string>('');
     const navigate = useNavigate();
 
-    // Sidebar-Toggle-Funktion
+    // Sidebar-Toggle
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
     };
 
-    // Logout-Funktion
+    // logout functionality
     const handleLogout = async () => {
         try {
             console.log('Logging out...');
 
             const response = await fetch(import.meta.env.VITE_BACKEND_API + '/logout', {
                 method: 'POST',
-                /*headers: {
-                    //'Authorization': `Bearer ${localStorage.getItem()}`
-                },*/
             });
 
             if (!response.ok) {
                 throw new Error('Failed to logout from server');
             }
 
-            //localStorage.removeItem('token');
             navigate('/');
         } catch (error) {
             console.error('Logout failed:', error);
         }
     };
+
+    // get departments from backend
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const response = await fetch(import.meta.env.VITE_BACKEND_API + '/departments');
+                if (!response.ok) throw new Error('Failed to fetch departments');
+                const data = await response.json();
+                setDepartments(data.departments);
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+            }
+        };
+
+        fetchDepartments();
+    }, []);
 
     return (
         <div className="flex w-screen h-screen overflow-hidden">
@@ -92,7 +103,31 @@ export default function RequesterDashboard() {
                     )}
                 </button>
 
-                {/* Sidebar-Elemente */}
+                {/* Dropdown für Departments */}
+                {isOpen && (
+                    <div className="p-4">
+                        <label htmlFor="department-select" className="block text-black font-medium mb-2">
+                            Select Department:
+                        </label>
+                        <select
+                            id="department-select"
+                            value={selectedDepartment}
+                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                            className="w-full p-2 border rounded-md text-black"
+                        >
+                            <option value="" disabled>
+                                Choose a department
+                            </option>
+                            {departments.map((dept) => (
+                                <option key={dept} value={dept}>
+                                    {dept}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Sidebar Elements */}
                 <div className="m-4">
                     <RequesterSidebarItem icon={Ticket} label="Tickets" isOpen={isOpen} />
                     <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={isOpen} />
