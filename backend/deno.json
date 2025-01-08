@@ -3,7 +3,6 @@
     "start": "deno run -A --watch-hmr --env-file=../.env --env-file=../.local.env main.ts"
   },
   "imports": {
-    "@types/express": "npm:@types/express@^5.0.0",
     "@types/node": "npm:@types/node@^22.10.1",
     "hono": "npm:hono@^4.6.14"
   }

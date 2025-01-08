@@ -1,7 +1,7 @@
-import { Database } from 'jsr:@db/sqlite';
-import { hash, AlgorithmName } from 'jsr:@stdext/crypto/hash';
-import { dbAction, dbDepartments, dbRole, dbUser } from '../model/dbtypes.ts';
-import { assert } from '@std/assert';
+import {Database} from 'jsr:@db/sqlite';
+import {AlgorithmName, hash} from 'jsr:@stdext/crypto/hash';
+import {DbAction, DbDepartments, DbRole, DbUser} from '../model/dbtypes.ts';
+import {assert} from '@std/assert';
 
 const db_conn = new Database('./service/test.db');
 
@@ -13,140 +13,445 @@ function initDB() {
     }
 
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS departments (
-            pk_department_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            department_name TEXT NOT NULL UNIQUE,
-            description TEXT
+        CREATE TABLE IF NOT EXISTS departments
+        (
+            pk_department_id
+            INTEGER
+            PRIMARY
+            KEY
+            AUTOINCREMENT,
+            department_name
+            TEXT
+            NOT
+            NULL
+            UNIQUE,
+            description
+            TEXT
         )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS roles (
-            pk_role_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role_name TEXT NOT NULL,
-            description TEXT,
-            fk_department_id INTEGER NOT NULL,
-            FOREIGN KEY (fk_department_id) REFERENCES departments (pk_department_id) ON DELETE CASCADE
+        CREATE TABLE IF NOT EXISTS roles
+        (
+            pk_role_id
+            INTEGER
+            PRIMARY
+            KEY
+            AUTOINCREMENT,
+            role_name
+            TEXT
+            NOT
+            NULL,
+            description
+            TEXT,
+            fk_department_id
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_department_id
+        ) REFERENCES departments
+        (
+            pk_department_id
+        ) ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS actions
+        (
+            pk_action_id
+            INTEGER
+            PRIMARY
+            KEY
+            AUTOINCREMENT,
+            action_name
+            TEXT
+            NOT
+            NULL
         )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS actions (
-            pk_action_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            action_name TEXT NOT NULL
+        CREATE TABLE IF NOT EXISTS allowed_role_actions
+        (
+            pk_role_action_assoc_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_role_id
+            INTEGER
+            NOT
+            NULL,
+            fk_action_id
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_role_id
+        ) REFERENCES roles
+        (
+            pk_role_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_action_id
+        ) REFERENCES actions
+        (
+            pk_action_id
+        )
+          ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS users
+        (
+            pk_user_id
+            TEXT
+            PRIMARY
+            KEY
+            NOT
+            NULL,
+            user_name
+            TEXT
+            NOT
+            NULL
+            UNIQUE,
+            password_hash
+            TEXT
+            NOT
+            NULL,
+            created_at
+            INTEGER
+            NOT
+            NULL,
+            updated_at
+            INTEGER
         )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS allowed_role_actions (
-            pk_role_action_assoc_id INTEGER PRIMARY KEY,
-            fk_role_id INTEGER NOT NULL,
-            fk_action_id INTEGER NOT NULL,
-            FOREIGN KEY (fk_role_id) REFERENCES roles (pk_role_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_action_id) REFERENCES actions (pk_action_id) ON DELETE CASCADE
+        CREATE TABLE IF NOT EXISTS user_extra_permissions
+        (
+            pk_user_extra_perm_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_user_id
+            TEXT
+            NOT
+            NULL,
+            fk_action_id
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_user_id
+        ) REFERENCES users
+        (
+            pk_user_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_action_id
+        ) REFERENCES actions
+        (
+            pk_action_id
+        )
+          ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS status
+        (
+            pk_status_id
+            INTEGER
+            PRIMARY
+            KEY
+            NOT
+            NULL,
+            status_name
+            TEXT
+            NOT
+            NULL
         )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            pk_user_id TEXT PRIMARY KEY NOT NULL,
-            user_name TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER
+        CREATE TABLE IF NOT EXISTS tickets
+        (
+            pk_ticket_id
+            TEXT
+            PRIMARY
+            KEY,
+            fk_author
+            INTEGER
+            NOT
+            NULL,
+            title
+            TEXT
+            NOT
+            NULL,
+            description
+            TEXT
+            NOT
+            NULL,
+            fk_status_id
+            INTEGER
+            NOT
+            NULL,
+            images
+            BLOB,
+            created_at
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_author
+        ) REFERENCES users
+        (
+            pk_user_id
+        ) ON DELETE SET NULL,
+            FOREIGN KEY
+        (
+            fk_status_id
+        ) REFERENCES status
+        (
+            pk_status_id
+        )
+          ON DELETE SET NULL
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS ticket_associations
+        (
+            pk_ticket_assoc_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_ticket_id
+            TEXT
+            NOT
+            NULL,
+            fk_department_id
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_ticket_id
+        ) REFERENCES tickets
+        (
+            pk_ticket_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_department_id
+        ) REFERENCES departments
+        (
+            pk_department_id
+        )
+          ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS tags
+        (
+            pk_tag_id
+            INTEGER
+            PRIMARY
+            KEY,
+            tag_name
+            TEXT
+            NOT
+            NULL,
+            abbreviation
+            TEXT,
+            description
+            TEXT,
+            fk_department_id
+            INTEGER
+            NOT
+            NULL,
+            style
+            TEXT,
+            FOREIGN
+            KEY
+        (
+            fk_department_id
+        ) REFERENCES departments
+        (
+            pk_department_id
+        ) ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS tag_associations
+        (
+            pk_tag_assoc_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_tag_id
+            INTEGER
+            NOT
+            NULL,
+            fk_ticket_id
+            TEXT
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_tag_id
+        ) REFERENCES tags
+        (
+            pk_tag_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_ticket_id
+        ) REFERENCES tickets
+        (
+            pk_ticket_id
+        )
+          ON DELETE CASCADE
+            )
+    `);
+    db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS event_types
+        (
+            pk_event_type_id
+            INTEGER
+            PRIMARY
+            KEY,
+            event_type_name
+            TEXT
         )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS user_extra_permissions (
-            pk_user_extra_perm_id INTEGER PRIMARY KEY,
-            fk_user_id TEXT NOT NULL,
-            fk_action_id INTEGER NOT NULL,
-            FOREIGN KEY (fk_user_id) REFERENCES users (pk_user_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_action_id) REFERENCES actions (pk_action_id) ON DELETE CASCADE
+        CREATE TABLE IF NOT EXISTS events
+        (
+            pk_event_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_ticket_id
+            TEXT
+            NOT
+            NULL,
+            fk_author_id
+            TEXT
+            NOT
+            NULL,
+            created_at
+            INTEGER
+            NOT
+            NULL,
+            fk_event_type
+            INTEGER
+            NOT
+            NULL,
+            description
+            TEXT,
+            content
+            TEXT,
+            images
+            BLOB,
+            FOREIGN
+            KEY
+        (
+            fk_ticket_id
+        ) REFERENCES tickets
+        (
+            pk_ticket_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_author_id
+        ) REFERENCES users
+        (
+            pk_user_id
         )
+          ON DELETE SET NULL,
+            FOREIGN KEY
+        (
+            fk_event_type
+        ) REFERENCES event_types
+        (
+            pk_event_type_id
+        )
+          ON DELETE SET NULL
+            )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS status (
-            pk_status_id INTEGER PRIMARY KEY NOT NULL,
-            status_name TEXT NOT NULL
+        CREATE TABLE IF NOT EXISTS user_associations
+        (
+            pk_user_assoc_id
+            INTEGER
+            PRIMARY
+            KEY,
+            fk_user_id
+            TEXT
+            NOT
+            NULL,
+            fk_department_id
+            INTEGER
+            NOT
+            NULL,
+            fk_role_id
+            INTEGER
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_user_id
+        ) REFERENCES users
+        (
+            pk_user_id
+        ) ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_department_id
+        ) REFERENCES departments
+        (
+            pk_department_id
         )
+          ON DELETE CASCADE,
+            FOREIGN KEY
+        (
+            fk_role_id
+        ) REFERENCES roles
+        (
+            pk_role_id
+        )
+            )
     `);
     db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS tickets (
-            pk_ticket_id TEXT PRIMARY KEY,
-            fk_author INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            fk_status_id INTEGER NOT NULL,
-            images BLOB,
-            created_at INTEGER NOT NULL,
-            FOREIGN KEY (fk_author) REFERENCES users (pk_user_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_status_id) REFERENCES status (pk_status_id) ON DELETE SET NULL
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS ticket_associations (
-            pk_ticket_assoc_id INTEGER PRIMARY KEY,
-            fk_ticket_id TEXT NOT NULL,
-            fk_department_id INTEGER NOT NULL,
-            FOREIGN KEY (fk_ticket_id) REFERENCES tickets (pk_ticket_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_department_id) REFERENCES departments (pk_department_id) ON DELETE CASCADE
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS tags (
-            pk_tag_id INTEGER PRIMARY KEY,
-            tag_name TEXT NOT NULL,
-            abbreviation TEXT,
-            description TEXT,
-            fk_department_id INTEGER NOT NULL,
-            style TEXT,
-            FOREIGN KEY (fk_department_id) REFERENCES departments (pk_department_id) ON DELETE CASCADE
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS tag_associations (
-            pk_tag_assoc_id INTEGER PRIMARY KEY,
-            fk_tag_id INTEGER NOT NULL,
-            fk_ticket_id TEXT NOT NULL,
-            FOREIGN KEY (fk_tag_id) REFERENCES tags (pk_tag_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_ticket_id) REFERENCES tickets (pk_ticket_id) ON DELETE CASCADE
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS event_types (
-            pk_event_type_id INTEGER PRIMARY KEY,
-            event_type_name TEXT
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS events (
-            pk_event_id INTEGER PRIMARY KEY,
-            fk_ticket_id TEXT NOT NULL,
-            fk_author_id TEXT NOT NULL,
-            created_at INTEGER NOT NULL,
-            fk_event_type INTEGER NOT NULL,
-            description TEXT,
-            content TEXT,
-            images BLOB,
-            FOREIGN KEY (fk_ticket_id) REFERENCES tickets (pk_ticket_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_author_id) REFERENCES users (pk_user_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_event_type) REFERENCES event_types (pk_event_type_id) ON DELETE SET NULL
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS user_associations (
-            pk_user_assoc_id INTEGER PRIMARY KEY,
-            fk_user_id TEXT NOT NULL,
-            fk_department_id INTEGER NOT NULL,
-            fk_role_id INTEGER NOT NULL,
-            FOREIGN KEY (fk_user_id) REFERENCES users (pk_user_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_department_id) REFERENCES departments (pk_department_id) ON DELETE CASCADE,
-            FOREIGN KEY (fk_role_id) REFERENCES roles (pk_role_id)
-        )
-    `);
-    db_conn.exec(`
-        CREATE TABLE IF NOT EXISTS access_tokens (
-            access_token TEXT NOT NULL,
-            fk_user_id TEXT NOT NULL,
-            FOREIGN KEY (fk_user_id) REFERENCES users (pk_user_id) ON DELETE CASCADE
-        )
+        CREATE TABLE IF NOT EXISTS access_tokens
+        (
+            access_token
+            TEXT
+            NOT
+            NULL,
+            fk_user_id
+            TEXT
+            NOT
+            NULL,
+            FOREIGN
+            KEY
+        (
+            fk_user_id
+        ) REFERENCES users
+        (
+            pk_user_id
+        ) ON DELETE CASCADE
+            )
     `);
     prefillDB();
 }
@@ -157,7 +462,7 @@ function prefillDB() {
     const init_event_types = ['ACTION', 'COMMENT'];
     // add department
     const admin_dept = 'System_Administration';
-    const admin_role = { role_name: 'Administrators', department: 'System_Administration' };
+    const admin_role = {role_name: 'Administrators', department: 'System_Administration'};
 
     // TO DO: proper Error
     if (!db_conn.open) {
@@ -248,11 +553,13 @@ function addUser(username: string, password_hash: string): number | Error {
         return error;
     }
 }
+
 // idk if needed
-function getUsers(): dbUser[] {
+function getUsers(): DbUser[] {
     return db_conn.prepare('SELECT * FROM users').all();
 }
-function getUserByUsername(username: string): dbUser | Error | undefined {
+
+function getUserByUsername(username: string): DbUser | Error | undefined {
     try {
         return db_conn.prepare('SELECT * FROM users WHERE user_name = :username').get(username);
     } catch (error) {
@@ -260,7 +567,8 @@ function getUserByUsername(username: string): dbUser | Error | undefined {
         return error;
     }
 }
-function getUserById(user_id: string): dbUser | Error | undefined {
+
+function getUserById(user_id: string): DbUser | Error | undefined {
     try {
         return db_conn.prepare('SELECT * FROM users WHERE pk_user_id = :user_id').get(user_id);
     } catch (error) {
@@ -282,6 +590,7 @@ function updateUserUsernameById(user_id: string, new_username: string): number |
         return error;
     }
 }
+
 function updateUserPasswordById(user_id: string, new_password_hash: string): number | Error {
     try {
         const timestamp = Date.now();
@@ -317,10 +626,11 @@ function addAction(action_name: string): number | Error {
     }
 }
 
-function getActionByName(action_name: string): dbAction | Error | undefined {
+function getActionByName(action_name: string): DbAction | Error | undefined {
     return db_conn.prepare('SELECT * FROM actions WHERE action_name= ?').get(action_name);
 }
-function getActionById(action_id: string): dbAction | Error | undefined {
+
+function getActionById(action_id: string): DbAction | Error | undefined {
     return db_conn.prepare('SELECT * FROM actions WHERE pk_actions_id= ?').get(action_id);
 }
 
@@ -354,11 +664,12 @@ function addDepartment(department_name: string, description?: string): number | 
         return error;
     }
 }
-function getDepartments(): dbDepartments[] | Error {
+
+function getDepartments(): DbDepartments[] | Error {
     return db_conn.prepare('SELECT * FROM departments').all();
 }
 
-function getDepartmentById(department_id: number): dbDepartments | Error | undefined {
+function getDepartmentById(department_id: number): DbDepartments | Error | undefined {
     return db_conn
         .prepare('SELECT * FROM departments WHERE pk_department_id = :department_id')
         .get(department_id);
@@ -374,6 +685,7 @@ function deleteDepartment(department_id: number) {
         return error;
     }
 }
+
 //#endregion Department CRUD
 
 //#region Role CRUD
@@ -397,6 +709,7 @@ function addRole(role_name: string, department_id: number, description?: string)
         return error;
     }
 }
+
 function getRoleId(role_name: number, department_id: number): number | Error | undefined {
     const id = db_conn
         .prepare('SELECT roles.pk_role_id FROM roles WHERE pk_role_id= ? AND fk_department_id= ?')
@@ -407,23 +720,24 @@ function getRoleId(role_name: number, department_id: number): number | Error | u
     return id;
 }
 
-function getRoleById(role_id: string): dbRole[] | Error | undefined {
+function getRoleById(role_id: string): DbRole[] | Error | undefined {
     return db_conn
         .prepare(
             'SELECT * FROM roles ' +
-                'LEFT JOIN allowed_role_actions RA on RA.fk_role_id = roles.pk_role_id' +
-                'LEFT JOIN actions A on RA.fk_action_id = A.pk_action_id' +
-                'WHERE pk_role_id= ?'
+            'LEFT JOIN allowed_role_actions RA on RA.fk_role_id = roles.pk_role_id' +
+            'LEFT JOIN actions A on RA.fk_action_id = A.pk_action_id' +
+            'WHERE pk_role_id= ?'
         )
         .all(role_id);
 }
-function getRolesInDepartment(department_id: string): dbRole[] | Error | undefined {
+
+function getRolesInDepartment(department_id: string): DbRole[] | Error | undefined {
     return db_conn
         .prepare(
             'SELECT * FROM roles ' +
-                'LEFT JOIN allowed_role_actions RA on RA.fk_role_id = roles.pk_role_id' +
-                'LEFT JOIN actions A on RA.fk_action_id = A.pk_action_id' +
-                'WHERE fk_department_id= ?'
+            'LEFT JOIN allowed_role_actions RA on RA.fk_role_id = roles.pk_role_id' +
+            'LEFT JOIN actions A on RA.fk_action_id = A.pk_action_id' +
+            'WHERE fk_department_id= ?'
         )
         .all(department_id);
 }
@@ -436,6 +750,7 @@ function deleteRole(role_id: number): number | Error {
         return error;
     }
 }
+
 //#endregion Role CRUD
 
 //#region Associations
@@ -456,6 +771,7 @@ function addUserToDepartment(
         return error;
     }
 }
+
 function updateRoleOfUser(
     user_id: string,
     department_id: number,
@@ -473,6 +789,7 @@ function updateRoleOfUser(
         return error;
     }
 }
+
 function deleteUserFromDepartment(user_id: string, department_id: number): number | Error {
     try {
         return db_conn.exec(
@@ -498,6 +815,7 @@ function addActionToRole(role_id: number, action_id: number): number | Error {
         return error;
     }
 }
+
 function deleteActionFromRole(role_id: number, action_id: number): number | Error {
     try {
         return db_conn.exec(
@@ -523,6 +841,7 @@ function addTagToTicket(tag_id: number, ticket_id: string): number | Error {
         return error;
     }
 }
+
 function deleteTagFromTicket(tag_id: number, ticket_id: string): number | Error {
     try {
         return db_conn.exec(
@@ -573,16 +892,18 @@ function addTicket(
         return error;
     }
 }
+
 function getTicketById(ticket_id: string) {
     return db_conn.prepare('SELECT * FROM tickets WHERE pk_ticket_id= ?').get(ticket_id);
 }
+
 function getTicketsOfDepartment(department_id: number) {
     return db_conn
         .prepare(
             'SELECT tickets.* FROM tickets ' +
-                'LEFT JOIN ticket_associations TA on TA.fk_ticket_id = tickets.pk_ticket_id' +
-                'LEFT JOIN departments D on D.pk_department_id = TA.fk_department_id' +
-                'WHERE fk_department_id= ?'
+            'LEFT JOIN ticket_associations TA on TA.fk_ticket_id = tickets.pk_ticket_id' +
+            'LEFT JOIN departments D on D.pk_department_id = TA.fk_department_id' +
+            'WHERE fk_department_id= ?'
         )
         .all(department_id);
 }
@@ -603,6 +924,7 @@ function updateTicketStatus(ticket_id: string, new_status_id: number): number | 
         return error;
     }
 }
+
 function deleteTicketById(ticket_id: string): number | Error {
     try {
         return db_conn.exec('DELETE FROM tickets WHERE pk_ticket_id= :ticket_id', ticket_id);
@@ -611,6 +933,7 @@ function deleteTicketById(ticket_id: string): number | Error {
         return error;
     }
 }
+
 //#endregion Ticket CRUD
 
 //#region Event CRUD
@@ -698,6 +1021,7 @@ function addEventToTicket(
 function getEventsOfTicket(ticket_id: string) {
     return db_conn.prepare('SELECT * FROM events WHERE fk_ticket_id= ?').all(ticket_id);
 }
+
 //#endregion Event CRUD
 
 //#region Tags
@@ -752,9 +1076,11 @@ function addTagToDepartment(
 function getTagById(tag_id: number) {
     return db_conn.prepare('SELECT * FROM tags WHERE pk_tag_id= ?').get(tag_id);
 }
+
 function getTagsInDepartment(department_id: number) {
     return db_conn.prepare('SELECT * FROM tags WHERE fk_department_id= ?').all(department_id);
 }
+
 function deleteTag(tag_id: number) {
     try {
         return db_conn.exec('DELETE FROM tickets WHERE pk_tag_id= ?', tag_id);
