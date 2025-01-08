@@ -1,9 +1,9 @@
-import {Hono} from "npm:hono@4.6.14";
+import {Hono} from "hono";
 import {sign} from "hono/jwt";
-import db from "../service/database.ts";
 import {setCookie} from "hono/cookie";
-import {LoginRequestBody} from "../model/api_types.ts";
 import {AlgorithmName, verify as crypto_verify,} from "jsr:@stdext/crypto/hash";
+import db from "@backend/service/database.ts";
+import {LoginRequestBody} from "@backend/model/api_types.ts";
 
 const login = new Hono();
 const JWT_SECRET: string = Deno.env.get("JWT_SECRET")!;
@@ -48,7 +48,6 @@ login.post("/", async (c) => {
     JWT_REFRESH_SECRET,
   );
   console.log("maxAge: " + JWT_REFRESH_EXPIRY);
-  // @ts-ignore: <Hono does shit so we ignore that>
   setCookie(c, "refreshToken", refreshToken, { maxAge: JWT_REFRESH_EXPIRY });
   /*
     setCookie(c, 'refreshToken', refreshToken, {
