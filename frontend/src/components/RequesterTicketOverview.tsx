@@ -1,12 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {Button} from "@/components/ui/button.tsx";
 
-export default function RequesterTicketOverview() {
+export default function RequesterTicketOverview({ setView }) {
+
     return (
         <div className="space-y-10">
             <div className="flex row-auto justify-end mx-5">
-                <Button className="bg-green-500 md:w-1/12 font-bold hover:bg-green-600">New Ticket</Button>
+                <Button className="bg-green-500 md:w-1/12 font-bold hover:bg-green-600"
+                        onClick={() => setView('create')}>New Ticket</Button>
             </div>
+
+            <h1 className="text-center text-white mb-7 font-mono">Tickets</h1>
 
             {/* Open Tickets */}
             <Card>

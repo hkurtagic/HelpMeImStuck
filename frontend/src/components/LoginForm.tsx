@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
@@ -32,7 +32,6 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
 
             const data = await response.json();
             console.log('login data' + JSON.stringify(data));
-            //localStorage.setItem('token', JSON.stringify(data));
             globalThis.location.href = '/dashboard';
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
