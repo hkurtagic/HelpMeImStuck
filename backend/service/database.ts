@@ -3,7 +3,7 @@ import {AlgorithmName, hash} from "jsr:@stdext/crypto/hash";
 import {DbAction, DbDepartments, DbRole, DbUser,} from "@backend/model/dbtypes.ts";
 import {assert} from "@std/assert";
 
-const db_conn = new Database("./service/test.db");
+const db_conn = new Database("./test.db");
 
 // init if not exist
 function initDB() {
