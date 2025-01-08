@@ -4,6 +4,8 @@
   },
   "imports": {
     "@types/node": "npm:@types/node@^22.10.1",
-    "hono": "npm:hono@^4.6.16"
+    "hono": "npm:hono@^4.6.16",
+    "sequelize": "npm:sequelize@^6.37.5",
+    "sqlite3": "npm:sqlite3@^5.1.7"
   }
 }
