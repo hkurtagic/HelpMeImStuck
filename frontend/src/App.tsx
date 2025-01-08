@@ -1,5 +1,5 @@
 import "./App.css";
-import React from "npm:@types/react@^18.3.12";
+import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import LoginPage from "@/pages/LoginPage.tsx";
 import DashboardPage from "@/pages/DashboardPage.tsx";

@@ -70,13 +70,6 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
                             <div className="grid gap-2">
                                 <Label htmlFor="password">Password</Label>
 
-                                <a
-                                    href="/password-reset"
-                                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline hover:text-gray-500 text-black"
-                                >
-                                    Forgot your password?
-                                </a>
-
                                 <Input
                                     id="password"
                                     type="password"

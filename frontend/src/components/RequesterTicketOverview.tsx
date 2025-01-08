@@ -16,19 +16,19 @@ export default function RequesterTicketOverview() {
                 <CardContent className="space-y-4">
                     <Card className="bg-blue-100">
                         <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
+                            <CardTitle>Speaker doesn't work</CardTitle>
                         </CardHeader>
                         <CardContent className>
-                            <p>Details zu offenen Tickets</p>
+                            <p>Left Speaker in A.1.02 has no sound!</p>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-blue-100">
                         <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
+                            <CardTitle>HDMI cable for office PC in A.3.04 is broken!</CardTitle>
                         </CardHeader>
                         <CardContent className>
-                            <p>Details zu offenen Tickets</p>
+                            <p>Someone bit in the cable. Help me!</p>
                         </CardContent>
                     </Card>
                 </CardContent>
@@ -39,23 +39,7 @@ export default function RequesterTicketOverview() {
                     <CardTitle>Tickets in Progress</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Card className="bg-blue-100">
-                        <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
-                        </CardHeader>
-                        <CardContent className>
-                            <p>Details zu offenen Tickets</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-blue-100">
-                        <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
-                        </CardHeader>
-                        <CardContent className>
-                            <p>Details zu offenen Tickets</p>
-                        </CardContent>
-                    </Card>
+                    <p>There are no tickets in progress.</p>
                 </CardContent>
             </Card>
 
@@ -64,23 +48,7 @@ export default function RequesterTicketOverview() {
                     <CardTitle>Closed Tickets</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Card className="bg-blue-100">
-                        <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
-                        </CardHeader>
-                        <CardContent className>
-                            <p>Details zu offenen Tickets</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-blue-100">
-                        <CardHeader>
-                            <CardTitle>Open Tickets</CardTitle>
-                        </CardHeader>
-                        <CardContent className>
-                            <p>Details zu offenen Tickets</p>
-                        </CardContent>
-                    </Card>
+                    <p>There are no closed tickets.</p>
                 </CardContent>
             </Card>
         </div>

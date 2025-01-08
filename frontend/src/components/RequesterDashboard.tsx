@@ -3,6 +3,7 @@ import RequesterSidebarItem from './RequesterSidebarItem.tsx';
 import { PanelLeftClose, PanelRightClose, Ticket, ChartArea, LogOut } from 'lucide-react';
 import RequesterTicketOverview from '@/components/RequesterTicketOverview.tsx';
 import { useNavigate } from 'react-router-dom';
+import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 
 export default function RequesterDashboard() {
     const [isOpen, setIsOpen] = useState(false);
@@ -97,8 +98,8 @@ export default function RequesterDashboard() {
 
             {/* Dashboard Content */}
             <div className={`flex-1 overflow-auto p-5 transition-all duration-300 ${isOpen ? 'md:ml-64' : 'md:ml-16'}`}>
-                <h1 className="text-center text-black mb-7 font-mono">Tickets</h1>
-                <RequesterTicketOverview />
+                <h1 className="text-center text-white mb-7 font-mono">Tickets</h1>
+                <CreateTicketForm/>
             </div>
         </div>
     );
