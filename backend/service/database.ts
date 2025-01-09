@@ -1,12 +1,16 @@
 import { Database } from "jsr:@db/sqlite";
 import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
-import { dbAction, dbDepartments, dbRole, dbUser } from "../model/dbtypes.ts";
+import {
+  dbAction,
+  dbDepartments,
+  dbRole,
+  dbUser,
+} from "@backend/model/dbtypes.ts";
 import { assert } from "@std/assert";
-import { Department } from "../../shared_types/communication_types.ts";
+import { Department } from "@shared/shared_types.ts";
 import * as path from "jsr:@std/path";
 
 const p = path.fromFileUrl(path.join(path.dirname(import.meta.url), "test.db"));
-console.log("db path: " + p);
 const db_conn = new Database(p);
 
 // init if not exist
@@ -208,7 +212,7 @@ function prefillDB() {
         if (department.department_name == admin_dept) {
           //   console.log("admin dept: " + department.department_name);
 
-          addRole(admin_role.role_name, department.pk_department_id);
+          addRole(admin_role.role_name, department.department_id);
         } else {
           init_roles.forEach((role) => {
             if (department.department_name !== admin_dept) {
@@ -216,7 +220,7 @@ function prefillDB() {
               //     "added role" + role + "\nto dept: " +
               //       department.department_name,
               //   );
-              addRole(role, department.pk_department_id);
+              addRole(role, department.department_id);
             }
           });
         }
@@ -259,7 +263,7 @@ function prefillDB() {
         }
         // console.log(JSON.stringify(department));
 
-        const d_roles = getRolesInDepartment(department.pk_department_id)!;
+        const d_roles = getRolesInDepartment(department.department_id)!;
         init_users.forEach((user) => {
           addUser(
             user.user_name,
@@ -285,7 +289,7 @@ function prefillDB() {
             console.log(JSON.stringify(matchin_user_role));
             addUserToDepartment(
               db_user.pk_user_id,
-              department.pk_department_id,
+              department.department_id,
               matchin_user_role.pk_role_id,
             );
           }
@@ -456,8 +460,10 @@ function addDepartment(
     return error;
   }
 }
-function getDepartments(): dbDepartments[] | Error {
-  return db_conn.prepare("SELECT * FROM departments").all();
+function getDepartments(): Department[] | Error {
+  return db_conn.prepare(
+    "SELECT D.pk_department_id as department_id, D.department_name FROM departments D",
+  ).all();
 }
 
 function getDepartmentsOfUser(user_id: string): Department[] | Error {

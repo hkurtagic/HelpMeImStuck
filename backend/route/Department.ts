@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import JWTAuthChecker from "@backend/handler/AuthenticationHandler.ts";
-import { Department } from "../../shared_types/communication_types.ts";
-import db from "../service/database.ts";
+import { Department } from "@shared/shared_types.ts";
+import db from "@backend/service/database.ts";
 
 const department = new Hono();
 
