@@ -6,9 +6,9 @@ interface Ticket {
   ticket_id: string;
   author: string;
   title: string;
-  description?: string;
+  description: string;
   status: string;
-  images: Blob;
+  images?: Base64<ImageType>;
 }
 interface TicketEvent {
   event_id: number;
@@ -25,4 +25,15 @@ interface TicketHistory {
   events: TicketEvent[];
 }
 
-export type { Department, Ticket, TicketEvent, TicketHistory };
+type ImageType = "png" | "jpeg";
+type Base64<imageType extends ImageType> =
+  `data:image/${imageType};base64${string}`;
+
+export type {
+  Base64,
+  Department,
+  ImageType,
+  Ticket,
+  TicketEvent,
+  TicketHistory,
+};
