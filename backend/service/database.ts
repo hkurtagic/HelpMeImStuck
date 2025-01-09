@@ -2,13 +2,18 @@ import { Database } from "jsr:@db/sqlite";
 import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
 import { dbAction, dbDepartments, dbRole, dbUser } from "../model/dbtypes.ts";
 import { assert } from "@std/assert";
+import { Department } from "../../shared_types/communication_types.ts";
+import * as path from "jsr:@std/path";
 
-const db_conn = new Database("./service/test.db");
+const p = path.fromFileUrl(path.join(path.dirname(import.meta.url), "test.db"));
+console.log("db path: " + p);
+const db_conn = new Database(p);
 
 // init if not exist
 function initDB() {
   // TO DO: proper Error exposure
   if (!db_conn.open) {
+    console.log("Database not open");
     return null;
   }
 
@@ -307,6 +312,7 @@ function prefillDB() {
     prep_event_type_insert.finalize();
   }
 }
+//#endregion Tokens
 
 //#region User CRUD
 function addUser(username: string, password_hash: string): number | Error {
@@ -323,6 +329,7 @@ function addUser(username: string, password_hash: string): number | Error {
     return error;
   }
 }
+
 // idk if needed
 function getUsers(): dbUser[] {
   return db_conn.prepare("SELECT * FROM users").all();
@@ -451,6 +458,15 @@ function addDepartment(
 }
 function getDepartments(): dbDepartments[] | Error {
   return db_conn.prepare("SELECT * FROM departments").all();
+}
+
+function getDepartmentsOfUser(user_id: string): Department[] | Error {
+  return db_conn.prepare(
+    "SELECT D.pk_department_id as department_id, D.department_name FROM departments D " +
+      "LEFT JOIN user_associations UA on UA.pf_department_id = D.pk_department_id " +
+      "LEFT JOIN users U on U.pk_user_id = UA.fk_user_id " +
+      "WHERE U.pk_user_id= ?",
+  ).all(user_id);
 }
 
 function getDepartmentIdByName(
@@ -705,10 +721,16 @@ function addTicket(
   }
 }
 function getTicketById(ticket_id: string) {
-  return db_conn.prepare("SELECT * FROM tickets WHERE pk_ticket_id= ?").get(
+  return db_conn.prepare(
+    "SELECT T.pk_ticket_id as ticket_id, U.user_name as author, T.title, T.description, S.status_name as status, T.images FROM tickets T " +
+      "LEFT JOIN users U on U.pk_user_id = T.fk_author_id" +
+      "LEFT JOIN status S on S.pk_status_id = T.fk_status_id" +
+      "WHERE T.pk_ticket_id= ?",
+  ).get(
     ticket_id,
   );
 }
+
 function getTicketsOfDepartment(department_id: number) {
   return db_conn
     .prepare(
@@ -843,6 +865,7 @@ function getEventsOfTicket(ticket_id: string) {
     ticket_id,
   );
 }
+
 //#endregion Event CRUD
 
 //#region Tags
@@ -897,11 +920,13 @@ function addTagToDepartment(
 function getTagById(tag_id: number) {
   return db_conn.prepare("SELECT * FROM tags WHERE pk_tag_id= ?").get(tag_id);
 }
+
 function getTagsInDepartment(department_id: number) {
   return db_conn.prepare("SELECT * FROM tags WHERE fk_department_id= ?").all(
     department_id,
   );
 }
+
 function deleteTag(tag_id: number) {
   try {
     return db_conn.exec("DELETE FROM tickets WHERE pk_tag_id= ?", tag_id);
@@ -962,6 +987,7 @@ export default {
   getDepartments,
   getDepartmentIdByName,
   getDepartmentById,
+  getDepartmentsOfUser,
   deleteDepartment,
   addRole,
   getRoleId,
@@ -987,4 +1013,5 @@ export default {
   getTagById,
   getTagsInDepartment,
   deleteTag,
+  getUserPermissionsByUserId,
 };
