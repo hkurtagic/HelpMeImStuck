@@ -3,8 +3,11 @@ import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
 import { dbAction, dbDepartments, dbRole, dbUser } from "../model/dbtypes.ts";
 import { assert } from "@std/assert";
 import { Department } from "../../shared_types/communication_types.ts";
+import * as path from "jsr:@std/path";
 
-const db_conn = new Database("./service/test.db");
+const db_conn = new Database(
+  path.join(path.dirname(import.meta.url), "test.db"),
+);
 
 // init if not exist
 function initDB() {
@@ -308,6 +311,7 @@ function prefillDB() {
     prep_event_type_insert.finalize();
   }
 }
+//#endregion Tokens
 
 //#region User CRUD
 function addUser(username: string, password_hash: string): number | Error {
@@ -324,6 +328,7 @@ function addUser(username: string, password_hash: string): number | Error {
     return error;
   }
 }
+
 // idk if needed
 function getUsers(): dbUser[] {
   return db_conn.prepare("SELECT * FROM users").all();
@@ -724,6 +729,7 @@ function getTicketById(ticket_id: string) {
     ticket_id,
   );
 }
+
 function getTicketsOfDepartment(department_id: number) {
   return db_conn
     .prepare(
@@ -858,6 +864,7 @@ function getEventsOfTicket(ticket_id: string) {
     ticket_id,
   );
 }
+
 //#endregion Event CRUD
 
 //#region Tags
@@ -912,11 +919,13 @@ function addTagToDepartment(
 function getTagById(tag_id: number) {
   return db_conn.prepare("SELECT * FROM tags WHERE pk_tag_id= ?").get(tag_id);
 }
+
 function getTagsInDepartment(department_id: number) {
   return db_conn.prepare("SELECT * FROM tags WHERE fk_department_id= ?").all(
     department_id,
   );
 }
+
 function deleteTag(tag_id: number) {
   try {
     return db_conn.exec("DELETE FROM tickets WHERE pk_tag_id= ?", tag_id);
@@ -1003,4 +1012,5 @@ export default {
   getTagById,
   getTagsInDepartment,
   deleteTag,
+  getUserPermissionsByUserId,
 };
