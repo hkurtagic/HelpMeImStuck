@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {EP_login} from "@/route_helper/routes_helper.tsx";
 
 export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
     const [username, setUsername] = useState('');
@@ -17,7 +18,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<'div
         setLoading(true);
 
         try {
-            const response = await fetch(import.meta.env.VITE_BACKEND_API + '/login', {
+            const response = await fetch(EP_login, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

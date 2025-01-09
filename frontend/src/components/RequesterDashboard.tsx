@@ -4,6 +4,8 @@ import { PanelLeftClose, PanelRightClose, Ticket, ChartArea, LogOut } from 'luci
 import RequesterTicketOverview from '@/components/RequesterTicketOverview.tsx';
 import { useNavigate } from 'react-router-dom';
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
+import {EP_department, EP_logout} from "@/route_helper/routes_helper.tsx";
+import StatisticsPage from "@/pages/StatisticsPage.tsx";
 
 export default function RequesterDashboard() {
     const [view, setView] = useState<'overview' | 'create'>('overview');
@@ -22,7 +24,7 @@ export default function RequesterDashboard() {
         try {
             console.log('Logging out...');
 
-            const response = await fetch(import.meta.env.VITE_BACKEND_API + '/logout', {
+            const response = await fetch(EP_logout, {
                 method: 'POST',
             });
 
@@ -40,10 +42,10 @@ export default function RequesterDashboard() {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const response = await fetch(import.meta.env.VITE_BACKEND_API + '/departments');
+                const response = await fetch(EP_department);
                 if (!response.ok) throw new Error('Failed to fetch departments');
                 const data = await response.json();
-                setDepartments(data.departments);
+                setDepartments(data);
             } catch (error) {
                 console.error('Error fetching departments:', error);
             }
@@ -119,8 +121,8 @@ export default function RequesterDashboard() {
                                 Choose a department
                             </option>
                             {departments.map((dept) => (
-                                <option key={dept} value={dept}>
-                                    {dept}
+                                <option value={dept.pk_department_id}>
+                                    {dept.department_name}
                                 </option>
                             ))}
                         </select>
@@ -129,8 +131,8 @@ export default function RequesterDashboard() {
 
                 {/* Sidebar Elements */}
                 <div className="m-4">
-                    <RequesterSidebarItem icon={Ticket} label="Tickets" isOpen={isOpen} />
-                    <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={isOpen} />
+                    <RequesterSidebarItem icon={Ticket} label="Tickets" isOpen={isOpen} onClick={() => setView ('tickets')}/>
+                    <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={isOpen} onClick={() => setView('statistics')}/>
                     <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={isOpen} onClick={handleLogout} />
                 </div>
             </div>
@@ -139,6 +141,8 @@ export default function RequesterDashboard() {
             <div className={`flex-1 overflow-auto p-5 transition-all duration-300 ${isOpen ? 'md:ml-64' : 'md:ml-16'}`}>
                 {view === 'overview' && <RequesterTicketOverview setView={setView} />}
                 {view === 'create' && <CreateTicketForm setView={setView} />}
+                {view === 'statistics' && <StatisticsPage/>}
+                {view === 'tickets' && <RequesterTicketOverview setView={setView}/>}
             </div>
         </div>
     );

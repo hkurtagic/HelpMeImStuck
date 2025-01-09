@@ -17,14 +17,14 @@ app.use(logger());
 
 app.use(
   "*",
-  cors({
+  /*cors({
     origin: (origin, c) => {
-      return origin.includes("localhost") ? origin : "http://localhost";
+      return origin.includes("localhost") ? origin : "http://localhost:*";
     },
     // allowMethods: ['POST', 'GET', 'OPTIONS'],
     // exposeHeaders: ['Set-Cookie'],
     credentials: true,
-  }),
+  }),*/
 );
 
 app.route("/login", login);

@@ -5,6 +5,7 @@ import LoginPage from "@/pages/LoginPage.tsx";
 import DashboardPage from "@/pages/DashboardPage.tsx";
 import ActivityPage from "@/pages/ActivityPage.tsx";
 import PasswordResetPage from "@/pages/PasswordResetPage.tsx";
+import StatisticsPage from "@/pages/StatisticsPage.tsx";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
               <Route path="/:dashboard" element={<DashboardPage />} />
               <Route path="/activities" element={<ActivityPage />} />
               <Route path="/password-reset" element={<PasswordResetPage/>} />
+              <Route path="/statistics" element={<StatisticsPage/>} />
           </Routes>
       </BrowserRouter>
   );
