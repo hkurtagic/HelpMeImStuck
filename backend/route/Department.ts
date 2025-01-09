@@ -29,8 +29,9 @@ department.get("/", JWTAuthChecker, async (c) => {
   }
 });
 
-department.get("/:user_id", JWTAuthChecker, async (c) => {
-  const depts = db.getDepartmentsOfUser(c.req.param("user_id")!);
+department.get("/own_departments", JWTAuthChecker, async (c) => {
+  const req = await c.req.json() as ({ user_id: string });
+  const depts = db.getDepartmentsOfUser(req.user_id);
   if (!(depts instanceof Error)) {
     return c.json(depts, 200);
   }

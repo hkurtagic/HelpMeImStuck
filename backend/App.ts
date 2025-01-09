@@ -6,6 +6,7 @@ import { cors } from "hono/cors";
 import database from "./service/database.ts";
 import logout from "./route/Logout.ts";
 import department from "./route/Department.ts";
+import tickets from "./backend/route/Tickets.ts";
 
 const app: Hono = new Hono().basePath("/api");
 database.initDB();
@@ -30,6 +31,7 @@ app.route("/login", login);
 app.route("/logout", logout);
 
 app.route("/department", department);
+app.route("/ticket", tickets);
 
 app.route("/test", test);
 

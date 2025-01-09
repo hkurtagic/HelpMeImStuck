@@ -25,4 +25,4 @@ interface TicketHistory {
   events: TicketEvent[];
 }
 
-export type { Department, TicketEvent, TicketHistory };
+export type { Department, Ticket, TicketEvent, TicketHistory };
