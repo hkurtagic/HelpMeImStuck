@@ -7,7 +7,7 @@
   "imports": {
     "@/": "./frontend/src/",
     "@backend/": "./backend/",
-    "frontend/": "./frontend/",
+    "@frontend/": "./frontend/",
     "@shared/": "./shared/",
     "/": "./",
     "./": "./",

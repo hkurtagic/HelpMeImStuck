@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import {EP_department} from "@/route_helper/routes_helper.tsx";
+import { Department } from "@shared/shared_types.ts";
 
 interface CreateTicketFormProps {
     setView: (view: 'overview' | 'create') => void;
