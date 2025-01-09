@@ -5,14 +5,15 @@ import { assert } from "@std/assert";
 import { Department } from "../../shared_types/communication_types.ts";
 import * as path from "jsr:@std/path";
 
-const db_conn = new Database(
-  path.join(path.dirname(import.meta.url), "test.db"),
-);
+const p = path.fromFileUrl(path.join(path.dirname(import.meta.url), "test.db"));
+console.log("db path: " + p);
+const db_conn = new Database(p);
 
 // init if not exist
 function initDB() {
   // TO DO: proper Error exposure
   if (!db_conn.open) {
+    console.log("Database not open");
     return null;
   }
 
