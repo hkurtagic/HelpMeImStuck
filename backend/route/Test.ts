@@ -5,7 +5,7 @@ import { setCookie } from "hono/cookie";
 import { jwt_custom_payload } from "@backend/model/api_types.ts";
 import { getCookie } from "hono/cookie";
 import db from "@backend/service/database.ts";
-import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
+// import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
 import { Base64, ImageType } from "@shared/shared_types.ts";
 
 const test = new Hono();
@@ -64,13 +64,13 @@ test.get("/logged_in", JWTAuthChecker, async (c) => {
   );
 });
 
-test.get("/image_to_blob", (c) => {
-  const blob = base64toBlob(c.req.query("image") as Base64<ImageType>);
-  console.log(blob);
-  // console.log("--------------------------------");
-  // const b64 = BlobToBase64(blob);
-  // console.log(b64);
-  return c.json({ image: blob }, 200);
-});
+// test.get("/image_to_blob", (c) => {
+//   const blob = base64toBlob(c.req.query("image") as Base64<ImageType>);
+//   console.log(blob);
+//   // console.log("--------------------------------");
+//   // const b64 = BlobToBase64(blob);
+//   // console.log(b64);
+//   return c.json({ image: blob }, 200);
+// });
 
 export default test;
