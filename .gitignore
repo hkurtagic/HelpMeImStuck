@@ -5,4 +5,4 @@
 /.vscode/
 #/_documentation/
 /.local.env
-/backend/service/test.db
+/backend/service/*.db
