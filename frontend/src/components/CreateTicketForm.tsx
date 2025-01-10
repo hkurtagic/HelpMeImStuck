@@ -29,9 +29,7 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 
 	// Abteilungen laden
 	useEffect(() => {
-		//if (!departments) {
 		fetchDepartments();
-		//}
 	}, []);
 
 	async function fetchDepartments() {
