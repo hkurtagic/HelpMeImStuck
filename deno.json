@@ -17,6 +17,19 @@
     "@stdext/crypto": "jsr:@stdext/crypto@^0.1.0",
     "clsx": "npm:clsx@^2.1.1"
   },
+  "fmt": {
+    "files": {
+      "include": [
+        "./frontend/src/",
+        "./backend/"
+      ]
+    },
+    "useTabs": true,
+    "lineWidth": 100,
+    "indentWidth": 4,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  },
   "workspace": [
     "./frontend",
     "./backend"
