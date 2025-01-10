@@ -6,11 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 import {EP_department, EP_logout} from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
+import {Department} from "@shared/shared_types.ts";
 
 export default function RequesterDashboard() {
     const [view, setView] = useState<'overview' | 'create'>('overview');
     const [isOpen, setIsOpen] = useState(false);
-    const [departments, setDepartments] = useState<string[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string>('');
     const navigate = useNavigate();
 
@@ -142,7 +143,7 @@ export default function RequesterDashboard() {
                 {view === 'overview' && <RequesterTicketOverview setView={setView} />}
                 {view === 'create' && <CreateTicketForm setView={setView} />}
                 {view === 'statistics' && <StatisticsPage/>}
-                {view === 'tickets' && <RequesterTicketOverview setView={setView}/>}
+                {view === 'tickets' && <RequesterTicketOverview setView={setView} selectedDepartment={selectedDepartment}/>}
             </div>
         </div>
     );

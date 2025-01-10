@@ -9,6 +9,7 @@ const ticketHistory = '/ticket_history';
 // endpoints
 const EP_department = '/api/department';
 const EP_ticket = '/api/ticket';
+
 const EP_login = '/api/login';
 
 const EP_logout = '/api/logout'

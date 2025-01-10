@@ -29,15 +29,14 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 
     // Abteilungen laden
     useEffect(() => {
-        //if (!departments) {
-            fetchDepartments();
-        //}
+        fetchDepartments();
     }, []);
 
     async function fetchDepartments() {
         try {
             const response = await fetch(EP_department);
             if (!response.ok) throw new Error('Failed to fetch departments');
+            console.log(response)
             const data = await response.json();
             setDepartments(data); // Erwartet ein Array von Objekten {id, name}
         } catch (error) {
@@ -142,7 +141,7 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
                         >
                             <option value="" disabled>Select a department</option>
                             {departments.map((dept) => (
-                                <option key={dept.pk_department_id} value={dept.pk_department_id}>
+                                <option key={dept.department_id} value={dept.department_id}>
                                     {dept.department_name}
                                 </option>
                             ))}
