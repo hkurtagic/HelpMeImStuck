@@ -79,7 +79,7 @@ function initDB() {
   db_conn.exec(`
         CREATE TABLE IF NOT EXISTS tickets (
             pk_ticket_id TEXT PRIMARY KEY,
-            fk_author INTEGER NOT NULL,
+            fk_author TEXT NOT NULL,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             fk_status_id INTEGER NOT NULL,
@@ -240,7 +240,7 @@ function prefillDB() {
     ) {
       const admin_role_id = getRoleId(
         admin_role.role_name,
-        admin_dept_id.pk_department_id,
+        admin_dept_id.department_id,
       )!;
       //   console.log(
       //     "Admin init:\n" + "id: " + admin_user_id.pk_user_id + "\nrole: " +
@@ -250,7 +250,7 @@ function prefillDB() {
       if (!(admin_role_id instanceof Error)) {
         addUserToDepartment(
           admin_user_id.pk_user_id,
-          admin_dept_id.pk_department_id,
+          admin_dept_id.department_id,
           admin_role_id,
         );
       }
@@ -477,10 +477,10 @@ function getDepartmentsOfUser(user_id: string): Department[] | Error {
 
 function getDepartmentIdByName(
   department_name: string,
-): dbDepartments | Error | undefined {
+): Department | undefined {
   return db_conn
     .prepare(
-      "SELECT * FROM departments WHERE department_name = :department_name",
+      "SELECT D.pk_department_id as department_id, D.department_name FROM departments WHERE department_name = :department_name",
     )
     .get(department_name);
 }

@@ -1,9 +1,12 @@
-import {Hono} from "hono";
-import {sign} from "hono/jwt";
-import {setCookie} from "hono/cookie";
-import {AlgorithmName, verify as crypto_verify,} from "jsr:@stdext/crypto/hash";
+import { Hono } from "hono";
+import { sign } from "hono/jwt";
+import { setCookie } from "hono/cookie";
+import {
+  AlgorithmName,
+  verify as crypto_verify,
+} from "jsr:@stdext/crypto/hash";
 import db from "@backend/service/database.ts";
-import {LoginRequestBody} from "@backend/model/api_types.ts";
+import { LoginRequestBody } from "@shared/shared_types.ts";
 
 const login = new Hono();
 const JWT_SECRET: string = Deno.env.get("JWT_SECRET")!;

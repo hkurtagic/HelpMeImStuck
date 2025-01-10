@@ -1,3 +1,8 @@
+interface LoginRequestBody {
+  username: string;
+  password: string;
+}
+
 interface Department {
   department_id: number;
   department_name: string;
@@ -8,7 +13,7 @@ interface Ticket {
   title: string;
   description: string;
   status: string;
-  images?: Base64<ImageType>;
+  images?: Base64<ImageType>[];
 }
 interface TicketEvent {
   event_id: number;
@@ -17,7 +22,7 @@ interface TicketEvent {
   event_type: string;
   description: string;
   content?: string;
-  images?: Blob;
+  images?: Base64<ImageType>[];
 }
 
 interface TicketHistory {
@@ -27,12 +32,13 @@ interface TicketHistory {
 
 type ImageType = "png" | "jpeg";
 type Base64<imageType extends ImageType> =
-  `data:image/${imageType};base64${string}`;
+  `data:image/${imageType};base64,${string}`;
 
 export type {
   Base64,
   Department,
   ImageType,
+  LoginRequestBody,
   Ticket,
   TicketEvent,
   TicketHistory,
