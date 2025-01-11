@@ -1,7 +1,41 @@
-enum Action {
-	createUser,
-	modifyUser,
-	deleteUser,
+enum RequesterActions {
+	ticket_create,
+	ticket_pullBack,
+	ticket_closeOwn,
+}
+enum SupporterActions {
+	ticket_seeTickets,
+	ticket_accept,
+	ticket_close,
+	ticket_forward,
+	ticket_addDepartment,
+	ticket_addTag,
+}
+
+enum AdminActions {
+	user_create,
+	user_modify,
+	user_delete,
+	role_create,
+	role_modify,
+	role_delete,
+	department_create,
+	department_modify,
+	department_delete,
+}
+type Actions = RequesterActions | SupporterActions | AdminActions;
+
+enum EventType {
+	statusChange,
+	departmentAdded,
+	departmentForwarded,
+	Comment,
+}
+
+enum TicketStatus {
+	OPEN,
+	IN_PROGRESS,
+	CLOSED,
 }
 
 interface LoginRequestBody {
@@ -11,17 +45,19 @@ interface LoginRequestBody {
 interface LoginReply {
 	user_name: string;
 }
-
-interface Department {
-	department_id: number;
+interface newDepartment {
 	department_name: string;
+	department_description?: string;
+}
+interface Department extends newDepartment {
+	department_id: number;
 }
 interface Role {
 	role_id: number;
 	role_name: string;
 	description?: string;
 	department: Department;
-	actions?: Action[];
+	actions?: Actions[];
 }
 
 interface User {
@@ -29,7 +65,7 @@ interface User {
 	user_name: string;
 	password?: string;
 	roles?: Role[];
-	user_permissions?: Action[];
+	user_permissions?: Actions[];
 }
 
 interface Ticket {
@@ -38,8 +74,8 @@ interface Ticket {
 	departments: Department[];
 	title: string;
 	description: string;
-	status: string;
-	images?: Blob[];
+	status: TicketStatus;
+	images?: Blob;
 }
 interface TicketEvent {
 	event_id: number;
@@ -48,7 +84,7 @@ interface TicketEvent {
 	event_type: string;
 	description: string;
 	content?: string;
-	images?: Base64<ImageType>[];
+	images?: Blob[];
 }
 
 interface TicketHistory {
@@ -56,19 +92,21 @@ interface TicketHistory {
 	events: TicketEvent[];
 }
 
-type ImageType = "png" | "jpeg";
-type Base64<imageType extends ImageType> = `data:image/${imageType};base64,${string}`;
+// type ImageType = "png" | "jpeg";
+// type Base64<imageType extends ImageType> = `data:image/${imageType};base64,${string}`;
 
 export type {
-	Base64,
+	Actions,
+	// Base64,
 	Department,
-	ImageType,
+	// ImageType,
 	LoginReply,
 	LoginRequestBody,
+	newDepartment,
 	Role,
 	Ticket,
 	TicketEvent,
 	TicketHistory,
 	User,
 };
-export { Action };
+export { EventType, TicketStatus };
