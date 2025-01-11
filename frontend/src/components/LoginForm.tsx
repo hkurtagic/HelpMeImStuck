@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { dashboard, EP_login } from "@/route_helper/routes_helper.tsx";
+import { dashboardPath, EP_login } from "@/route_helper/routes_helper.tsx";
 import { useNavigate } from "react-router-dom";
 import { User } from "@shared/shared_types";
 import { UserContext } from "@/components/UserContext";
@@ -39,7 +39,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<"div
 			const data = await response.json() as User;
 			updateUser(data);
 			// console.log("login data" + JSON.stringify(data));
-			navigate(dashboard);
+			navigate(dashboardPath);
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
 			setError(errorMessage);
