@@ -1,11 +1,16 @@
-import {Database} from "jsr:@db/sqlite";
-import {AlgorithmName, hash} from "jsr:@stdext/crypto/hash";
-import {DbAction, DbDepartments, DbRole, DbUser,} from "@backend/model/dbtypes.ts";
-import {assert} from "@std/assert";
+import { Database } from "jsr:@db/sqlite";
+import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
+import {
+  DbAction,
+  DbDepartments,
+  DbRole,
+  DbUser,
+} from "@backend/model/dbtypes.ts";
+import { assert } from "@std/assert";
 import * as path from "jsr:@std/path";
 
 const db_conn = new Database(
-  path.join(path.dirname(import.meta.url), "test.db"),
+  path.join(path.dirname(import.meta.url), "test.db").substring(8),
 );
 
 // init if not exist
