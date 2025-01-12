@@ -1,8 +1,8 @@
-import {Hono} from "hono";
+import { Hono } from "hono";
 import JWTAuthChecker from "@backend/handler/AuthenticationHandler.ts";
-import {decode} from "hono/jwt";
-import {jwt_payload} from "@backend/model/api_types.ts";
-import {getCookie} from "hono/cookie";
+import { decode } from "hono/jwt";
+import { jwt_payload } from "@backend/model/api_types.ts";
+import { getCookie } from "hono/cookie";
 
 const test = new Hono();
 

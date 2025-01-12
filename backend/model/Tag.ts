@@ -1,7 +1,13 @@
-import { DataTypes, INTEGER, Model } from "npm:sequelize";
+import { DataTypes, Model } from "npm:sequelize";
 import { sequelize } from "../service/dbconnector.ts";
-import Department from "./Department.ts";
-import User from "./User.ts";
+
+/**
+ * @type {object}
+ * @property {string} tag_name - A name
+ * @property {string} tag_abbreviation - An abbreviation [will be displayed]
+ * @property {string} tag_description - A short description of the role
+ * @property {string} tag_style - The style of the tag [for the frontend]
+ */
 
 export default class Tag extends Model {}
 
@@ -27,13 +33,5 @@ Tag.init({
   tag_style: {
     type: DataTypes.TEXT,
     allowNull: true,
-  },
-  fk_department_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: Department,
-      key: "pk_department_id",
-    },
   },
 }, { sequelize: sequelize });

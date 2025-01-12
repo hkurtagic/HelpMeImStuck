@@ -1,6 +1,11 @@
 import { DataTypes, Model } from "npm:sequelize";
 import { sequelize } from "../service/dbconnector.ts";
 
+/**
+ * @type {object}
+ * @property {string} status name - A name
+ */
+
 export default class Status extends Model {}
 
 Status.init({

@@ -1,6 +1,11 @@
 import { DataTypes, Model } from "npm:sequelize";
 import { sequelize } from "@backend/service/dbconnector.ts";
 
+/**
+ * @type {object}
+ * @property {string} event_type_name - A name
+ */
+
 export default class EventType extends Model {}
 
 EventType.init(

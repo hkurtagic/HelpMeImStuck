@@ -4,11 +4,15 @@ import User from "./User.ts";
 
 export default class Action extends Model {}
 
+/**
+ * @type {object}
+ * @property {string} action_name - A Name
+ */
+
 Action.init({
   pk_action_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    allowNull: false,
     primaryKey: true,
   },
   action_name: {
