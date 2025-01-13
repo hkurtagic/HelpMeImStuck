@@ -4,7 +4,7 @@ import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
 
 /**
  * @type {object}
- * @property {string} user_name - A Name
+ * @property {string} user_name - The name of the user
  * @property {string} password_hash - A plain text password [will automatically be hashed]
  */
 
@@ -16,6 +16,7 @@ User.init(
       type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
     },
     user_name: {
       type: DataTypes.TEXT,

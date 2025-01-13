@@ -6,7 +6,7 @@ export default class Action extends Model {}
 
 /**
  * @type {object}
- * @property {string} action_name - A Name
+ * @property {string} action_name - A name for the Action
  */
 
 Action.init({
@@ -14,6 +14,7 @@ Action.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+    allowNull: false,
   },
   action_name: {
     type: DataTypes.TEXT,

@@ -3,8 +3,8 @@ import { sequelize } from "../service/dbconnector.ts";
 
 /**
  * @type {object}
- * @property {string} ticket_title - A name
- * @property {string} ticket_description - A short description opf the Ticket
+ * @property {string} ticket_title - The title of the ticket
+ * @property {string} ticket_description - A short description of the Ticket
  */
 
 export default class Ticket extends Model {}
@@ -15,6 +15,7 @@ Ticket.init(
       type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
     },
     ticket_title: {
       type: DataTypes.TEXT,

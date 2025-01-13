@@ -3,7 +3,7 @@ import { sequelize } from "../service/dbconnector.ts";
 
 /**
  * @type {object}
- * @property {string} status name - A name
+ * @property {string} status name - A name for the status
  */
 
 export default class Status extends Model {}
@@ -13,6 +13,7 @@ Status.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+    allowNull: false,
   },
   status_name: {
     type: DataTypes.TEXT,
