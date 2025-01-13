@@ -1,7 +1,16 @@
 import { z } from "zod";
-import { Actions as AllActions } from "@shared/shared_types.ts";
-import { RoleScheme, UserScheme, UUIDScheme } from "@shared/shared_schemas.ts";
+import { Actions as AllActions, TicketStatus } from "@shared/shared_types.ts";
+import { RoleScheme, UserScheme, UUID } from "@shared/shared_schemas.ts";
 const Action = z.nativeEnum(AllActions);
+const stat = z.nativeEnum(TicketStatus);
+
+// const StatusSchema = z.preprocess(unknownObjLayout =>{
+
+// }).object({
+// 	status_id: z.number().nonnegative(),
+// 	status_name: stat
+// }).setKey((data) => {
+// 	if (data.pk_status_id) {}})
 
 const AllowedActions = z.object({
 	actions: Action.array(),
@@ -25,9 +34,10 @@ const SupporterActionPreset = AllowedActions.parse({
 const AdminActionPreset = AllowedActions.parse({
 	actions: [
 		...SupporterActionPreset.actions,
-		Object.values(Action.enum).filter((a) =>
-			!SupporterActionPreset.actions.includes(a as AllActions)
-		),
+		...Object.values(Action).filter((a) => {
+			if (typeof a === "number" && !SupporterActionPreset.actions.includes(a)) return a;
+			return;
+		}),
 	],
 });
 
@@ -43,7 +53,7 @@ const ServersideUserSchema = UserScheme.omit({
 });
 
 const JWTExtraPayload = z.object({
-	user_id: UUIDScheme,
+	user_id: UUID,
 });
 const JWTPayload = JWTExtraPayload.extend({
 	iat: z.number(),

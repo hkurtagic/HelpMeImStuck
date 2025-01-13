@@ -7,7 +7,7 @@ import { ValidationFunction, validator } from "hono/validator";
 import { JWTExtraPayload, JWTPayload } from "@backend/model/serverside_types.ts";
 import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
-import { UUIDScheme } from "@shared/shared_schemas.ts";
+import { UUID } from "@shared/shared_schemas.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
@@ -75,7 +75,7 @@ function UserValidator(
 	allowed_ownDepartment_actions: Actions[],
 ) {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const user_id = UUIDScheme.safeParse(value);
+		const user_id = UUID.safeParse(value);
 		if (user_id.success) {
 			if (user_id.data === c.var.user_id) {
 				return user_id.data;
@@ -114,7 +114,7 @@ function UserValidator(
 }
 function TicketValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = UUIDScheme.safeParse(value);
+		const ticket_id = UUID.safeParse(value);
 		if (ticket_id.success) {
 			return ticket_id.data;
 		}
@@ -123,7 +123,7 @@ function TicketValidator() {
 }
 function DepartmentValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = UUIDScheme.safeParse(value);
+		const ticket_id = UUID.safeParse(value);
 		if (ticket_id.success) {
 			return ticket_id.data;
 		}

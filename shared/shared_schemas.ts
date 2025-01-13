@@ -4,14 +4,15 @@ import { EventType as event_type, TicketStatus as ticket_status } from "./shared
 const TicketStatus = z.nativeEnum(ticket_status);
 const EventType = z.nativeEnum(event_type);
 
-const UUIDScheme = z.string().refine(
-	(value) =>
-		/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-			value ?? "",
-		),
-	"ID should be a valid UUID",
-);
-const IDScheme = z.number().int().nonnegative();
+// const UUIDScheme = z.string().refine(
+// 	(value) =>
+// 		/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+// 			value ?? "",
+// 		),
+// 	"ID should be a valid UUID",
+// );
+const UUID = z.string().uuid("ID is not a valid UUID");
+const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
 
 const NewDepartmentScheme = z.object({
 	department_name: z.string(),
@@ -19,7 +20,7 @@ const NewDepartmentScheme = z.object({
 });
 
 const DepartmentScheme = NewDepartmentScheme.extend({
-	department_id: IDScheme,
+	department_id: ID,
 });
 
 const NewRoleScheme = z.object({
@@ -29,7 +30,7 @@ const NewRoleScheme = z.object({
 });
 
 const RoleScheme = NewRoleScheme.extend({
-	role_id: IDScheme,
+	role_id: ID,
 });
 
 const LoginUserScheme = z.object({
@@ -42,7 +43,7 @@ const NewUserScheme = LoginUserScheme.extend({
 });
 
 const UserScheme = NewUserScheme.extend({
-	user_id: UUIDScheme,
+	user_id: UUID,
 }).omit({
 	password: true,
 });
@@ -64,13 +65,13 @@ const NewTicketScheme = z.object({
 });
 
 const TicketScheme = NewTicketScheme.extend({
-	ticket_id: UUIDScheme,
+	ticket_id: UUID,
 	ticket_status: TicketStatus,
 	tags: TagScheme.array().optional(),
 });
 
 const BaseTicketEventScheme = z.object({
-	event_id: UUIDScheme,
+	event_id: UUID,
 	ticket_id: z.string(),
 	author: z.string(),
 	created_at: z.string().datetime({ offset: true }),
@@ -106,13 +107,13 @@ const TicketHistoryEventScheme = z.discriminatedUnion("event_type", [
 	TicketEvent_CommentScheme.omit({ ticket_id: true }),
 ]);
 const TicketHistoryScheme = z.object({
-	ticket_id: UUIDScheme,
+	ticket_id: UUID,
 	events: TicketHistoryEventScheme.array(),
 });
 
 export {
 	DepartmentScheme,
-	IDScheme,
+	ID as IDScheme,
 	LoginUserScheme,
 	NewDepartmentScheme,
 	NewRoleScheme,
@@ -124,5 +125,5 @@ export {
 	TicketHistoryScheme,
 	TicketScheme,
 	UserScheme,
-	UUIDScheme,
+	UUID,
 };

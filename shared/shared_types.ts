@@ -44,17 +44,6 @@ enum Actions {
 	department_modify,
 	department_delete,
 }
-enum ownDepartmentActions {
-	department_ownDeartment_modify,
-	role_ownDeartment_create,
-	role_ownDeartment_modify,
-	role_ownDeartment_delete,
-	user_ownDeartment_create,
-	user_ownDeartment_modify,
-	user_ownDeartment_delete,
-	tag_ownDeartment_manage,
-}
-
 enum EventType {
 	statusChange,
 	departmentAdded,
@@ -161,4 +150,4 @@ export type Tag = z.infer<typeof TagScheme>;
 // TicketEvent,
 // TicketHistory,
 // User,
-export { Actions, EventType, ownDepartmentActions, TicketStatus };
+export { Actions, EventType, TicketStatus };
