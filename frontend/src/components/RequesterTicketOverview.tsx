@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,10 +17,6 @@ export default function RequesterTicketOverview(
 ) {
 	const [tickets, setTickets] = useState<Ticket[]>([]);
 
-	/**
-	 * Bisherige implementation erwartet alle tickets und filtert nach dropdown selection
-	 * evtl. zuerst dropdown selection und dann request inkl. selection im body
-	 */
 	useEffect(() => {
 		const fetchTickets = async () => {
 			try {
@@ -46,6 +43,16 @@ export default function RequesterTicketOverview(
 		}
 	}, [selectedDepartment]); // Lädt Tickets neu, wenn sich die Abteilung ändert
 
+	// Funktion zum Aktualisieren des Ticket-Status
+	const updateTicketStatus = (ticketId: string, newStatus: number) => {
+		setTickets((prevTickets) =>
+			prevTickets.map((ticket) =>
+				ticket.ticket_id === ticketId ? { ...ticket, status: newStatus } : ticket
+			)
+		);
+	};
+
+
 	// Tickets nach Status filtern
 	const openTickets = tickets.filter((ticket) => ticket.status === TicketStatus.OPEN);
 	const inProgressTickets = tickets.filter((ticket) =>
@@ -65,6 +72,7 @@ export default function RequesterTicketOverview(
 			</div>
 
 			<h1 className="text-center text-white mb-7 font-mono">Tickets</h1>
+			<h2 className="text-center text-white mb-4 font font-mono">Select a department to view your tickets!</h2>
 
 			{/* Open Tickets */}
 			<Card>
@@ -79,7 +87,9 @@ export default function RequesterTicketOverview(
 									key={ticket.ticket_id}
 									ticket={ticket}
 									showButton={true}
-								/>
+									showHistoryIcon={true}
+								 	setView={setView}
+									updateTicketStatus={updateTicketStatus}/>
 							))
 						)
 						: <p>At the moment you have no open tickets.</p>}
@@ -99,6 +109,9 @@ export default function RequesterTicketOverview(
 									key={ticket.ticket_id}
 									ticket={ticket}
 									showButton={true}
+									showHistoryIcon={true}
+									setView={setView}
+									updateTicketStatus={updateTicketStatus}
 								/>
 							))
 						)
@@ -119,6 +132,9 @@ export default function RequesterTicketOverview(
 									key={ticket.ticket_id}
 									ticket={ticket}
 									showButton={true}
+									showHistoryIcon={true}
+									setView={setView}
+									updateTicketStatus={updateTicketStatus}
 								/>
 							))
 						)
