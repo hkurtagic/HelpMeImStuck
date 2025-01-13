@@ -1,13 +1,12 @@
-import {Hono} from "hono";
-import {logger} from "hono/logger";
+import { Hono } from "hono";
+import { logger } from "hono/logger";
 import login from "@backend/route/Login.ts";
 import test from "@backend/route/Example.ts";
-import {cors} from "hono/cors";
+import { cors } from "hono/cors";
 import database from "@backend/service/database.ts";
 import logout from "@backend/route/Logout.ts";
 
 const app: Hono = new Hono().basePath("/api");
-database.initDB();
 
 /* Custom logger https://hono.dev/docs/middleware/builtin/logger */
 app.use(logger());
