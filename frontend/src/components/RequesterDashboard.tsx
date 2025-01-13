@@ -7,10 +7,11 @@ import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import { Department } from "@shared/shared_types.ts";
+import TicketHistory from "@/components/TicketHistory.tsx";
 
 export default function RequesterDashboard() {
 	const [view, setView] = useState<"overview" | "create">("overview");
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(true);
 	const [departments, setDepartments] = useState<Department[]>([]);
 	const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 	const navigate = useNavigate();
@@ -49,6 +50,7 @@ export default function RequesterDashboard() {
 				if (!res.ok) {
 					throw new Error("Failed to fetch departments");
 				}
+				console.log(res)
 				return res.json();
 			}).then((data) => {
 				setDepartments(data);
@@ -56,18 +58,6 @@ export default function RequesterDashboard() {
 			.catch((error) => {
 				console.error("Error fetching departments:", error);
 			});
-		// const fetchDepartments = async () => {
-		// 	try {
-		// 		const response = await fetch(EP_own_department);
-		// 		if (!response.ok) throw new Error("Failed to fetch departments");
-		// 		const data = await response.json();
-		// 		setDepartments(data);
-		// 	} catch (error) {
-		// 		console.error("Error fetching departments:", error);
-		// 	}
-		// };
-
-		// fetchDepartments();
 	}, []);
 
 	return (
@@ -137,7 +127,7 @@ export default function RequesterDashboard() {
 							htmlFor="department-select"
 							className="block text-black font-medium mb-2"
 						>
-							Select Department:
+							Select your Department
 						</label>
 						<select
 							id="department-select"
@@ -146,7 +136,8 @@ export default function RequesterDashboard() {
 								setSelectedDepartment(
 									departments.find((d) => d.department_name == e.target.value) ||
 										null,
-								)}
+								)
+							}
 							className="w-full p-2 border rounded-md text-black"
 						>
 							<option value="" disabled>
@@ -204,6 +195,7 @@ export default function RequesterDashboard() {
 						selectedDepartment={selectedDepartment}
 					/>
 				)}
+				{view === "history" && <TicketHistory setView={setView}/>}
 			</div>
 		</div>
 	);
