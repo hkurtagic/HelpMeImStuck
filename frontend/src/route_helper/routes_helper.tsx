@@ -10,9 +10,10 @@ const EP_own_department = EP_department + "/own";
 const EP_ticket = "/api/ticket";
 const EP_department_tickets = (department_id: number) => `${EP_ticket}/${department_id}`;
 const EP_ticket_create = EP_ticket; // + "/";
-const EP_login = "/api/login";
 
-const EP_logout = "/api/logout";
+const EP_user = "/api/user";
+const EP_login = EP_user + "/login";
+const EP_logout = EP_user + "/logout";
 
 export {
 	dashboardPath,
