@@ -2,11 +2,31 @@ import { DataTypes, Model } from "npm:sequelize";
 import { sequelize } from "../service/dbconnector.ts";
 
 /**
- * @type {object}
- * @property {string} tag_name - A name for the tag
- * @property {string} tag_abbreviation - An abbreviation [will be displayed]
- * @property {string} tag_description - A short description of the role
- * @property {string} tag_style - The style of the tag [for the frontend]
+ * ```js
+ * pk_tag_id: {
+ *     type: DataTypes.INTEGER,
+ *     autoIncrement: true,
+ *     primaryKey: true,
+ *     allowNull: false,
+ *   },
+ *   tag_name: {
+ *     type: DataTypes.TEXT,
+ *     allowNull: false,
+ *     unique: true,
+ *   },
+ *   tag_abbreviation: {
+ *     type: DataTypes.TEXT,
+ *     allowNull: false,
+ *   },
+ *   tag_description: {
+ *     type: DataTypes.TEXT,
+ *     allowNull: true,
+ *   },
+ *   tag_style: {
+ *     type: DataTypes.TEXT,
+ *     allowNull: true,
+ *   }
+ * ```
  */
 
 export default class Tag extends Model {}
