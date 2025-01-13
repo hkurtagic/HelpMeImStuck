@@ -4,7 +4,7 @@ import { sequelize } from "@backend/service/dbconnector.ts";
 /**
  * @type {object}
  * @property {string} image_content - Content of the image
- * @property {string} image_type - The image type
+ * @property {string} image_type - The type of the image
  */
 
 export default class Image extends Model {}
@@ -14,6 +14,7 @@ Image.init({
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
+    allowNull: false,
   },
   image_content: {
     type: DataTypes.TEXT,
