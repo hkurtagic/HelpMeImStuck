@@ -157,6 +157,17 @@ export default function prefillDB() {
 		});
 		prep_event_type_insert.finalize();
 	}
+	if (_rowCounter("actions") == 0) {
+		const stmt_action_insert = database.db_conn.prepare(
+			"INSERT INTO actions (pk_action_id,action_name) VALUES (?,?)",
+		);
+		Object.values(Actions).forEach((k, v) => {
+			if (typeof k === "string") {
+				stmt_action_insert.run(v, k);
+			}
+		});
+		stmt_action_insert.finalize();
+	}
 }
 
 // sadly no parameter binding for tablename possible and therefore string concat as it will not be used outside

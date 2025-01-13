@@ -1,7 +1,15 @@
-import { Database } from "jsr:@db/sqlite";
+import { Database, SQLBlob } from "jsr:@db/sqlite";
+// import sqlite3 from 'sqlite3';
 import { dbAction, dbDepartments, dbRole, dbUser } from "@backend/model/dbtypes.ts";
 import { assert } from "@std/assert";
-import type { Department, Role, Ticket, TicketStatus } from "@shared/shared_types.ts";
+import type {
+	Actions,
+	Department,
+	EventType,
+	Role,
+	Ticket,
+	TicketStatus,
+} from "@shared/shared_types.ts";
 import * as path from "jsr:@std/path";
 import prefillDB from "@backend/service/database_prefill.ts";
 
@@ -78,11 +86,9 @@ function initDB() {
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             fk_status_id INTEGER NOT NULL,
-            fk_image_id INTEGER,
             created_at INTEGER NOT NULL,
             FOREIGN KEY (fk_author_id) REFERENCES users (pk_user_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_status_id) REFERENCES status (pk_status_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_image_id) REFERENCES images (pk_image_id) ON DELETE CASCADE
+            FOREIGN KEY (fk_status_id) REFERENCES status (pk_status_id) ON DELETE SET NULL
         )
     `);
 	db_conn.exec(`
@@ -129,11 +135,9 @@ function initDB() {
             fk_event_type INTEGER NOT NULL,
             description TEXT,
             content TEXT,
-            fk_image_id INTEGER,
             FOREIGN KEY (fk_ticket_id) REFERENCES tickets (pk_ticket_id) ON DELETE CASCADE,
             FOREIGN KEY (fk_author_id) REFERENCES users (pk_user_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_event_type) REFERENCES event_types (pk_event_type_id) ON DELETE SET NULL,
-            FOREIGN KEY (fk_image_id) REFERENCES images (pk_image_id) ON DELETE CASCADE
+            FOREIGN KEY (fk_event_type) REFERENCES event_types (pk_event_type_id) ON DELETE SET NULL
         )
     `);
 	db_conn.exec(`
@@ -149,8 +153,13 @@ function initDB() {
     `);
 	db_conn.exec(`
         CREATE TABLE IF NOT EXISTS images (
-            pk_image_id INTEGER PRIMARY KEY,
-            image_data BLOB NOT NULL
+            pk_image_id TEXT PRIMARY KEY,
+            image_data TEXT NOT NULL,
+			fk_ticket_id TEXT,
+			fk_event_id TEXT,
+            FOREIGN KEY (fk_ticket_id) REFERENCES images (pk_image_id) ON DELETE CASCADE,
+            FOREIGN KEY (fk_event_id) REFERENCES events (pk_event_id) ON DELETE CASCADE,
+			CHECK (fk_ticket_id is NOT NULL or fk_event_id is NOT NULL)
         )
     `);
 	db_conn.exec(`
@@ -174,15 +183,17 @@ const ticket_q =
 //#endregion
 
 //#region User CRUD
-function addUser(username: string, password_hash: string): number | Error {
+function addUser(username: string, password_hash: string): string | Error {
 	try {
-		return db_conn.exec(
+		const user_id = crypto.randomUUID();
+		db_conn.exec(
 			"INSERT INTO users (pk_user_id,user_name,password_hash,created_at) VALUES (?,?,?,?)",
-			crypto.randomUUID(),
+			user_id,
 			username,
 			password_hash,
 			Date.now(),
 		);
+		return user_id;
 	} catch (error) {
 		assertIsError(error);
 		return error;
@@ -248,6 +259,22 @@ function updateUserPasswordById(
 function deleteUserById(user_id: string): number | Error {
 	try {
 		return db_conn.prepare("DELETE FROM users WHERE pk_user_id = :user_id").run(
+			user_id,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
+
+function getUserActionsByUserId(user_id: string): { actions: number }[] | Error {
+	try {
+		return db_conn.prepare(
+			"SELECT A.pk_action_id as actions FROM actions A" +
+				"LEFT JOIN user_extra_permissions UEP on UEP.fk_action_id = A.pk_action_id " +
+				"LEFT JOIN users U on U.pk_user_id = UEP.fk_user_id " +
+				"WHERE U.pk_user_id= ?",
+		).all(
 			user_id,
 		);
 	} catch (error) {
@@ -636,24 +663,9 @@ function addTicket(
 	description: string,
 	author_id: string,
 	status: TicketStatus,
-	image?: Blob,
 ): string | Error {
 	try {
 		const ticket_id = crypto.randomUUID();
-		// if (typeof image !== "undefined") {
-		// 	db_conn.exec("INSERT INTO images (image_data) VALUES (?)",image);
-
-		// 	db_conn.exec(
-		// 		"INSERT INTO tickets (pk_ticket_id,fk_author_id,title,description,fk_status_id,images,created_at) VALUES (?,?,?,?,?,?,?)",
-		// 		ticket_id,
-		// 		author,
-		// 		title,
-		// 		description,
-		// 		1,
-		// 		image,
-		// 		Date.now(),
-		// 	);
-		// }
 		db_conn.exec(
 			"INSERT INTO tickets (pk_ticket_id,fk_author_id,title,description,fk_status_id,created_at) VALUES (?,?,?,?,?,?)",
 			ticket_id,
@@ -740,41 +752,40 @@ function deleteTicketById(ticket_id: string): number | Error {
 function addEventToTicket(
 	ticket_id: string,
 	author_id: string,
-	event_type_id: number,
+	event_type_id: EventType,
 	description?: string,
 	content?: string,
-	encoded_images?: string,
 ): number | Error {
 	try {
-		if (
-			typeof description !== "undefined" &&
-			typeof content !== "undefined" &&
-			typeof encoded_images !== "undefined"
-		) {
-			return db_conn.exec(
-				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content,images) VALUES (?,?,?,?,?,?,?)",
-				ticket_id,
-				author_id,
-				Date.now(),
-				event_type_id,
-				description,
-				content,
-				encoded_images,
-			);
-		}
-		if (
-			typeof content !== "undefined" && typeof encoded_images !== "undefined"
-		) {
-			return db_conn.exec(
-				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,content,encoded_images) VALUES (?,?,?,?,?,?)",
-				ticket_id,
-				author_id,
-				Date.now(),
-				event_type_id,
-				content,
-				encoded_images,
-			);
-		}
+		// if (
+		// 	description !== undefined &&
+		// 	content !== undefined &&
+		// 	image !== undefined
+		// ) {
+		// 	return db_conn.exec(
+		// 		"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content,images) VALUES (?,?,?,?,?,?,?)",
+		// 		ticket_id,
+		// 		author_id,
+		// 		Date.now(),
+		// 		event_type_id,
+		// 		description,
+		// 		content,
+		// 		image,
+		// 	);
+		// }
+		// if (
+		// 	typeof content !== "undefined" && typeof image !== "undefined"
+		// ) {
+		// 	return db_conn.exec(
+		// 		"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,content,encoded_images) VALUES (?,?,?,?,?,?)",
+		// 		ticket_id,
+		// 		author_id,
+		// 		Date.now(),
+		// 		event_type_id,
+		// 		content,
+		// 		image,
+		// 	);
+		// }
 		if (typeof description !== "undefined" && typeof content !== "undefined") {
 			return db_conn.exec(
 				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content) VALUES (?,?,?,?,?,?)",
@@ -896,20 +907,40 @@ function deleteTag(tag_id: number) {
 }
 
 //#endregion
-
-function getUserPermissionsByUserId(user_id: string) {
-	return db_conn
-		.prepare(
-			"SELECT users.pk_user_id,users.user_name,D.pk_department_id,D.department_name,R.pk_role_id,R.role_name,A.action_name FROM users " +
-				"LEFT JOIN user_associations UA on UA.fk_user_id = users.pk_user_id" +
-				"LEFT JOIN departments D on D.pk_department_id = UA.fk_department_id" +
-				"LEFT JOIN roles R on R.pk_role_id = UA.fk_role_id" +
-				"LEFT JOIN allowed_role_actions RA on RA.fk_role_id = R.pk_role_id" +
-				"LEFT JOIN actions A on A.pk_action_id = RA.fk_actions_id" +
-				"WHERE users.pk_user_id= ?",
-		)
-		.all(user_id);
+//#region Images
+function addImageToEvent(
+	event_id: string,
+	image: string,
+): number | Error {
+	try {
+		return db_conn.exec(
+			"INSERT INTO images (pk_image_id,image_data,fk_event_id) VALUES (?,?,?)",
+			crypto.randomUUID(),
+			event_id,
+			image,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
 }
+function addImageToTicket(
+	ticket_id: string,
+	image: string,
+): number | Error {
+	try {
+		return db_conn.exec(
+			"INSERT INTO images (pk_image_id,image_data,fk_ticket_id) VALUES (?,?,?)",
+			crypto.randomUUID(),
+			ticket_id,
+			image,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
+//#endregion
 
 function closeDB() {
 	if (db_conn.open) {
@@ -928,6 +959,9 @@ export default {
 	addTicketToDepartment,
 	updateTicketOfDepartment,
 	deleteTicketFromDepartment,
+	addImageToEvent,
+	addImageToTicket,
+	getUserActionsByUserId,
 
 	addUser,
 	getUsers,
@@ -970,6 +1004,5 @@ export default {
 	getTagById,
 	getTagsInDepartment,
 	deleteTag,
-	getUserPermissionsByUserId,
 	updateDepartment,
 };

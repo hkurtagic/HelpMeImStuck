@@ -1,10 +1,9 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 // import { cors } from "hono/cors";
-import login from "@backend/route/Login.ts";
+import user from "@backend/route/User.ts";
 import test from "@backend/route/Test.ts";
 import database from "@backend/service/database.ts";
-import logout from "@backend/route/Logout.ts";
 import department from "@backend/route/Department.ts";
 import tickets from "@backend/route/Tickets.ts";
 
@@ -27,8 +26,7 @@ app.use(logger());
 //   }),*/
 // );
 
-app.route("/login", login);
-app.route("/logout", logout);
+app.route("/user", user);
 
 app.route("/department", department);
 app.route("/ticket", tickets);
