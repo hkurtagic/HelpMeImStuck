@@ -10,7 +10,6 @@ import Ticket from "@backend/model/Ticket.ts";
 import Event from "@backend/model/Event.ts";
 import Image from "@backend/model/Image.ts";
 import Role from "@backend/model/Role.ts";
-import UserDepartmentRole from "@backend/model/UserDepartmentRole.ts";
 
 export default async (): Promise<void> => {
   new Action();
@@ -23,7 +22,6 @@ export default async (): Promise<void> => {
   new Tag();
   new Ticket();
   new User();
-  new UserDepartmentRole();
 
   //1
   User.belongsToMany(Action, {
@@ -46,23 +44,8 @@ export default async (): Promise<void> => {
   });
 
   //User, Department and Role association
-  User.belongsToMany(Department, {
-    through: "UserDepartmentRole",
-    foreignKey: "fk_user_id",
-  });
-  Department.belongsToMany(User, {
-    through: "UserDepartmentRole",
-    foreignKey: "fk_department_id",
-  });
-
-  User.belongsToMany(Role, {
-    through: "UserDepartmentRole",
-    foreignKey: "fk_user_id",
-  });
-  Role.belongsToMany(User, {
-    through: "UserDepartmentRole",
-    foreignKey: "fk_role_id",
-  });
+  User.belongsToMany(Role, { through: "UserRoles", foreignKey: "fk_user_id" });
+  Role.belongsToMany(User, { through: "UserRoles", foreignKey: "fk_role_id" });
 
   //Roles
   //One Department has many Roles
@@ -128,11 +111,6 @@ export default async (): Promise<void> => {
       fields: ["fk_department_id", "tag_abbreviation"],
       type: "unique",
       name: "UniqueTagAbbreviationInDepartment",
-    });
-    await queryInterface.addConstraint("UserDepartmentRoles", {
-      fields: ["fk_department_id", "fk_role_id", "fk_user_id"],
-      type: "unique",
-      name: "UniqueUserDepartmentRoleEntry",
     });
   } catch (error) {
     throw error;
