@@ -11,6 +11,7 @@ const UUIDScheme = z.string().refine(
 		),
 	"ID should be a valid UUID",
 );
+const IDScheme = z.number().int().nonnegative();
 
 const NewDepartmentScheme = z.object({
 	department_name: z.string(),
@@ -18,7 +19,7 @@ const NewDepartmentScheme = z.object({
 });
 
 const DepartmentScheme = NewDepartmentScheme.extend({
-	department_id: z.number(),
+	department_id: IDScheme,
 });
 
 const NewRoleScheme = z.object({
@@ -28,7 +29,7 @@ const NewRoleScheme = z.object({
 });
 
 const RoleScheme = NewRoleScheme.extend({
-	role_id: z.number(),
+	role_id: IDScheme,
 });
 
 const LoginUserScheme = z.object({
@@ -105,12 +106,13 @@ const TicketHistoryEventScheme = z.discriminatedUnion("event_type", [
 	TicketEvent_CommentScheme.omit({ ticket_id: true }),
 ]);
 const TicketHistoryScheme = z.object({
-	ticket_id: z.string(),
+	ticket_id: UUIDScheme,
 	events: TicketHistoryEventScheme.array(),
 });
 
 export {
 	DepartmentScheme,
+	IDScheme,
 	LoginUserScheme,
 	NewDepartmentScheme,
 	NewRoleScheme,
