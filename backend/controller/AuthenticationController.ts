@@ -1,16 +1,18 @@
 import { decode, sign, verify } from "hono/jwt";
 import { Context } from "hono";
-import { deleteCookie, getCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Next } from "hono/types";
 import { createMiddleware } from "hono/factory";
-import { jwt_custom_payload } from "@backend/model/api_types.ts";
+import { ValidationFunction, validator } from "hono/validator";
+import { JWTExtraPayload, JWTPayload } from "@backend/model/serverside_types.ts";
 import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
+import { UUIDScheme } from "@shared/shared_schemas.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
 const JWT_REFRESH_SECRET = Deno.env.get("JWT_REFRESH_SECRET")!;
-// const JWT_REFRESH_EXPIRY = convert_to_seconds(Deno.env.get('JWT_REFRESH_EXPIRY')!);
+const JWT_REFRESH_EXPIRY = parseInt(Deno.env.get("JWT_REFRESH_EXPIRY")!);
 
 const JWTAuthController = createMiddleware<{
 	Variables: {
@@ -33,23 +35,19 @@ const JWTAuthController = createMiddleware<{
 				`decoded JWT refreshToken: ${JSON.stringify(decode(refreshToken!).payload)}`,
 			);
 		}
-
 		if (!accessToken && !refreshToken) {
 			return c.json({ message: "Unauthorized" }, 401);
 		}
 		let user_id = undefined;
 		try {
-			user_id = (await verify(
-				accessToken!,
-				JWT_SECRET,
-			) as jwt_custom_payload).user_id;
+			user_id = (await verifyJWTToken(accessToken, JWT_SECRET)).user_id;
 		} catch (_error1) {
 			if (!refreshToken) {
 				return c.json({ message: "Unauthorized" }, 401);
 			}
 			try {
-				user_id = (await verify(refreshToken, JWT_REFRESH_SECRET) as jwt_custom_payload)
-					.user_id;
+				user_id = (await verifyJWTToken(refreshToken, JWT_REFRESH_SECRET)).user_id;
+				createJWTAuthToken(c, { user_id: user_id });
 			} catch (_error2) {
 				console.log("_error1\n");
 				console.log(_error1);
@@ -60,92 +58,139 @@ const JWTAuthController = createMiddleware<{
 		}
 		const user = db.getUserById(user_id);
 		if ((user == undefined)) {
-			c.header("Authorization", "");
-			deleteCookie(c, "refreshToken");
+			removeJWTTokens(c);
 			return c.json({ message: "User does not exist" }, 401);
 		}
 		if ((user instanceof Error)) {
 			console.log(user);
-			return c.json({}, 500);
-		}
-		if (!accessToken) {
-			const iat = Math.floor(Date.now() / 1000);
-			const a_exp = JWT_ACCESS_EXPIRY + iat;
-			const accessToken = await sign(
-				{
-					user_id: user_id,
-					iat: iat,
-					exp: a_exp,
-				},
-				JWT_SECRET,
-			);
-			c.header("Authorization", accessToken);
+			return c.json({ message: "Serverside error" }, 500);
 		}
 		console.log("JWT user_id: " + user_id);
 		c.set("user_id", user_id);
-		/*
-    try {
-      const decoded = await verify(
-        accessToken!,
-        JWT_SECRET,
-      ) as jwt_custom_payload;
-      // console.log("JWT auth from : " + JSON.stringify(decoded as jwt_payload));
-      const user = db.getUserById(decoded.user_id);
-      if ((user == undefined)) {
-        c.header("Authorization", "");
-        deleteCookie(c, "refreshToken");
-        return c.json({ message: "User does not exist" }, 401);
-      }
-      if ((user instanceof Error)) {
-        console.log(user);
-        return c.json({}, 500);
-      }
-      // c.header("user_id", (decoded as jwt_custom_payload).user_id);
-    } catch (_error1) {
-      if (!refreshToken) {
-        return c.json({ message: "Unauthorized" }, 401);
-      }
-
-      try {
-        const decoded = await verify(refreshToken, JWT_REFRESH_SECRET);
-        const iat = Math.floor(Date.now() / 1000);
-        const a_exp = JWT_ACCESS_EXPIRY + iat;
-        const accessToken = await sign(
-          {
-            user_id: decoded.user_id,
-            iat: iat,
-            exp: a_exp,
-          },
-          JWT_SECRET,
-        );
-        // setCookie(c, 'refreshToken', refreshToken, { httpOnly: true, sameSite: 'strict' });
-        c.header("Authorization", accessToken);
-        //c.header('user_id', (decoded as jwt_payload).user_id);
-      } catch (_error2) {
-        console.log("_error1\n");
-        console.log(_error1);
-        console.log("_error2\n");
-        console.log(_error2);
-        return c.json({ message: "Invalid Token." }, 400);
-      }
-    }
-      */
 		await next();
 	},
 );
+function UserValidator(
+	allowed_actions: Actions[],
+	allowed_ownDepartment_actions: Actions[],
+) {
+	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
+		const user_id = UUIDScheme.safeParse(value);
+		if (user_id.success) {
+			if (user_id.data === c.var.user_id) {
+				return user_id.data;
+			}
+			const user = db.getUserById(user_id.data);
+			if (user !== undefined) {
+				const acting_user_actions = db.getUserActionsByUserId(c.var.user_id);
+				const acting_user_depts = db.getDepartmentsOfUser(c.var.user_id);
+				const user_depts = db.getDepartmentsOfUser(user_id.data);
+				if (
+					acting_user_actions instanceof Error || acting_user_depts instanceof Error ||
+					user_depts instanceof Error
+				) {
+					console.log(acting_user_actions);
+					console.log(acting_user_depts);
+					console.log(user_depts);
+					return c.json({ message: "Serverside error" }, 500);
+				}
+				if (
+					acting_user_actions.map((a) => a.actions).filter((value) =>
+							allowed_actions.includes(value)
+						).length > 0 ||
+					(acting_user_actions.map((a) => a.actions).filter((value) =>
+								allowed_ownDepartment_actions.includes(value)
+							).length > 0 &&
+						acting_user_depts.map((d) => d.department_id).filter((value) =>
+							user_depts.map((d) => d.department_id).includes(value)
+						))
+				) {
+					return user_id.data;
+				}
+			}
+		}
+		return c.json({ message: "Not a valid User ID" }, 400);
+	});
+}
+function TicketValidator() {
+	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
+		const ticket_id = UUIDScheme.safeParse(value);
+		if (ticket_id.success) {
+			return ticket_id.data;
+		}
+		return c.json({ message: "Not a valid Ticket ID" }, 400);
+	});
+}
+function DepartmentValidator() {
+	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
+		const ticket_id = UUIDScheme.safeParse(value);
+		if (ticket_id.success) {
+			return ticket_id.data;
+		}
+		return c.json({ message: "Not a valid Ticket ID" }, 400);
+	});
+}
+// const ActionAuth = createMiddleware<{
+// 	Variables: {
+// 		allowed_actions: Actions[];
+// 	};
+// }>(
+// 	async (c: Context, next: Next) => {
+// 		// TODO: proper auth checking
+// 		// if (!c.var.user_id == undefined) {
+// 		// const user = db.getA(user_id);
+// 		// return c.json({ message: "Forbidden" }, 403);
+// 		await next();
+// 		// }
+// 	},
+// );
 
-const ActionAuthPrep = createMiddleware<{
-	Variables: {
-		allowed_actions: Actions[];
+async function createJWTAuthToken(c: Context, tokenPayload: JWTExtraPayload) {
+	const iat = Math.floor(Date.now() / 1000);
+	const a_exp = JWT_ACCESS_EXPIRY + iat;
+	const accessToken = await sign(
+		{
+			...tokenPayload,
+			iat: iat,
+			exp: a_exp,
+		},
+		JWT_SECRET,
+	);
+	c.header("Authorization", accessToken);
+}
+async function createJWTRefreshToken(c: Context, tokenPayload: JWTExtraPayload) {
+	const iat = Math.floor(Date.now() / 1000);
+	const r_exp: number = JWT_REFRESH_EXPIRY + iat;
+	const jwtToken = {
+		...tokenPayload,
+		iat: iat,
+		exp: r_exp,
 	};
-}>(
-	async (c: Context, next: Next) => {
-		// TODO: proper auth checking
-		// const user = db.getRoleOfUser(user_id);
-		// if(c.var.user_id == )
-		// return c.json({ message: "Forbidden" }, 403);
-		await next();
-	},
-);
+	const refreshToken = await sign(jwtToken, JWT_REFRESH_SECRET);
+	setCookie(c, "refreshToken", refreshToken, { maxAge: JWT_REFRESH_EXPIRY });
+}
+function removeJWTTokens(c: Context) {
+	c.header("Authorization", "");
+	deleteCookie(c, "refreshToken");
+}
 
-export { ActionAuthPrep, JWTAuthController };
+function verifyJWTToken(token: string | undefined, secret: string): Promise<JWTPayload> {
+	return new Promise((resolve, reject) => {
+		if (token) {
+			verify(token, secret).then((decoded) => resolve(decoded as JWTPayload)).catch((error) =>
+				reject(error)
+			);
+		}
+		reject("token missing");
+	});
+}
+
+export {
+	// ActionAuth,
+	createJWTAuthToken,
+	createJWTRefreshToken,
+	JWTAuthController,
+	removeJWTTokens,
+	TicketValidator,
+	UserValidator,
+};

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { JWTAuthController } from "../controller/AuthenticationController.ts";
 import { decode, sign } from "hono/jwt";
 import { setCookie } from "hono/cookie";
-import { jwt_custom_payload } from "@backend/model/api_types.ts";
+import { JWTExtraPayload } from "@backend/model/serverside_types.ts";
 import { getCookie } from "hono/cookie";
 import db from "@backend/service/database.ts";
 // import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
@@ -60,7 +60,7 @@ test.get("/logged_in", JWTAuthController, async (c) => {
 	console.log(auth_head);
 	const decoded = await decode(auth_head!);
 	return c.text(
-		"You are logged in as: " + (decoded.payload as jwt_custom_payload).user_id,
+		"You are logged in as: " + (decoded.payload as JWTExtraPayload).user_id,
 	);
 });
 
