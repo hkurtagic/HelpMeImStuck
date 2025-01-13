@@ -11,7 +11,6 @@ import { AlgorithmName, hash, verify as crypto_verify } from "jsr:@stdext/crypto
 import db from "@backend/service/database.ts";
 import { Actions, LoginUser, NewUser, User } from "@shared/shared_types.ts";
 import { NewUserScheme, UserScheme } from "@shared/shared_schemas.ts";
-import z from "zod";
 
 const user = new Hono();
 

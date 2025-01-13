@@ -3,8 +3,7 @@ import { JWTAuthController, TicketValidator } from "../controller/Authentication
 import { Department, NewTicket, Ticket, TicketStatus } from "@shared/shared_types.ts";
 // import { dbAction, dbDepartments, dbRole, dbUser } from "@backend/model/dbtypes.ts";
 import db from "@backend/service/database.ts";
-import DatabaseResultController from "@backend/controller/DatabaseController.ts";
-import { NewTicketScheme, UUIDScheme } from "@shared/shared_schemas.ts";
+import { NewTicketScheme } from "@shared/shared_schemas.ts";
 
 import { testTicket1History } from "../../tests/backend/test_data.ts";
 
@@ -13,10 +12,6 @@ const tickets = new Hono();
 // get tickets of user
 tickets.get("/", JWTAuthController, (c) => {
 	const tickets = db.getTicketsOfUser(c.var.user_id);
-	DatabaseResultController(c, tickets, tickets, {
-		message: "Servererror with provided User ID",
-		stauscode: 500,
-	});
 	if ((tickets instanceof Error)) {
 		console.log(tickets);
 		return c.json({ message: "Servererror with provided User ID" }, 500);
