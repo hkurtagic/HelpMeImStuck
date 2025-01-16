@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { EventType as event_type, TicketStatus as ticket_status } from "./shared_types.ts";
 
-const TicketStatus = z.nativeEnum(ticket_status);
+const zTicketStatus = z.nativeEnum(ticket_status);
 const EventType = z.nativeEnum(event_type);
 
 // const UUIDScheme = z.string().refine(
@@ -66,7 +66,7 @@ const NewTicketScheme = z.object({
 
 const TicketScheme = NewTicketScheme.extend({
 	ticket_id: UUID,
-	ticket_status: TicketStatus,
+	ticket_status: zTicketStatus,
 	tags: TagScheme.array().optional(),
 });
 
@@ -79,7 +79,7 @@ const BaseTicketEventScheme = z.object({
 
 const TicketEvent_StatusChangeScheme = BaseTicketEventScheme.extend({
 	event_type: z.literal(EventType.enum.statusChange),
-	new_status: TicketStatus,
+	new_status: zTicketStatus,
 });
 const TicketEvent_DepartmentAddedScheme = BaseTicketEventScheme.extend({
 	event_type: z.literal(EventType.enum.departmentAdded),
@@ -113,7 +113,7 @@ const TicketHistoryScheme = z.object({
 
 export {
 	DepartmentScheme,
-	ID as IDScheme,
+	ID,
 	LoginUserScheme,
 	NewDepartmentScheme,
 	NewRoleScheme,
@@ -126,4 +126,5 @@ export {
 	TicketScheme,
 	UserScheme,
 	UUID,
+	zTicketStatus,
 };

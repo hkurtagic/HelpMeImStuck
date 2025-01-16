@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
+import { AlgorithmName, hash, verify as crypto_verify } from "jsr:@stdext/crypto/hash";
 import {
 	createJWTAuthToken,
 	createJWTRefreshToken,
 	JWTAuthController,
 	removeJWTTokens,
-	UserValidator,
 } from "@backend/controller/AuthenticationController.ts";
-import { AlgorithmName, hash, verify as crypto_verify } from "jsr:@stdext/crypto/hash";
+import { UserValidator } from "@backend/controller/ValidationController.ts";
 import db from "@backend/service/database.ts";
 import { Actions, LoginUser, NewUser, User } from "@shared/shared_types.ts";
 import { NewUserScheme, UserScheme } from "@shared/shared_schemas.ts";

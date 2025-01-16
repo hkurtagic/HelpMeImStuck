@@ -3,11 +3,8 @@ import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Next } from "hono/types";
 import { createMiddleware } from "hono/factory";
-import { ValidationFunction, validator } from "hono/validator";
 import { JWTExtraPayload, JWTPayload } from "@backend/model/serverside_types.ts";
 import db from "@backend/service/database.ts";
-import { Actions } from "@shared/shared_types.ts";
-import { UUID } from "@shared/shared_schemas.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
@@ -46,12 +43,12 @@ const JWTAuthController = createMiddleware<{
 				return c.json({ message: "Unauthorized" }, 401);
 			}
 			try {
-				user_id = (await verifyJWTToken(refreshToken, JWT_REFRESH_SECRET)).user_id;
+				user_id = (await verifyJWTToken(refreshToken!, JWT_REFRESH_SECRET)).user_id;
 				createJWTAuthToken(c, { user_id: user_id });
 			} catch (_error2) {
-				console.log("_error1\n");
+				console.log("access token verification error: ");
 				console.log(_error1);
-				console.log("_error2\n");
+				console.log("refresh token verification error:");
 				console.log(_error2);
 				return c.json({ message: "Invalid Token." }, 400);
 			}
@@ -70,66 +67,7 @@ const JWTAuthController = createMiddleware<{
 		await next();
 	},
 );
-function UserValidator(
-	allowed_actions: Actions[],
-	allowed_ownDepartment_actions: Actions[],
-) {
-	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const user_id = UUID.safeParse(value);
-		if (user_id.success) {
-			if (user_id.data === c.var.user_id) {
-				return user_id.data;
-			}
-			const user = db.getUserById(user_id.data);
-			if (user !== undefined) {
-				const acting_user_actions = db.getUserActionsByUserId(c.var.user_id);
-				const acting_user_depts = db.getDepartmentsOfUser(c.var.user_id);
-				const user_depts = db.getDepartmentsOfUser(user_id.data);
-				if (
-					acting_user_actions instanceof Error || acting_user_depts instanceof Error ||
-					user_depts instanceof Error
-				) {
-					console.log(acting_user_actions);
-					console.log(acting_user_depts);
-					console.log(user_depts);
-					return c.json({ message: "Serverside error" }, 500);
-				}
-				if (
-					acting_user_actions.map((a) => a.actions).filter((value) =>
-							allowed_actions.includes(value)
-						).length > 0 ||
-					(acting_user_actions.map((a) => a.actions).filter((value) =>
-								allowed_ownDepartment_actions.includes(value)
-							).length > 0 &&
-						acting_user_depts.map((d) => d.department_id).filter((value) =>
-							user_depts.map((d) => d.department_id).includes(value)
-						))
-				) {
-					return user_id.data;
-				}
-			}
-		}
-		return c.json({ message: "Not a valid User ID" }, 400);
-	});
-}
-function TicketValidator() {
-	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = UUID.safeParse(value);
-		if (ticket_id.success) {
-			return ticket_id.data;
-		}
-		return c.json({ message: "Not a valid Ticket ID" }, 400);
-	});
-}
-function DepartmentValidator() {
-	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = UUID.safeParse(value);
-		if (ticket_id.success) {
-			return ticket_id.data;
-		}
-		return c.json({ message: "Not a valid Ticket ID" }, 400);
-	});
-}
+
 // const ActionAuth = createMiddleware<{
 // 	Variables: {
 // 		allowed_actions: Actions[];
@@ -177,9 +115,14 @@ function removeJWTTokens(c: Context) {
 function verifyJWTToken(token: string | undefined, secret: string): Promise<JWTPayload> {
 	return new Promise((resolve, reject) => {
 		if (token) {
-			verify(token, secret).then((decoded) => resolve(decoded as JWTPayload)).catch((error) =>
-				reject(error)
-			);
+			return verify(token, secret)
+				.then((decoded) => {
+					console.log("verified token" + JSON.stringify(decoded));
+					resolve(decoded as JWTPayload);
+				})
+				.catch((error) => {
+					reject(error);
+				});
 		}
 		reject("token missing");
 	});
@@ -191,6 +134,4 @@ export {
 	createJWTRefreshToken,
 	JWTAuthController,
 	removeJWTTokens,
-	TicketValidator,
-	UserValidator,
 };
