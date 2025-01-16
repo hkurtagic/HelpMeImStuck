@@ -3,7 +3,7 @@ import { validator } from "hono/validator";
 import { JWTAuthController } from "../controller/AuthenticationController.ts";
 import { Department, NewDepartment } from "@shared/shared_types.ts";
 import db from "@backend/service/database.ts";
-import { DepartmentScheme, IDScheme, NewDepartmentScheme } from "@shared/shared_schemas.ts";
+import { DepartmentScheme, ID, NewDepartmentScheme } from "@shared/shared_schemas.ts";
 
 const department = new Hono();
 
@@ -34,10 +34,10 @@ department.post(
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Object" }, 400);
 		}
-		return parsed.data;
+		return parsed.data as NewDepartment;
 	}),
 	async (c) => {
-		const req = await c.req.json() as NewDepartment;
+		const req = await c.req.valid("json");
 		const depts = db.addDepartment(req.department_name, req.department_description);
 		if (depts instanceof Error) {
 			console.log(depts);
@@ -72,7 +72,7 @@ department.put(
 );
 // delete
 department.delete("/:department_id", JWTAuthController, (c) => {
-	const d_validation = IDScheme.safeParse(c.req.param());
+	const d_validation = ID.safeParse(c.req.param());
 	if (!d_validation.success) {
 		return c.json({ message: "Not a valid Department ID" }, 400);
 	}
