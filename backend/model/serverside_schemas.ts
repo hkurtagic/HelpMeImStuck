@@ -1,16 +1,17 @@
 import { z } from "zod";
-import { Actions as AllActions, TicketStatus } from "@shared/shared_types.ts";
-import { RoleScheme, UserScheme, UUID } from "@shared/shared_schemas.ts";
+import { Actions as AllActions } from "@shared/shared_types.ts";
+import { RoleScheme, UserScheme, UUID, zTicketStatus } from "@shared/shared_schemas.ts";
+import { DTOStatusSchema } from "@backend/model/dto_schemas.ts";
+
 const Action = z.nativeEnum(AllActions);
-const stat = z.nativeEnum(TicketStatus);
 
-// const StatusSchema = z.preprocess(unknownObjLayout =>{
-
-// }).object({
-// 	status_id: z.number().nonnegative(),
-// 	status_name: stat
-// }).setKey((data) => {
-// 	if (data.pk_status_id) {}})
+const StatusSchema = z.union([
+	DTOStatusSchema,
+	z.object({
+		status_id: z.number().nonnegative(),
+		status_name: zTicketStatus,
+	}),
+]);
 
 const AllowedActions = z.object({
 	actions: Action.array(),
@@ -60,6 +61,8 @@ const JWTPayload = JWTExtraPayload.extend({
 	exp: z.number(),
 });
 
+type Status = z.output<typeof StatusSchema>;
+
 export {
 	AdminActionPreset,
 	JWTExtraPayload,
@@ -67,5 +70,6 @@ export {
 	RequesterActionPreset,
 	ServersideRoleSchema,
 	ServersideUserSchema,
+	StatusSchema,
 	SupporterActionPreset,
 };

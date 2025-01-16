@@ -1,9 +1,10 @@
-import { Hono } from "hono";
-import { JWTAuthController, TicketValidator } from "../controller/AuthenticationController.ts";
+import { Context, Hono } from "hono";
+import { ValidationFunction, validator } from "hono/validator";
+import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
 import { Department, NewTicket, Ticket, TicketStatus } from "@shared/shared_types.ts";
-// import { dbAction, dbDepartments, dbRole, dbUser } from "@backend/model/dbtypes.ts";
+import { TicketIDValidator, TicketValidator } from "@backend/controller/ValidationController.ts";
 import db from "@backend/service/database.ts";
-import { NewTicketScheme } from "@shared/shared_schemas.ts";
+import { ID, NewTicketScheme, TicketScheme } from "@shared/shared_schemas.ts";
 
 import { testTicket1History } from "../../tests/backend/test_data.ts";
 
@@ -20,6 +21,10 @@ tickets.get("/", JWTAuthController, (c) => {
 });
 // get tickets of department for supporter
 tickets.get("/:department_id", JWTAuthController, (c) => {
+	const d_id_validation = ID.safeParse(c.req.param());
+	if (!d_id_validation.success) {
+		return c.json({ message: "Not a valid department" }, 400);
+	}
 	const user_dept = db.getDepartmentsOfUser(c.var.user_id);
 	if ((user_dept instanceof Error)) {
 		console.log(user_dept);
@@ -95,16 +100,28 @@ tickets.post("/", JWTAuthController, async (c) => {
 	return c.json(ticket_id, 200);
 });
 // get single ticket details and history
-tickets.get("/:ticketid", JWTAuthController, TicketValidator, async (c) => {
+tickets.get("/:ticketid", JWTAuthController, TicketIDValidator, async (c) => {
 	return c.json(testTicket1History, 200);
 });
-// update ticket history
-tickets.put("/:ticketid", JWTAuthController, TicketValidator, async (c) => {
-	return c.json({ message: "Successfully event added to ticket" }, 200);
-});
+// add event to ticket history
+tickets.put(
+	"/:ticketid",
+	JWTAuthController,
+	TicketIDValidator,
+	validator("json", (value: ValidationFunction<string, string>, c: Context) => {
+		const parsed = TicketScheme.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Ticket object!" }, 400);
+		}
+		return parsed.data;
+	}),
+	async (c) => {
+		return c.json({ message: "Successfully event added to ticket" }, 200);
+	},
+);
 
 // pull back ticket
-tickets.delete("/:ticketid", JWTAuthController, TicketValidator, async (c) => {
+tickets.delete("/:ticketid", JWTAuthController, TicketIDValidator, async (c) => {
 	// check if not already accepted by checking event count and if actor is author
 	return c.json({ message: "Successfully deleted ticket" }, 200);
 });
