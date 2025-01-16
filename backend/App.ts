@@ -3,12 +3,11 @@ import { logger } from "hono/logger";
 // import { cors } from "hono/cors";
 import user from "@backend/route/User.ts";
 import test from "@backend/route/Test.ts";
-import database from "@backend/service/database.ts";
+// import database from "@backend/service/database.ts";
 import department from "@backend/route/Department.ts";
 import tickets from "./route/Ticket.ts";
 
-const app = new Hono().basePath("/api");
-database.initDB();
+const app: Hono = new Hono().basePath("/api");
 
 /* Custom logger https://hono.dev/docs/middleware/builtin/logger */
 app.use(logger());
