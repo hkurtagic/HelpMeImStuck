@@ -29,7 +29,7 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<"div
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ username, password }),
+				body: JSON.stringify({ user_name: username, password }),
 			});
 
 			if (!response.ok) {
@@ -38,6 +38,10 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<"div
 
 			const data = await response.json() as User;
 			updateUser(data);
+			const auth = response.headers.get("Authorization");
+			if (auth) {
+				window.sessionStorage.setItem("Authorization", auth);
+			}
 			// console.log("login data" + JSON.stringify(data));
 			navigate(dashboardPath);
 		} catch (err) {
