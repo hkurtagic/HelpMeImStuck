@@ -8,6 +8,7 @@ import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/r
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import { Department } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
+import HistoryPage from "@/pages/HistoryPage.tsx";
 
 export default function RequesterDashboard() {
 	const [view, setView] = useState<"overview" | "create">("overview");
@@ -215,10 +216,12 @@ export default function RequesterDashboard() {
 				}`}
 			>
 				{view === "overview" && (
-					<RequesterTicketOverview
+/*					<RequesterTicketOverview
 						setView={setView}
 						selectedDepartment={selectedDepartment}
-					/>
+					/>*/
+
+					<HistoryPage/>
 				)}
 				{view === "create" && <CreateTicketForm setView={setView} />}
 				{view === "statistics" && <StatisticsPage />}
