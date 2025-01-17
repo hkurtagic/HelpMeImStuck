@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import TicketCard from "@/components/Ticket.tsx";
-import { EP_ticket } from "@/route_helper/routes_helper.tsx";
+import {appendAuthHeader, EP_ticket} from "@/route_helper/routes_helper.tsx";
 import { Department, Ticket, TicketStatus } from "@shared/shared_types";
 
 interface TicketOverviewProps {
@@ -22,9 +22,9 @@ export default function RequesterTicketOverview(
 			try {
 				const response = await fetch(EP_ticket, {
 					method: "GET",
-					headers: {
+					headers: appendAuthHeader({
 						"Content-Type": "application/json",
-					},
+					}),
 				});
 
 				if (!response.ok) throw new Error("Failed to fetch tickets");
@@ -86,10 +86,11 @@ export default function RequesterTicketOverview(
 								<TicketCard
 									key={ticket.ticket_id}
 									ticket={ticket}
-									showButton={true}
 									showHistoryIcon={true}
 								 	setView={setView}
-									updateTicketStatus={updateTicketStatus}/>
+									updateTicketStatus={updateTicketStatus}
+									role={"requester"}
+								/>
 							))
 						)
 						: <p>At the moment you have no open tickets.</p>}
@@ -108,11 +109,10 @@ export default function RequesterTicketOverview(
 								<TicketCard
 									key={ticket.ticket_id}
 									ticket={ticket}
-									showButton={true}
 									showHistoryIcon={true}
 									setView={setView}
 									updateTicketStatus={updateTicketStatus}
-								/>
+								 role={"requester"}/>
 							))
 						)
 						: <p>There are no tickets in progress.</p>}
@@ -131,14 +131,14 @@ export default function RequesterTicketOverview(
 								<TicketCard
 									key={ticket.ticket_id}
 									ticket={ticket}
-									showButton={true}
 									showHistoryIcon={true}
 									setView={setView}
 									updateTicketStatus={updateTicketStatus}
-								/>
+								 	role={"requester"}/>
 							))
 						)
 						: <p>There are no closed tickets.</p>}
+
 				</CardContent>
 			</Card>
 		</div>

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { dashboardPath, EP_login } from "@/route_helper/routes_helper.tsx";
+import {appendAuthHeader, dashboardPath, EP_login} from "@/route_helper/routes_helper.tsx";
 import { useNavigate } from "react-router-dom";
 import { User } from "@shared/shared_types";
 import { UserContext } from "@/components/UserContext";
@@ -26,11 +26,11 @@ export function LoginForm({ className, ...props }: ComponentPropsWithoutRef<"div
 			const response = await fetch(EP_login, {
 				method: "POST",
 				credentials: "include",
-				headers: {
+				headers: appendAuthHeader({
 					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ user_name: username, password }),
-			});
+				}),
+				body: JSON.stringify({ user_name: username, password })
+			})
 
 			if (!response.ok) {
 				throw new Error("Login failed. Please try again");

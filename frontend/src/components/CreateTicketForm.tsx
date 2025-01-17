@@ -34,14 +34,21 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 
 	async function fetchDepartments() {
 		try {
-			const response = await fetch(EP_department);
+			const response = await fetch(EP_department, {
+				method: "GET",
+				credentials: "include",
+				headers: appendAuthHeader(),
+			});
+
 			if (!response.ok) throw new Error("Failed to fetch departments");
+
 			const data = await response.json();
 			setDepartments(data); // Erwartet ein Array von Objekten {id, name}
 		} catch (error) {
 			console.error("Error fetching departments:", error);
 		}
 	}
+
 
 	const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const selectedDept = departments.find((d) => d.department_name == e.target.value) || null;
@@ -119,6 +126,8 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 			setIsSubmitting(false);
 		}
 	};
+
+
 
 	return (
 		<div className="flex items-center justify-center min-h-screen">
