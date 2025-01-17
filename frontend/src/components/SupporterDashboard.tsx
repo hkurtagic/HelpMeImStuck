@@ -76,6 +76,41 @@ export default function RequesterDashboard() {
             {isOpen && (
                 <div className="md:hidden fixed w-3/4 left-0 top-0 h-screen bg-white text-black z-40 overflow-auto rounded-r-3xl">
                     <div className="mt-16 p-4">
+
+                        {/* Dropdown für Departments */}
+                        {isOpen && (
+                            <div className="p-4">
+                                <label
+                                    htmlFor="department-select"
+                                    className="block text-black font-medium mb-2"
+                                >
+                                    Select your Department
+                                </label>
+                                <select
+                                    id="department-select"
+                                    value={selectedDepartment?.department_name || ""}
+                                    onChange={(e) =>
+                                        setSelectedDepartment(
+                                            departments.find((d) => d.department_name == e.target.value) ||
+                                            null,
+                                        )
+                                    }
+                                    className="w-full p-2 border rounded-md text-black"
+                                >
+                                    <option value="" disabled>
+                                        Choose a department
+                                    </option>
+                                    {departments.map((dept) => (
+                                        <option key={dept.department_id} value={dept.department_name}>
+                                            {dept.department_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+
+
                         <RequesterSidebarItem icon={Ticket} label="Home" isOpen={true} />
                         <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={true} />
                         <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={true} onClick={handleLogout} />
