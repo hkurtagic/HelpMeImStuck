@@ -1,5 +1,5 @@
 import { useState } from "react";
-import SmActivityFeed from "@/components/ActivityFeed.tsx";
+import HistoryFeed from "@/components/HistoryFeed.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
@@ -7,8 +7,8 @@ export default function HistoryPage() {
     const [inputText, setInputText] = useState("");
 
     return (
-        <div className="border border-red-700 p-4">
-            <SmActivityFeed />
+        <div className="p-4">
+            <HistoryFeed/>
 
             {/* Textfeld für Benutzereingaben */}
             <div className="mt-10 flex flex-row">
