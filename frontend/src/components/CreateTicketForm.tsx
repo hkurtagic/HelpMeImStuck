@@ -81,8 +81,8 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 						department_name: selectedDepartment.department_name,
 					} as Department,
 				],
-				title: title,
-				description: description,
+				ticket_title: title,
+				ticket_description: description,
 				status: TicketStatus.OPEN,
 			};
 			// const formData = new FormData();
