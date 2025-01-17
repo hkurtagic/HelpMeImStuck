@@ -3,6 +3,7 @@ const hostPath = "${window.location.origin}";
 const rootPath = "/";
 const dashboardPath = "/dashboard";
 const ticketHistoryPath = "/ticket_history";
+const statisticsPath = "/statistics";
 
 // endpoints
 const EP_department = "/api/department";
@@ -27,6 +28,7 @@ export {
 	hostPath,
 	rootPath,
 	ticketHistoryPath,
+	statisticsPath
 };
 
 // helper functions

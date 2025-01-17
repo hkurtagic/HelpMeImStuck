@@ -1,6 +1,6 @@
 import SmActivityFeed from "@/components/ActivityFeed.tsx";
 
-export default function ActivityPage() {
+export default function HistoryPage() {
     return (
         <div>
             <SmActivityFeed/>
