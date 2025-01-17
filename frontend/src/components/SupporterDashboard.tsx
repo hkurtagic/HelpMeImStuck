@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import RequesterSidebarItem from "./RequesterSidebarItem.tsx";
 import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket } from "lucide-react";
-import RequesterTicketOverview from "@/components/RequesterTicketOverview.tsx";
 import { useNavigate } from "react-router-dom";
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
-import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/routes_helper.tsx";
+import {appendAuthHeader, EP_department, EP_logout} from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import { Department } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
@@ -43,7 +42,7 @@ export default function RequesterDashboard() {
 
     // get departments from backend
     useEffect(() => {
-        fetch(EP_own_department, {
+        fetch(EP_department, {
             method: "GET",
             headers: appendAuthHeader(),
         })
@@ -108,7 +107,7 @@ export default function RequesterDashboard() {
                 {isOpen && (
                     <div className="p-4">
                         <label htmlFor="department-select" className="block text-black font-medium mb-2">
-                            Select your Department
+                            Select a Department
                         </label>
                         <select
                             id="department-select"
@@ -121,7 +120,7 @@ export default function RequesterDashboard() {
                             className="w-full p-2 border rounded-md text-black"
                         >
                             <option value="" disabled>
-                                Choose a department
+                                Select a department
                             </option>
                             {departments.map((dept) => (
                                 <option key={dept.department_id} value={dept.department_name}>
