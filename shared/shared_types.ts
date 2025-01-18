@@ -1,17 +1,17 @@
 import { z } from "zod";
 import {
-	DepartmentScheme,
-	LoginUserScheme,
-	NewDepartmentScheme,
-	NewRoleScheme,
-	NewTicketScheme,
-	NewUserScheme,
-	RoleScheme,
-	TagScheme,
-	TicketEventScheme,
-	TicketHistoryScheme,
-	TicketScheme,
-	UserScheme,
+	S_Department,
+	S_DepartmentCreate,
+	S_Role,
+	S_RoleCreate,
+	S_Tag,
+	S_Ticket,
+	S_TicketCreate,
+	S_TicketEvent,
+	S_TicketHistory,
+	S_User,
+	S_UserCreate,
+	S_UserLogin,
 } from "./shared_schemas.ts";
 
 enum Actions {
@@ -57,18 +57,18 @@ enum TicketStatus {
 	CLOSED,
 }
 
-export type NewDepartment = z.infer<typeof NewDepartmentScheme>;
-export type Department = z.infer<typeof DepartmentScheme>;
-export type NewRole = z.infer<typeof NewRoleScheme>;
-export type Role = z.infer<typeof RoleScheme>;
-export type LoginUser = z.infer<typeof LoginUserScheme>;
-export type NewUser = z.infer<typeof NewUserScheme>;
-export type User = z.infer<typeof UserScheme>;
-export type NewTicket = z.infer<typeof NewTicketScheme>;
-export type Ticket = z.infer<typeof TicketScheme>;
-export type TicketEvent = z.infer<typeof TicketEventScheme>;
-export type TicketHistory = z.infer<typeof TicketHistoryScheme>;
-export type Tag = z.infer<typeof TagScheme>;
+export type DepartmentCreate = z.infer<typeof S_DepartmentCreate>;
+export type Department = z.infer<typeof S_Department>;
+export type RoleCreate = z.infer<typeof S_RoleCreate>;
+export type Role = z.infer<typeof S_Role>;
+export type UserLogin = z.infer<typeof S_UserLogin>;
+export type UserCreate = z.infer<typeof S_UserCreate>;
+export type User = z.infer<typeof S_User>;
+export type TicketCreate = z.infer<typeof S_TicketCreate>;
+export type Ticket = z.infer<typeof S_Ticket>;
+export type TicketEvent = z.infer<typeof S_TicketEvent>;
+export type TicketHistory = z.infer<typeof S_TicketHistory>;
+export type Tag = z.infer<typeof S_Tag>;
 
 // interface LoginRequestBody {
 // 	username: string;

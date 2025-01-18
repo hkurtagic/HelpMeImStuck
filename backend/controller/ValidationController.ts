@@ -2,7 +2,7 @@ import { Context } from "hono";
 import { ValidationFunction, validator } from "hono/validator";
 import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
-import { DepartmentScheme, ID, TicketScheme, UUID } from "@shared/shared_schemas.ts";
+import { ID, S_Department, S_Ticket, UUID } from "@shared/shared_schemas.ts";
 
 function UserValidator(
 	allowed_actions: Actions[],
@@ -57,7 +57,7 @@ function TicketIDValidator() {
 }
 function TicketValidator() {
 	return validator("json", (value: ValidationFunction<string, string>, c: Context) => {
-		const parsed = TicketScheme.safeParse(value);
+		const parsed = S_Ticket.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Ticket object!" }, 400);
 		}
@@ -75,7 +75,7 @@ function DepartmentIDValidator() {
 }
 function DepartmentValidator() {
 	return validator("json", (value: ValidationFunction<string, string>, c: Context) => {
-		const parsed = DepartmentScheme.safeParse(value);
+		const parsed = S_Department.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Department object!" }, 400);
 		}

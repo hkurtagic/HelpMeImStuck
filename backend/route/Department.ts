@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { JWTAuthController } from "../controller/AuthenticationController.ts";
-import { Department, NewDepartment } from "@shared/shared_types.ts";
+import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
+import { Department, DepartmentCreate } from "@shared/shared_types.ts";
 import db from "@backend/service/database.ts";
-import { DepartmentScheme, ID, NewDepartmentScheme } from "@shared/shared_schemas.ts";
+import { ID, S_Department, S_DepartmentCreate } from "@shared/shared_schemas.ts";
 
 const department = new Hono();
 
@@ -30,11 +30,11 @@ department.post(
 	"/",
 	JWTAuthController,
 	validator("json", (value, c) => {
-		const parsed = NewDepartmentScheme.safeParse(value);
+		const parsed = S_DepartmentCreate.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Object" }, 400);
 		}
-		return parsed.data as NewDepartment;
+		return parsed.data as DepartmentCreate;
 	}),
 	async (c) => {
 		const req = await c.req.valid("json");
@@ -51,7 +51,7 @@ department.put(
 	"/:department_id",
 	JWTAuthController,
 	validator("json", (value, c) => {
-		const parsed = DepartmentScheme.safeParse(value);
+		const parsed = S_Department.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Object" }, 400);
 		}

@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { EventType as event_type, TicketStatus as ticket_status } from "./shared_types.ts";
+import { Actions, EventType, TicketStatus } from "./shared_types.ts";
 
-const zTicketStatus = z.nativeEnum(ticket_status);
-const EventType = z.nativeEnum(event_type);
+const zTicketStatus = z.nativeEnum(TicketStatus);
+const zEventType = z.nativeEnum(EventType);
+const zAction = z.nativeEnum(Actions);
 
 // const UUIDScheme = z.string().refine(
 // 	(value) =>
@@ -14,117 +15,120 @@ const EventType = z.nativeEnum(event_type);
 const UUID = z.string().uuid("ID is not a valid UUID");
 const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
 
-const NewDepartmentScheme = z.object({
+const S_DepartmentCreate = z.object({
 	department_name: z.string(),
 	department_description: z.string().optional(),
 });
 
-const DepartmentScheme = NewDepartmentScheme.extend({
+const S_Department = S_DepartmentCreate.extend({
 	department_id: ID,
 });
 
-const NewRoleScheme = z.object({
+const S_RoleCreate = z.object({
 	role_name: z.string(),
 	role_description: z.string().optional(),
-	department: DepartmentScheme,
+	department: S_Department,
+	actions: zAction.array(),
 });
 
-const RoleScheme = NewRoleScheme.extend({
+const S_Role = S_RoleCreate.extend({
 	role_id: ID,
 });
 
-const LoginUserScheme = z.object({
+const S_UserLogin = z.object({
 	user_name: z.string(),
 	password: z.string(),
 });
 
-const NewUserScheme = LoginUserScheme.extend({
-	roles: RoleScheme.array(),
+const S_UserCreate = S_UserLogin.extend({
+	roles: S_Role.array(),
+	actions: zAction.array().optional(),
 });
 
-const UserScheme = NewUserScheme.extend({
+const S_User = S_UserCreate.extend({
 	user_id: UUID,
 }).omit({
 	password: true,
 });
 
-const TagScheme = z.object({
+const S_Tag = z.object({
 	tag_name: z.string(),
 	abbreviation: z.string(),
 	description: z.string().optional(),
-	department: DepartmentScheme,
+	department: S_Department,
 	style: z.string().optional(),
 });
 
-const NewTicketScheme = z.object({
+const S_TicketCreate = z.object({
 	author: z.string(),
-	departments: DepartmentScheme.array(),
+	departments: S_Department.array(),
 	ticket_title: z.string(),
 	ticket_description: z.string(),
 	images: z.string().array().optional(),
 });
 
-const TicketScheme = NewTicketScheme.extend({
+const S_Ticket = S_TicketCreate.extend({
 	ticket_id: UUID,
 	ticket_status: zTicketStatus,
-	tags: TagScheme.array().optional(),
+	tags: S_Tag.array().optional(),
 });
 
-const BaseTicketEventScheme = z.object({
+const S_TicketEventBase = z.object({
 	event_id: UUID,
 	ticket_id: z.string(),
 	author: z.string(),
 	created_at: z.string().datetime({ offset: true }),
 });
 
-const TicketEvent_StatusChangeScheme = BaseTicketEventScheme.extend({
-	event_type: z.literal(EventType.enum.statusChange),
+const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.statusChange),
 	new_status: zTicketStatus,
 });
-const TicketEvent_DepartmentAddedScheme = BaseTicketEventScheme.extend({
-	event_type: z.literal(EventType.enum.departmentAdded),
-	department: DepartmentScheme,
+const S_TicketEvent_DepartmentAdded = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.departmentAdded),
+	department: S_Department,
 });
-const TicketEvent_DepartmentForwardedScheme = BaseTicketEventScheme.extend({
-	event_type: z.literal(EventType.enum.departmentForwarded),
-	department: DepartmentScheme,
+const S_TicketEvent_DepartmentForwarded = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.departmentForwarded),
+	department: S_Department,
 });
-const TicketEvent_CommentScheme = BaseTicketEventScheme.extend({
-	event_type: z.literal(EventType.enum.Comment),
+const S_TicketEvent_Comment = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.Comment),
 	content: z.string(),
 	images: z.string().optional(),
 });
-const TicketEventScheme = z.discriminatedUnion("event_type", [
-	TicketEvent_StatusChangeScheme,
-	TicketEvent_DepartmentAddedScheme,
-	TicketEvent_DepartmentForwardedScheme,
-	TicketEvent_CommentScheme,
+const S_TicketEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_StatusChange,
+	S_TicketEvent_DepartmentAdded,
+	S_TicketEvent_DepartmentForwarded,
+	S_TicketEvent_Comment,
 ]);
-const TicketHistoryEventScheme = z.discriminatedUnion("event_type", [
-	TicketEvent_StatusChangeScheme.omit({ ticket_id: true }),
-	TicketEvent_DepartmentAddedScheme.omit({ ticket_id: true }),
-	TicketEvent_DepartmentForwardedScheme.omit({ ticket_id: true }),
-	TicketEvent_CommentScheme.omit({ ticket_id: true }),
+const S_TicketHistoryEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_StatusChange.omit({ ticket_id: true }),
+	S_TicketEvent_DepartmentAdded.omit({ ticket_id: true }),
+	S_TicketEvent_DepartmentForwarded.omit({ ticket_id: true }),
+	S_TicketEvent_Comment.omit({ ticket_id: true }),
 ]);
-const TicketHistoryScheme = z.object({
+const S_TicketHistory = z.object({
 	ticket_id: UUID,
-	events: TicketHistoryEventScheme.array(),
+	events: S_TicketHistoryEvent.array(),
 });
 
 export {
-	DepartmentScheme,
 	ID,
-	LoginUserScheme,
-	NewDepartmentScheme,
-	NewRoleScheme,
-	NewTicketScheme,
-	NewUserScheme,
-	RoleScheme,
-	TagScheme,
-	TicketEventScheme,
-	TicketHistoryScheme,
-	TicketScheme,
-	UserScheme,
+	S_Department,
+	S_DepartmentCreate,
+	S_Role,
+	S_RoleCreate,
+	S_Tag,
+	S_Ticket,
+	S_TicketCreate,
+	S_TicketEvent,
+	S_TicketHistory,
+	S_User,
+	S_UserCreate,
+	S_UserLogin,
 	UUID,
+	zAction,
 	zTicketStatus,
 };

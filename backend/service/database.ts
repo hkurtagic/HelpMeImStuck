@@ -1,6 +1,6 @@
 import { Database, SQLBlob } from "jsr:@db/sqlite";
 // import sqlite3 from 'sqlite3';
-import { dbAction, dbDepartments, dbRole, dbUser } from "@backend/model/dbtypes.ts";
+import { dbAction, dbDepartments, dbRole, dbUser } from "../schemes_and_types/dbtypes.ts";
 import { assert } from "@std/assert";
 import type {
 	Actions,
@@ -458,7 +458,7 @@ function getRoleId(
 	return id;
 }
 
-function getRoleById(role_id: string): dbRole[] | Error | undefined {
+function getRoleById(role_id: number): dbRole[] | Error | undefined {
 	return db_conn
 		.prepare(
 			"SELECT * FROM roles " +

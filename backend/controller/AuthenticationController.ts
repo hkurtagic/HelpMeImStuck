@@ -3,7 +3,7 @@ import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Next } from "hono/types";
 import { createMiddleware } from "hono/factory";
-import { JWTExtraPayload, JWTPayload } from "@backend/model/serverside_types.ts";
+import { JWTExtraPayload, JWTPayload } from "@backend/schemes_and_types/serverside_types.ts";
 import db from "@backend/service/database.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;

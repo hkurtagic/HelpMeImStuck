@@ -11,13 +11,16 @@ import {
 	User,
 } from "@shared/shared_types.ts";
 import { DepartmentScheme, RoleScheme, TicketScheme } from "@shared/shared_schemas.ts";
-import { ServersideRole, ServersideUser } from "@backend/model/serverside_types.ts";
-import { ServersideRoleSchema, ServersideUserSchema } from "@backend/model/serverside_schemas.ts";
+import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
+import {
+	S_ServersideRole,
+	S_ServersideUser,
+} from "@backend/schemes_and_types/serverside_schemas.ts";
 import {
 	AdminActionPreset,
 	RequesterActionPreset,
 	SupporterActionPreset,
-} from "@backend/model/serverside_schemas.ts";
+} from "../../backend/schemes_and_types/serverside_schemas.ts";
 import { z } from "zod";
 
 export const testAdminDepartment: Department = {

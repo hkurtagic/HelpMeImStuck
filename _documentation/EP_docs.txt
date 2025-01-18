@@ -1,0 +1,33 @@
+root= localhost:8080/api
+
+department:
+GET     /department                 = get all departments
+GET     /department/own             = get all departments of current user
+POST    /department                 = create a new department
+PUT     /department/:department_id  = update department
+DELETE  /department/:department_id  = delete department
+
+role:
+GET     /role/dept/:department_id   = get all roles in a department
+GET     /role/own                   = get all roles of a user
+POST    /role                       = create new role
+PUT     /role/:role_id              = update role
+DELETE  /role/:role_id              = delete role
+
+user:
+POST    /user/login                 = login user
+POST    /user/logout                = logout user
+GET     /user                       = get userdata of current user
+GET     /user/dept/:department_id   = get all users of provided department
+GET     /user/:user_id              = get a specific user (probably with actions?)
+POST    /user                       = create new user
+PUT     /user/:user_id              = update user
+DELETE  /user/:user_id              = delete user
+
+ticket:
+GET     /ticket                     = get tickets of user
+GET     /ticket/dept/:department_id = get tickets of department for supporter
+POST    /ticket                     = create a new ticket
+GET     /ticket/:ticket_id          = get single ticket details and history
+PUT     /ticket/:ticket_id          = add event to ticket history
+DELETE  /ticket/:ticket_id          = pull back ticket

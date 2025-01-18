@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { JWTAuthController } from "../controller/AuthenticationController.ts";
 import { decode, sign } from "hono/jwt";
 import { setCookie } from "hono/cookie";
-import { JWTExtraPayload } from "@backend/model/serverside_types.ts";
+import { JWTExtraPayload } from "@backend/schemes_and_types/serverside_types.ts";
 import { getCookie } from "hono/cookie";
 import db from "@backend/service/database.ts";
 // import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
