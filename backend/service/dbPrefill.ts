@@ -1,10 +1,10 @@
-import Department from "@backend/model/Department.ts";
-import Role from "@backend/model/Role.ts";
+import DepartmentModel from "@backend/model/Department.ts";
+import RoleModel from "@backend/model/Role.ts";
 import Status from "@backend/model/Status.ts";
 import Tag from "@backend/model/Tag.ts";
 import Ticket from "@backend/model/Ticket.ts";
-import Action from "@backend/model/Action.ts";
-import User from "@backend/model/User.ts";
+import ActionModel from "@backend/model/Action.ts";
+import UserModel from "@backend/model/User.ts";
 import { Actions, DepartmentCreate, RoleCreate, UserCreate } from "@shared/shared_types.ts";
 import {
 	AdminActionPreset,
@@ -23,7 +23,7 @@ export async function prefillDB() {
 	// prefill possible actions
 	Object.values(Actions).forEach(async (k, v) => {
 		if (typeof k === "string") {
-			await Action.create({
+			await ActionModel.create({
 				pk_action_id: v,
 				action_name: k,
 			});
@@ -39,7 +39,7 @@ export async function prefillDB() {
 
 	const new_r: RoleCreate = {
 		role_name: "Administrator",
-		role_description: "Administrator role",
+		// role_description: "Administrator role",
 		department: S_ServerDepartment.parse(d.toJSON()),
 		actions: RequesterActionPreset.actions,
 	};
@@ -55,6 +55,14 @@ export async function prefillDB() {
 
 	const u = await utils.addUser(new_u);
 	console.log("Admin User: " + JSON.stringify(S_ServersideUser.parse(u!.toJSON())));
+
+	const updated_r = parsed_r;
+	updated_r.role_name = "New Role name";
+	updated_r.role_description = "Administrator role";
+	updated_r.actions = AdminActionPreset.actions;
+	const up_r = await utils.editRole(updated_r);
+
+	console.log("updated role: " + JSON.stringify(S_ServersideRole.parse(up_r!.toJSON())));
 }
 
 /*

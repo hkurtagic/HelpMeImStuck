@@ -22,7 +22,7 @@ const S_DTOActionParsed = S_DTOAction.transform(({ pk_action_id, ..._ }) => {
 
 const S_DTODepartmentCreate = z.object({
 	department_name: z.string(),
-	department_description: z.string().optional(),
+	department_description: z.string().nullable(),
 });
 const S_DTODepartment = S_DTODepartmentCreate.extend({
 	pk_department_id: ID,
@@ -30,7 +30,7 @@ const S_DTODepartment = S_DTODepartmentCreate.extend({
 
 const S_DTORoleCreate = z.object({
 	role_name: z.string(),
-	role_description: z.string().optional(),
+	role_description: z.string().nullable(),
 });
 const S_DTORole = S_DTORoleCreate.extend({
 	pk_role_id: ID,
@@ -62,7 +62,7 @@ const S_DTOUser = S_DTOUserCreate.extend({
 
 const S_DTOUserExtendedParsed = S_DTOUser.extend({
 	roles: S_DTORoleParsed.array(),
-	actions: S_DTOActionParsed.array().optional(),
+	actions: S_DTOActionParsed.array().nullable(),
 }).transform(({ pk_user_id, password_hash, ...rest }) => {
 	return {
 		user_id: pk_user_id,

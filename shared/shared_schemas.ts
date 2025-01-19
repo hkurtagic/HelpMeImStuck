@@ -17,7 +17,7 @@ const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not
 
 const S_DepartmentCreate = z.object({
 	department_name: z.string(),
-	department_description: z.string().optional(),
+	department_description: z.string().optional().nullable(),
 });
 
 const S_Department = S_DepartmentCreate.extend({
@@ -26,7 +26,7 @@ const S_Department = S_DepartmentCreate.extend({
 
 const S_RoleCreate = z.object({
 	role_name: z.string(),
-	role_description: z.string().optional(),
+	role_description: z.string().optional().nullable(),
 	department: S_Department,
 	actions: zAction.array(),
 });
@@ -54,7 +54,7 @@ const S_User = S_UserCreate.extend({
 const S_Tag = z.object({
 	tag_name: z.string(),
 	abbreviation: z.string(),
-	description: z.string().optional(),
+	description: z.string().optional().nullable(),
 	department: S_Department,
 	style: z.string().optional(),
 });
@@ -64,13 +64,13 @@ const S_TicketCreate = z.object({
 	departments: S_Department.array(),
 	ticket_title: z.string(),
 	ticket_description: z.string(),
-	images: z.string().array().optional(),
+	images: z.string().array().optional().nullable(),
 });
 
 const S_Ticket = S_TicketCreate.extend({
 	ticket_id: UUID,
 	ticket_status: zTicketStatus,
-	tags: S_Tag.array().optional(),
+	tags: S_Tag.array().optional().nullable(),
 });
 
 const S_TicketEventBase = z.object({
@@ -95,7 +95,7 @@ const S_TicketEvent_DepartmentForwarded = S_TicketEventBase.extend({
 const S_TicketEvent_Comment = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.Comment),
 	content: z.string(),
-	images: z.string().optional(),
+	images: z.string().optional().nullable(),
 });
 const S_TicketEvent = z.discriminatedUnion("event_type", [
 	S_TicketEvent_StatusChange,

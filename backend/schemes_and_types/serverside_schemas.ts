@@ -84,7 +84,7 @@ const S_ServersideUser = z.union([
 	}).extend({
 		password: z.string(),
 		roles: S_ServersideRole.array(),
-		actions: zAction.array().optional(),
+		actions: zAction.array().optional().nullable(),
 	}),
 ]);
 

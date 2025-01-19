@@ -15,8 +15,8 @@ import {
 	Model,
 } from "npm:sequelize";
 import { sequelize } from "@backend/service/dbconnector.ts";
-import Department from "@backend/model/Department.ts";
-import Action from "@backend/model/Action.ts";
+import DepartmentModel from "@backend/model/Department.ts";
+import ActionModel from "@backend/model/Action.ts";
 import { DTORole, DTORoleCreate } from "@backend/schemes_and_types/dto_objects.ts";
 import { ServersideRole } from "@backend/schemes_and_types/serverside_types.ts";
 
@@ -39,7 +39,7 @@ import { ServersideRole } from "@backend/schemes_and_types/serverside_types.ts";
  * ```
  */
 
-export default class Role extends Model<DTORole, DTORoleCreate> implements DTORole {
+export default class RoleModel extends Model<DTORole, DTORoleCreate> implements DTORole {
 	// Properties
 	declare pk_role_id: CreationOptional<DTORole["pk_role_id"]>;
 	declare role_name: DTORole["role_name"];
@@ -48,17 +48,17 @@ export default class Role extends Model<DTORole, DTORoleCreate> implements DTORo
 	// Since TS cannot determine model association at compile time
 	// we have to declare them here purely virtually
 	// these will not exist until `Model.init` was called.
-	declare getDepartment: BelongsToGetAssociationMixin<Department>;
-	declare setDepartment: BelongsToSetAssociationMixin<Department, number>;
+	declare getDepartment: BelongsToGetAssociationMixin<DepartmentModel>;
+	declare setDepartment: BelongsToSetAssociationMixin<DepartmentModel, number>;
 
-	declare getActions: HasManyGetAssociationsMixin<Action>;
-	declare addAction: HasManyAddAssociationMixin<Action, number>;
-	declare addActions: HasManyAddAssociationsMixin<Action, number>;
-	declare setActions: HasManySetAssociationsMixin<Action, number>;
-	declare removeAction: HasManyRemoveAssociationMixin<Action, number>;
-	declare removeActions: HasManyRemoveAssociationsMixin<Action, number>;
-	declare hasAction: HasManyHasAssociationMixin<Action, number>;
-	declare hasActions: HasManyHasAssociationsMixin<Action, number>;
+	declare getActions: HasManyGetAssociationsMixin<ActionModel>;
+	declare addAction: HasManyAddAssociationMixin<ActionModel, number>;
+	declare addActions: HasManyAddAssociationsMixin<ActionModel, number>;
+	declare setActions: HasManySetAssociationsMixin<ActionModel, number>;
+	declare removeAction: HasManyRemoveAssociationMixin<ActionModel, number>;
+	declare removeActions: HasManyRemoveAssociationsMixin<ActionModel, number>;
+	declare hasAction: HasManyHasAssociationMixin<ActionModel, number>;
+	declare hasActions: HasManyHasAssociationsMixin<ActionModel, number>;
 	declare countActions: HasManyCountAssociationsMixin;
 
 	// Static Methods
@@ -66,17 +66,17 @@ export default class Role extends Model<DTORole, DTORoleCreate> implements DTORo
 		role_name: string,
 		department_id: number,
 	): Promise<Model<ServersideRole> | null> {
-		const role = await Role.findOne({
+		const role = await RoleModel.findOne({
 			where: { role_name: role_name },
 			include: [{
-				model: Department,
+				model: DepartmentModel,
 				as: "department",
 				where: {
 					pk_department_id: department_id,
 				},
 				required: true,
 			}, {
-				model: Action,
+				model: ActionModel,
 				as: "actions",
 				required: true,
 				through: {
@@ -89,14 +89,14 @@ export default class Role extends Model<DTORole, DTORoleCreate> implements DTORo
 		return role;
 	}
 	static async getRoleById(role_id: number): Promise<Model<ServersideRole> | null> {
-		const role = await Role.findOne({
+		const role = await RoleModel.findOne({
 			where: { pk_role_id: role_id },
 			include: [{
-				model: Department,
+				model: DepartmentModel,
 				as: "department",
 				required: true,
 			}, {
-				model: Action,
+				model: ActionModel,
 				as: "actions",
 				required: true,
 				through: {
@@ -110,7 +110,7 @@ export default class Role extends Model<DTORole, DTORoleCreate> implements DTORo
 	}
 }
 
-Role.init({
+RoleModel.init({
 	pk_role_id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,
@@ -124,6 +124,6 @@ Role.init({
 	},
 	role_description: {
 		type: DataTypes.TEXT,
-		allowNull: false,
+		allowNull: true,
 	},
 }, { sequelize: sequelize });

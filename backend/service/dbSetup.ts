@@ -1,58 +1,62 @@
 import * as path from "jsr:@std/path";
-import User from "@backend/model/User.ts";
+import UserModel from "@backend/model/User.ts";
 import { sequelize } from "@backend/service/dbconnector.ts";
 import EventType from "@backend/model/EventType.ts";
-import Action from "@backend/model/Action.ts";
+import ActionModel from "@backend/model/Action.ts";
 import Status from "@backend/model/Status.ts";
-import Department from "@backend/model/Department.ts";
+import DepartmentModel from "@backend/model/Department.ts";
 import Tag from "@backend/model/Tag.ts";
 import Ticket from "@backend/model/Ticket.ts";
 import Event from "@backend/model/Event.ts";
 import Image from "@backend/model/Image.ts";
-import Role from "@backend/model/Role.ts";
+import RoleModel from "@backend/model/Role.ts";
 
 export default async (): Promise<void> => {
-	new Action();
-	new Department();
+	new ActionModel();
+	new DepartmentModel();
 	new Event();
 	new EventType();
 	new Image();
-	new Role();
+	new RoleModel();
 	new Status();
 	new Tag();
 	new Ticket();
-	new User();
+	new UserModel();
 
 	//1
-	User.belongsToMany(Action, {
+	UserModel.belongsToMany(ActionModel, {
 		through: "UserAction",
 		foreignKey: "fk_user_id",
 		as: "actions",
 	});
-	Action.belongsToMany(User, {
+	ActionModel.belongsToMany(UserModel, {
 		through: "UserAction",
 		foreignKey: "fk_action_id",
 	});
 
 	//2
-	Action.belongsToMany(Role, {
+	ActionModel.belongsToMany(RoleModel, {
 		through: "RoleAction",
 		foreignKey: "fk_action_id",
 	});
-	Role.belongsToMany(Action, {
+	RoleModel.belongsToMany(ActionModel, {
 		through: "RoleAction",
 		foreignKey: "fk_role_id",
 		as: "actions",
 	});
 
 	//User and Role association
-	User.belongsToMany(Role, { through: "UserRoles", foreignKey: "fk_user_id", as: "roles" });
-	Role.belongsToMany(User, { through: "UserRoles", foreignKey: "fk_role_id" });
+	UserModel.belongsToMany(RoleModel, {
+		through: "UserRoles",
+		foreignKey: "fk_user_id",
+		as: "roles",
+	});
+	RoleModel.belongsToMany(UserModel, { through: "UserRoles", foreignKey: "fk_role_id" });
 
 	//Roles
 	//One Department has many Roles
-	Department.hasMany(Role, { foreignKey: "fk_department_id" });
-	Role.belongsTo(Department, {
+	DepartmentModel.hasMany(RoleModel, { foreignKey: "fk_department_id" });
+	RoleModel.belongsTo(DepartmentModel, {
 		foreignKey: "fk_department_id",
 		as: "department",
 	});
@@ -65,11 +69,11 @@ export default async (): Promise<void> => {
 	Tag.belongsToMany(Ticket, { through: "TicketTag", foreignKey: "fk_tag_id" });
 
 	//5
-	Department.belongsToMany(Ticket, {
+	DepartmentModel.belongsToMany(Ticket, {
 		through: "DepartmentTicket",
 		foreignKey: "fk_department_id",
 	});
-	Ticket.belongsToMany(Department, {
+	Ticket.belongsToMany(DepartmentModel, {
 		through: "DepartmentTicket",
 		foreignKey: "fk_ticket_id",
 	});
@@ -79,8 +83,8 @@ export default async (): Promise<void> => {
 	EventType.hasMany(Event, { foreignKey: "fk_event_type_id" });
 	Event.belongsTo(EventType, { foreignKey: "fk_event_type_id" });
 	//One User can have multiple Events
-	User.hasMany(Event, { foreignKey: "fk_user_id" });
-	Event.belongsTo(User, { foreignKey: "fk_user_id" });
+	UserModel.hasMany(Event, { foreignKey: "fk_user_id" });
+	Event.belongsTo(UserModel, { foreignKey: "fk_user_id" });
 	//One Ticket can have many Events
 	Ticket.hasMany(Event, { foreignKey: "fk_ticket_id" });
 	Event.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });
@@ -90,13 +94,13 @@ export default async (): Promise<void> => {
 
 	//Tags
 	//One Department has many Tags
-	Department.hasMany(Tag, { foreignKey: "fk_department_id" });
-	Tag.belongsTo(Department, { foreignKey: "fk_department_id" });
+	DepartmentModel.hasMany(Tag, { foreignKey: "fk_department_id" });
+	Tag.belongsTo(DepartmentModel, { foreignKey: "fk_department_id" });
 
 	//Tickets
 	//One User can have multiple Tickets
-	User.hasMany(Ticket, { foreignKey: "fk_user_id" });
-	Ticket.belongsTo(User, { foreignKey: "fk_user_id" });
+	UserModel.hasMany(Ticket, { foreignKey: "fk_user_id" });
+	Ticket.belongsTo(UserModel, { foreignKey: "fk_user_id" });
 	//Multiple Tickets can have the same status
 	Status.hasMany(Ticket, { foreignKey: "fk_status_id" });
 	Ticket.belongsTo(Status, { foreignKey: "fk_status_id" });
