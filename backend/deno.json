@@ -5,7 +5,9 @@
   "imports": {
     "@types/node": "npm:@types/node@^22.10.1",
     "hono": "npm:hono@^4.6.16",
+    "reflect-metadata": "npm:reflect-metadata@^0.2.2",
     "sequelize": "npm:sequelize@^6.37.5",
+    "sequelize-typescript": "npm:sequelize-typescript@^2.1.6",
     "sqlite3": "npm:sqlite3@^5.1.7"
   }
 }

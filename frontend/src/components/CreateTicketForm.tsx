@@ -9,7 +9,7 @@ import {
 	EP_department,
 	EP_ticket_create,
 } from "@/route_helper/routes_helper.tsx";
-import { Department, Ticket } from "@shared/shared_types.ts";
+import { Department, Ticket, TicketStatus } from "@shared/shared_types.ts";
 import { UserContext } from "@/components/UserContext";
 
 interface CreateTicketFormProps {
@@ -21,7 +21,7 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 	// States für Formulardaten
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
-	const [selected_department, setSelectedDepartment] = useState<Department | null>(null);
+	const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 	const [departments, setDepartments] = useState<Department[]>([]);
 	const [comments, setComments] = useState("");
 	const [images, setImages] = useState<Blob[] | []>([]); // Blob für das Bild
@@ -34,14 +34,21 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 
 	async function fetchDepartments() {
 		try {
-			const response = await fetch(EP_department);
+			const response = await fetch(EP_department, {
+				method: "GET",
+				credentials: "include",
+				headers: appendAuthHeader(),
+			});
+
 			if (!response.ok) throw new Error("Failed to fetch departments");
+
 			const data = await response.json();
 			setDepartments(data); // Erwartet ein Array von Objekten {id, name}
 		} catch (error) {
 			console.error("Error fetching departments:", error);
 		}
 	}
+
 
 	const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const selectedDept = departments.find((d) => d.department_name == e.target.value) || null;
@@ -51,8 +58,8 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 	// Formular absenden
 	const handleSubmit = async () => {
 		if (
-			!title || !description || !selected_department?.department_name ||
-			!selected_department?.department_id
+			!title || !description || !selectedDepartment?.department_name ||
+			!selectedDepartment?.department_id
 		) {
 			alert("Please fill in all required fields!");
 			return;
@@ -70,13 +77,13 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 				author: user.user_name,
 				departments: [
 					{
-						department_id: selected_department.department_id,
-						department_name: selected_department.department_name,
+						department_id: selectedDepartment.department_id,
+						department_name: selectedDepartment.department_name,
 					} as Department,
 				],
-				title: title,
-				description: description,
-				status: "",
+				ticket_title: title,
+				ticket_description: description,
+				status: TicketStatus.OPEN,
 			};
 			// const formData = new FormData();
 			// formData.append("title", title);
@@ -86,11 +93,12 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 			// formData.append("comments", comments);
 
 			if (!images.length) {
-				ticket.images = [];
-				images.forEach((image) => {
-					ticket.images!.push(image);
-					// formData.append("image_" + String(index), image); // Bild als Blob hinzufügen
-				});
+				ticket.images = images[0];
+				// ticket.images = [];
+				// images.forEach((image) => {
+				// 	ticket.images!.push(image);
+				// 	// formData.append("image_" + String(index), image); // Bild als Blob hinzufügen
+				// });
 			}
 			console.log(ticket);
 			const response = await fetch(EP_ticket_create, {
@@ -118,6 +126,8 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 			setIsSubmitting(false);
 		}
 	};
+
+
 
 	return (
 		<div className="flex items-center justify-center min-h-screen">
@@ -159,7 +169,7 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 					<div>
 						<Label className="text-xl">Department</Label>
 						<select
-							value={selected_department?.department_name || ""}
+							value={selectedDepartment?.department_name || ""}
 							onChange={(e) => handleDepartmentChange(e)}
 							className="border border-black w-full p-2 rounded-md"
 						>

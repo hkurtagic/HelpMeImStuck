@@ -1,24 +1,95 @@
 import { Hono } from "hono";
-import JWTAuthChecker from "@backend/handler/AuthenticationHandler.ts";
-import { Department } from "@shared/shared_types.ts";
+import { validator } from "hono/validator";
+import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
+import { Department, DepartmentCreate } from "@shared/shared_types.ts";
 import db from "@backend/service/database.ts";
+import { ID, S_Department, S_DepartmentCreate } from "@shared/shared_schemas.ts";
 
 const department = new Hono();
 
-department.get("/", JWTAuthChecker, (c) => {
-  const depts = db.getDepartments();
-  if (!(depts instanceof Error)) {
-    return c.json(depts, 200);
-  }
-  return c.json({ message: "Database error" }, 500);
+// get all departments
+department.get("/", JWTAuthController, (c) => {
+	const depts = db.getDepartments();
+	if (!(depts instanceof Error)) {
+		return c.json(depts, 200);
+	}
+	return c.json({ message: "Database error" }, 500);
 });
-
-department.get("/own_departments", JWTAuthChecker, async (c) => {
-  const req = await c.req.json() as ({ user_id: string });
-  const depts = db.getDepartmentsOfUser(req.user_id);
-  if (!(depts instanceof Error)) {
-    return c.json(depts, 200);
-  }
+// get all departments of acting user
+department.get("/own", JWTAuthController, (c) => {
+	// const req = await c.req.json() as ({ user_id: string });
+	const depts = db.getDepartmentsOfUser(c.var.user_id);
+	if (depts instanceof Error) {
+		console.log(depts);
+		return c.json({ message: "Serverside error" }, 500);
+	}
+	return c.json(depts, 200);
+});
+// create a new department
+department.post(
+	"/",
+	JWTAuthController,
+	validator("json", (value, c) => {
+		const parsed = S_DepartmentCreate.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Object" }, 400);
+		}
+		return parsed.data as DepartmentCreate;
+	}),
+	async (c) => {
+		const req = await c.req.valid("json");
+		const depts = db.addDepartment(req.department_name, req.department_description);
+		if (depts instanceof Error) {
+			console.log(depts);
+			return c.json({ message: "Serverside error" }, 500);
+		}
+		return c.json(depts, 200);
+	},
+);
+// update
+department.put(
+	"/:department_id",
+	JWTAuthController,
+	validator("json", (value, c) => {
+		const parsed = S_Department.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Object" }, 400);
+		}
+		return parsed.data;
+	}),
+	async (c) => {
+		const req = await c.req.json() as Department;
+		if (parseInt(c.req.param().department_id) != req.department_id) {
+			return c.json({ message: "Department ID of path and body does not match!" }, 400);
+		}
+		const depts = db.updateDepartment(req);
+		if (depts instanceof Error) {
+			console.log(depts);
+			return c.json({ message: "Serverside error" }, 500);
+		}
+		return c.json(depts, 200);
+	},
+);
+// delete
+department.delete("/:department_id", JWTAuthController, (c) => {
+	const d_validation = ID.safeParse(c.req.param());
+	if (!d_validation.success) {
+		return c.json({ message: "Not a valid Department ID" }, 400);
+	}
+	const dept = db.getDepartmentById(d_validation.data);
+	if (dept instanceof Error) {
+		console.log(dept);
+		return c.json({ message: "Serverside error" }, 500);
+	}
+	if (dept === undefined) {
+		return c.json({ message: "Department does not exist" }, 400);
+	}
+	const del_dept = db.deleteDepartment(parseInt(c.req.param().department_id));
+	if (del_dept instanceof Error) {
+		console.log(del_dept);
+		return c.json({ message: "Serverside error" }, 500);
+	}
+	return c.json(del_dept, 200);
 });
 
 export default department;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { UserContext } from "@/components/UserContext";
-import { UserState } from "@/components/UserContextTypes";
 import { User } from "@shared/shared_types";
+
 
 export default function UserContextProvider(props: {
 	children: React.ReactNode;

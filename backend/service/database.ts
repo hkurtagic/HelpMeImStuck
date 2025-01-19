@@ -1,14 +1,20 @@
-import { Database } from "jsr:@db/sqlite";
-import { AlgorithmName, hash } from "jsr:@stdext/crypto/hash";
-import { dbAction, dbDepartments, dbRole, dbUser } from "@backend/model/dbtypes.ts";
+import { Database, SQLBlob } from "jsr:@db/sqlite";
+// import sqlite3 from 'sqlite3';
+import { dbAction, dbDepartments, dbRole, dbUser } from "../schemes_and_types/dbtypes.ts";
 import { assert } from "@std/assert";
-import { Action, Department, Role } from "@shared/shared_types.ts";
+import type {
+	Actions,
+	Department,
+	EventType,
+	Role,
+	Ticket,
+	TicketStatus,
+} from "@shared/shared_types.ts";
 import * as path from "jsr:@std/path";
+import prefillDB from "@backend/service/database_prefill.ts";
 
 const p = path.fromFileUrl(path.join(path.dirname(import.meta.url), "test.db"));
 const db_conn = new Database(p);
-
-// const role_query =
 
 // init if not exist
 function initDB() {
@@ -76,13 +82,12 @@ function initDB() {
 	db_conn.exec(`
         CREATE TABLE IF NOT EXISTS tickets (
             pk_ticket_id TEXT PRIMARY KEY,
-            fk_author TEXT NOT NULL,
+            fk_author_id TEXT NOT NULL,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
             fk_status_id INTEGER NOT NULL,
-            images BLOB,
             created_at INTEGER NOT NULL,
-            FOREIGN KEY (fk_author) REFERENCES users (pk_user_id) ON DELETE SET NULL,
+            FOREIGN KEY (fk_author_id) REFERENCES users (pk_user_id) ON DELETE SET NULL,
             FOREIGN KEY (fk_status_id) REFERENCES status (pk_status_id) ON DELETE SET NULL
         )
     `);
@@ -130,7 +135,6 @@ function initDB() {
             fk_event_type INTEGER NOT NULL,
             description TEXT,
             content TEXT,
-            images BLOB,
             FOREIGN KEY (fk_ticket_id) REFERENCES tickets (pk_ticket_id) ON DELETE CASCADE,
             FOREIGN KEY (fk_author_id) REFERENCES users (pk_user_id) ON DELETE SET NULL,
             FOREIGN KEY (fk_event_type) REFERENCES event_types (pk_event_type_id) ON DELETE SET NULL
@@ -148,6 +152,17 @@ function initDB() {
         )
     `);
 	db_conn.exec(`
+        CREATE TABLE IF NOT EXISTS images (
+            pk_image_id TEXT PRIMARY KEY,
+            image_data TEXT NOT NULL,
+			fk_ticket_id TEXT,
+			fk_event_id TEXT,
+            FOREIGN KEY (fk_ticket_id) REFERENCES images (pk_image_id) ON DELETE CASCADE,
+            FOREIGN KEY (fk_event_id) REFERENCES events (pk_event_id) ON DELETE CASCADE,
+			CHECK (fk_ticket_id is NOT NULL or fk_event_id is NOT NULL)
+        )
+    `);
+	db_conn.exec(`
         CREATE TABLE IF NOT EXISTS access_tokens (
             access_token TEXT NOT NULL,
             fk_user_id TEXT NOT NULL,
@@ -157,174 +172,28 @@ function initDB() {
 	prefillDB();
 }
 
-function prefillDB() {
-	// possible ticket statuses
-	const init_statuses = ["OPEN", "IN_PROGRESS", "CLOSED"];
-	const init_event_types = ["ACTION", "COMMENT"];
-	const init_departments = ["IT", "Finance"];
-	const init_roles = ["Requester", "Supporter"];
-	const init_users = [{ user_name: "request", password: "test" }, {
-		user_name: "support",
-		password: "test",
-	}];
-	const init_actions = [
-		"create_user",
-		"modify_user",
-		"delete_user",
-		"create_department",
-		"modify_department",
-		"delete_department",
-		"create_role",
-		"modify_role",
-		"delete_role",
-		"accept_ticket",
-		"close_ticket",
-	];
-	// add admin values
-	const admin_username = Deno.env.get("DB_DEFAULT_ADMIN_USERNAME")!;
-	const admin_dept = "System_Administration";
-	const admin_role = {
-		role_name: "Administrators",
-		department: "System_Administration",
-	};
-
-	// TO DO: proper Error
-	if (!db_conn.open) {
-		return null;
-	}
-	// only checks for empty table, possible cause for failure if db is initialized elswhere
-	if (_rowCounter("departments") == 0) {
-		addDepartment(admin_dept);
-		init_departments.forEach((el) => {
-			addDepartment(el);
-		});
-	}
-	if (_rowCounter("roles") == 0) {
-		const depts = getDepartments();
-		// console.log("role depts: " + JSON.stringify(depts));
-		if (!(depts instanceof Error)) {
-			depts.forEach((department) => {
-				// console.log("dept loop: " + department.department_name);
-
-				if (department.department_name == admin_dept) {
-					//   console.log("admin dept: " + department.department_name);
-
-					addRole(admin_role.role_name, department.department_id);
-				} else {
-					init_roles.forEach((role) => {
-						if (department.department_name !== admin_dept) {
-							//   console.log(
-							//     "added role" + role + "\nto dept: " +
-							//       department.department_name,
-							//   );
-							addRole(role, department.department_id);
-						}
-					});
-				}
-			});
-		}
-	}
-	if (_rowCounter("users") == 0) {
-		const h = hash(
-			AlgorithmName.Argon2,
-			Deno.env.get("DB_DEFAULT_ADMIN_PASSWORD")!,
-		);
-		addUser(admin_username, h);
-		const admin_user_id = getUserByUsername(admin_username)!;
-		const admin_dept_id = getDepartmentIdByName(admin_dept)!;
-		if (
-			!(admin_dept_id instanceof Error) && !(admin_user_id instanceof Error)
-		) {
-			const admin_role_id = getRoleId(
-				admin_role.role_name,
-				admin_dept_id.department_id,
-			)!;
-			//   console.log(
-			//     "Admin init:\n" + "id: " + admin_user_id.pk_user_id + "\nrole: " +
-			//       admin_role.role_name + "\nrole_id: " + admin_role_id + "\ndept: " +
-			//       admin_dept_id.pk_department_id,
-			//   );
-			if (!(admin_role_id instanceof Error)) {
-				addUserToDepartment(
-					admin_user_id.pk_user_id,
-					admin_dept_id.department_id,
-					admin_role_id,
-				);
-			}
-		}
-		const depts = getDepartments();
-		if (!(depts instanceof Error)) {
-			depts.forEach((department) => {
-				if (department.department_name == admin_dept) {
-					return;
-				}
-				// console.log(JSON.stringify(department));
-
-				const d_roles = getRolesInDepartment(department.department_id)!;
-				init_users.forEach((user) => {
-					addUser(
-						user.user_name,
-						hash(
-							AlgorithmName.Argon2,
-							user.password,
-						),
-					);
-					const db_user = getUserByUsername(user.user_name)!;
-					console.log("user->dept: " + JSON.stringify(db_user));
-					console.log("roles: " + JSON.stringify(d_roles));
-					if (!(d_roles instanceof Error) && !(db_user instanceof Error)) {
-						const matchin_user_role = d_roles.filter(function (o) {
-							console.log(
-								"looking for role: " +
-									JSON.stringify(o.role_name.toLowerCase()),
-							);
-							console.log("with user: " + user.user_name.toLowerCase());
-							return o.role_name.toLowerCase().includes(
-								user.user_name.toLowerCase(),
-							);
-						})[0];
-						console.log(JSON.stringify(matchin_user_role));
-						addUserToDepartment(
-							db_user.pk_user_id,
-							department.department_id,
-							matchin_user_role.pk_role_id,
-						);
-					}
-				});
-			});
-		}
-	}
-	if (_rowCounter("status") == 0) {
-		const prep_status_insert = db_conn.prepare(
-			"INSERT INTO status (status_name) VALUES (?)",
-		);
-		init_statuses.forEach((el) => {
-			prep_status_insert.run(el);
-		});
-		prep_status_insert.finalize();
-	}
-	if (_rowCounter("event_types") == 0) {
-		const prep_event_type_insert = db_conn.prepare(
-			"INSERT INTO event_types (event_type_name) VALUES (?)",
-		);
-		init_event_types.forEach((el) => {
-			prep_event_type_insert.run(el);
-		});
-		prep_event_type_insert.finalize();
-	}
-}
-//#endregion Tokens
+//#region type to query map
+const user_q = `U.pk_user_id as user_id, U.user_name as user_name, U.password_hash as password`;
+const role_q = `R.pk_role_id as role_id, R.role_name as role_name, R.description as description`;
+const dept_q =
+	`D.pk_department_id as department_id, D.department_name as department_name, D.description as description`;
+const action_q = `A.pk_action_id as actions`;
+const ticket_q =
+	`T.pk_ticket_id as ticket_id, U.user_name as author, D.pk_department_id as department_id, D.department_name, T.title, T.description, T.fk_status_id as status, I.image_data as image`;
+//#endregion
 
 //#region User CRUD
-function addUser(username: string, password_hash: string): number | Error {
+function addUser(username: string, password_hash: string): string | Error {
 	try {
-		return db_conn.exec(
+		const user_id = crypto.randomUUID();
+		db_conn.exec(
 			"INSERT INTO users (pk_user_id,user_name,password_hash,created_at) VALUES (?,?,?,?)",
-			crypto.randomUUID(),
+			user_id,
 			username,
 			password_hash,
 			Date.now(),
 		);
+		return user_id;
 	} catch (error) {
 		assertIsError(error);
 		return error;
@@ -390,6 +259,22 @@ function updateUserPasswordById(
 function deleteUserById(user_id: string): number | Error {
 	try {
 		return db_conn.prepare("DELETE FROM users WHERE pk_user_id = :user_id").run(
+			user_id,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
+
+function getUserActionsByUserId(user_id: string): { actions: number }[] | Error {
+	try {
+		return db_conn.prepare(
+			"SELECT A.pk_action_id as actions FROM actions A" +
+				"LEFT JOIN user_extra_permissions UEP on UEP.fk_action_id = A.pk_action_id " +
+				"LEFT JOIN users U on U.pk_user_id = UEP.fk_user_id " +
+				"WHERE U.pk_user_id= ?",
+		).all(
 			user_id,
 		);
 	} catch (error) {
@@ -478,7 +363,7 @@ function getDepartments(): Department[] | Error {
 function getDepartmentsOfUser(user_id: string): Department[] | Error {
 	return db_conn.prepare(
 		"SELECT D.pk_department_id as department_id, D.department_name FROM departments D " +
-			"LEFT JOIN user_associations UA on UA.pk_department_id = D.pk_department_id " +
+			"LEFT JOIN user_associations UA on UA.fk_department_id = D.pk_department_id " +
 			"LEFT JOIN users U on U.pk_user_id = UA.fk_user_id " +
 			"WHERE U.pk_user_id= ?",
 	).all(user_id);
@@ -502,6 +387,21 @@ function getDepartmentById(
 			"SELECT * FROM departments WHERE pk_department_id = :department_id",
 		)
 		.get(department_id);
+}
+function updateDepartment(department: Department): number | Error {
+	try {
+		return db_conn.prepare(
+			"UPDATE departments SET department_name = ?, description = ? WHERE pk_department_id = ?",
+		)
+			.run(
+				department.department_name,
+				department.department_name,
+				department.department_id,
+			);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
 }
 
 function deleteDepartment(department_id: number) {
@@ -558,7 +458,7 @@ function getRoleId(
 	return id;
 }
 
-function getRoleById(role_id: string): dbRole[] | Error | undefined {
+function getRoleById(role_id: number): dbRole[] | Error | undefined {
 	return db_conn
 		.prepare(
 			"SELECT * FROM roles " +
@@ -681,6 +581,50 @@ function deleteActionFromRole(
 		return error;
 	}
 }
+// add ticket to one or more departments
+function addTicketToDepartment(ticket_id: string, department_id: number): number | Error {
+	try {
+		return db_conn.exec(
+			"INSERT INTO ticket_associations (fk_ticket_id,fk_department_id) VALUES (?,?)",
+			ticket_id,
+			department_id,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
+// forward ticket to one different department
+function updateTicketOfDepartment(
+	ticket_id: string,
+	department_id: number,
+	new_department_id: number,
+): number | Error {
+	try {
+		return db_conn.exec(
+			"UPDATE ticket_associations SET fk_department_id = ? WHERE fk_ticket_id= ? AND fk_department_id= ?",
+			new_department_id,
+			ticket_id,
+			department_id,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
+// remove ticket from department
+function deleteTicketFromDepartment(ticket_id: string, department_id: number): number | Error {
+	try {
+		return db_conn.exec(
+			"DELETE FROM ticket_associations WHERE fk_ticket_id= ? AND fk_department_id= ?",
+			ticket_id,
+			department_id,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
+}
 
 function addTagToTicket(tag_id: number, ticket_id: string): number | Error {
 	try {
@@ -717,32 +661,21 @@ function deleteTagFromTicket(
 function addTicket(
 	title: string,
 	description: string,
-	author: string,
-	encoded_images?: string,
+	author_id: string,
+	status: TicketStatus,
 ): string | Error {
 	try {
 		const ticket_id = crypto.randomUUID();
-		if (typeof encoded_images !== "undefined") {
-			db_conn.exec(
-				"INSERT INTO tickets (pk_ticket_id,fk_author,title,description,fk_status_id,images,created_at) VALUES (?,?,?,?,?,?,?)",
-				ticket_id,
-				author,
-				title,
-				description,
-				1,
-				encoded_images,
-				Date.now(),
-			);
-		}
 		db_conn.exec(
-			"INSERT INTO tickets (pk_ticket_id,fk_author,title,description,fk_status_id,created_at) VALUES (?,?,?,?,?,?)",
+			"INSERT INTO tickets (pk_ticket_id,fk_author_id,title,description,fk_status_id,created_at) VALUES (?,?,?,?,?,?)",
 			ticket_id,
-			author,
+			author_id,
 			title,
 			description,
-			1,
+			status,
 			Date.now(),
 		);
+
 		return ticket_id;
 	} catch (error) {
 		assertIsError(error);
@@ -763,16 +696,25 @@ function getTicketById(ticket_id: string) {
 function getTicketsOfDepartment(department_id: number) {
 	return db_conn
 		.prepare(
-			"SELECT tickets.* FROM tickets " +
-				"LEFT JOIN ticket_associations TA on TA.fk_ticket_id = tickets.pk_ticket_id" +
-				"LEFT JOIN departments D on D.pk_department_id = TA.fk_department_id" +
+			"SELECT " + ticket_q + " FROM tickets " +
+				"LEFT JOIN ticket_associations TA on TA.fk_ticket_id = tickets.pk_ticket_id " +
+				"LEFT JOIN departments D on D.pk_department_id = TA.fk_department_id " +
+				"LEFT JOIN users U on T.fk_author_id = U.pk_user_id " +
+				"LEFT JOIN images I on T.fk_image_id = I.pk_image_id " +
 				"WHERE fk_department_id= ?",
 		)
 		.all(department_id);
 }
 
-function getTicketOfUser(user_id: string) {
-	return db_conn.prepare("SELECT * FROM tickets WHERE fk_author_id= ?").all(
+function getTicketsOfUser(user_id: string): Ticket[] {
+	return db_conn.prepare(
+		"SELECT " + ticket_q + " FROM tickets T " +
+			"LEFT JOIN ticket_associations TA on TA.fk_ticket_id = T.pk_ticket_id " +
+			"LEFT JOIN departments D on D.pk_department_id = TA.fk_department_id " +
+			"LEFT JOIN users U on T.fk_author_id = U.pk_user_id " +
+			"LEFT JOIN images I on T.fk_image_id = I.pk_image_id " +
+			"WHERE T.fk_author_id= ?",
+	).all(
 		user_id,
 	);
 }
@@ -810,41 +752,40 @@ function deleteTicketById(ticket_id: string): number | Error {
 function addEventToTicket(
 	ticket_id: string,
 	author_id: string,
-	event_type_id: number,
+	event_type_id: EventType,
 	description?: string,
 	content?: string,
-	encoded_images?: string,
 ): number | Error {
 	try {
-		if (
-			typeof description !== "undefined" &&
-			typeof content !== "undefined" &&
-			typeof encoded_images !== "undefined"
-		) {
-			return db_conn.exec(
-				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content,images) VALUES (?,?,?,?,?,?,?)",
-				ticket_id,
-				author_id,
-				Date.now(),
-				event_type_id,
-				description,
-				content,
-				encoded_images,
-			);
-		}
-		if (
-			typeof content !== "undefined" && typeof encoded_images !== "undefined"
-		) {
-			return db_conn.exec(
-				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,content,encoded_images) VALUES (?,?,?,?,?,?)",
-				ticket_id,
-				author_id,
-				Date.now(),
-				event_type_id,
-				content,
-				encoded_images,
-			);
-		}
+		// if (
+		// 	description !== undefined &&
+		// 	content !== undefined &&
+		// 	image !== undefined
+		// ) {
+		// 	return db_conn.exec(
+		// 		"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content,images) VALUES (?,?,?,?,?,?,?)",
+		// 		ticket_id,
+		// 		author_id,
+		// 		Date.now(),
+		// 		event_type_id,
+		// 		description,
+		// 		content,
+		// 		image,
+		// 	);
+		// }
+		// if (
+		// 	typeof content !== "undefined" && typeof image !== "undefined"
+		// ) {
+		// 	return db_conn.exec(
+		// 		"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,content,encoded_images) VALUES (?,?,?,?,?,?)",
+		// 		ticket_id,
+		// 		author_id,
+		// 		Date.now(),
+		// 		event_type_id,
+		// 		content,
+		// 		image,
+		// 	);
+		// }
 		if (typeof description !== "undefined" && typeof content !== "undefined") {
 			return db_conn.exec(
 				"INSERT INTO events (fk_ticket_id,fk_author_id,created_at,fk_event_type,description,content) VALUES (?,?,?,?,?,?)",
@@ -966,26 +907,40 @@ function deleteTag(tag_id: number) {
 }
 
 //#endregion
-
-function getUserPermissionsByUserId(user_id: string) {
-	return db_conn
-		.prepare(
-			"SELECT users.pk_user_id,users.user_name,D.pk_department_id,D.department_name,R.pk_role_id,R.role_name,A.action_name FROM users " +
-				"LEFT JOIN user_associations UA on UA.fk_user_id = users.pk_user_id" +
-				"LEFT JOIN departments D on D.pk_department_id = UA.fk_department_id" +
-				"LEFT JOIN roles R on R.pk_role_id = UA.fk_role_id" +
-				"LEFT JOIN allowed_role_actions RA on RA.fk_role_id = R.pk_role_id" +
-				"LEFT JOIN actions A on A.pk_action_id = RA.fk_actions_id" +
-				"WHERE users.pk_user_id= ?",
-		)
-		.all(user_id);
+//#region Images
+function addImageToEvent(
+	event_id: string,
+	image: string,
+): number | Error {
+	try {
+		return db_conn.exec(
+			"INSERT INTO images (pk_image_id,image_data,fk_event_id) VALUES (?,?,?)",
+			crypto.randomUUID(),
+			event_id,
+			image,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
 }
-
-// sadly no parameter binding for tablename possible and therefore string concat as it will not be used outside
-function _rowCounter(tablename: string): number {
-	const query = "SELECT count(*) as count FROM " + tablename;
-	return Object.values(db_conn.prepare(query).get()!).at(0) as number;
+function addImageToTicket(
+	ticket_id: string,
+	image: string,
+): number | Error {
+	try {
+		return db_conn.exec(
+			"INSERT INTO images (pk_image_id,image_data,fk_ticket_id) VALUES (?,?,?)",
+			crypto.randomUUID(),
+			ticket_id,
+			image,
+		);
+	} catch (error) {
+		assertIsError(error);
+		return error;
+	}
 }
+//#endregion
 
 function closeDB() {
 	if (db_conn.open) {
@@ -1001,6 +956,13 @@ export default {
 	db_conn,
 	initDB,
 	closeDB,
+	addTicketToDepartment,
+	updateTicketOfDepartment,
+	deleteTicketFromDepartment,
+	addImageToEvent,
+	addImageToTicket,
+	getUserActionsByUserId,
+
 	addUser,
 	getUsers,
 	getUserById,
@@ -1033,7 +995,7 @@ export default {
 	addTicket,
 	getTicketById,
 	getTicketsOfDepartment,
-	getTicketOfUser,
+	getTicketsOfUser,
 	updateTicketStatus,
 	deleteTicketById,
 	addEventToTicket,
@@ -1042,5 +1004,5 @@ export default {
 	getTagById,
 	getTagsInDepartment,
 	deleteTag,
-	getUserPermissionsByUserId,
+	updateDepartment,
 };
