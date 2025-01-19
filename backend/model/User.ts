@@ -42,6 +42,27 @@ import Department from "@backend/model/Department.ts";
  *     }
  * ```
  */
+export interface ServersideUserModel extends Model<ServersideUser> {
+	getRoles: HasManyGetAssociationsMixin<Role>;
+	addRole: HasManyAddAssociationMixin<Role, number>;
+	addRoles: HasManyAddAssociationsMixin<Role, number>;
+	setRoles: HasManySetAssociationsMixin<Role, number>;
+	removeRole: HasManyRemoveAssociationMixin<Role, number>;
+	removeRoles: HasManyRemoveAssociationsMixin<Role, number>;
+	hasRole: HasManyHasAssociationMixin<Role, number>;
+	hasRoles: HasManyHasAssociationsMixin<Role, number>;
+	countRoles: HasManyCountAssociationsMixin;
+
+	getActions: HasManyGetAssociationsMixin<Action>;
+	addAction: HasManyAddAssociationMixin<Action, number>;
+	addActions: HasManyAddAssociationsMixin<Action, number>;
+	setActions: HasManySetAssociationsMixin<Action, number>;
+	removeAction: HasManyRemoveAssociationMixin<Action, number>;
+	removeActions: HasManyRemoveAssociationsMixin<Action, number>;
+	hasAction: HasManyHasAssociationMixin<Action, number>;
+	hasActions: HasManyHasAssociationsMixin<Action, number>;
+	countActions: HasManyCountAssociationsMixin;
+}
 
 export default class User extends Model<DTOUser, DTOUserCreate> implements DTOUser {
 	// Properties
@@ -73,7 +94,7 @@ export default class User extends Model<DTOUser, DTOUserCreate> implements DTOUs
 	declare countActions: HasManyCountAssociationsMixin;
 
 	// Static Methods
-	static async getUserById(user_id: string): Promise<Model<ServersideUser> | null> {
+	static async getUserById(user_id: string): Promise<ServersideUserModel | null> {
 		const user = await User.findOne({
 			where: { pk_user_id: user_id },
 			include: [
@@ -104,12 +125,12 @@ export default class User extends Model<DTOUser, DTOUserCreate> implements DTOUs
 					},
 				},
 			],
-		}) as unknown as Model<ServersideUser>;
+		}) as unknown as ServersideUserModel;
 		if (!user) return null;
 
 		return user;
 	}
-	static async getUserByName(user_name: string): Promise<Model<ServersideUser> | null> {
+	static async getUserByName(user_name: string): Promise<ServersideUserModel | null> {
 		const user = await User.findOne({
 			where: { user_name: user_name },
 			include: [
@@ -140,7 +161,7 @@ export default class User extends Model<DTOUser, DTOUserCreate> implements DTOUs
 					},
 				},
 			],
-		}) as unknown as Model<ServersideUser>;
+		}) as unknown as ServersideUserModel;
 		if (!user) return null;
 
 		return user;

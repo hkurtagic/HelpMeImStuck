@@ -15,7 +15,7 @@ import {
 } from "./shared_schemas.ts";
 
 enum Actions {
-	ticket_create,
+	ticket_create = 1,
 	ticket_pullBack,
 	ticket_closeOwn,
 	ticket_seeDepartmentTickets,
@@ -45,14 +45,14 @@ enum Actions {
 	department_delete,
 }
 enum EventType {
-	statusChange,
+	statusChange = 1,
 	departmentAdded,
 	departmentForwarded,
 	Comment,
 }
 
 enum TicketStatus {
-	OPEN,
+	OPEN = 1,
 	IN_PROGRESS,
 	CLOSED,
 }

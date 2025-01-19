@@ -6,9 +6,7 @@
 // }
 
 interface ObjectDiff {
-	added?: Record<string | number | symbol, unknown> | {
-		[propName: string]: unknown;
-	} | ObjectDiff;
+	added?: Record<string | number | symbol, unknown> | ObjectDiff;
 	updated?: {
 		[propName: string]: unknown | ObjectDiff;
 	};
@@ -66,7 +64,10 @@ export class ObjectUtils {
 						if (deep && this.isObject(oldPropValue) && this.isObject(newPropValue)) {
 							const d = this.diff(oldPropValue, newPropValue, deep);
 							if (d) updated[oldProp as keyof typeof oldObj] = d;
-						} else if ((Array.isArray(newPropValue) && Array.isArray(oldPropValue))) {
+						} else if (
+							(Array.isArray(newPropValue) && Array.isArray(oldPropValue)) &&
+							!this.isObject(oldPropValue[0]) && !this.isObject(newPropValue[0])
+						) {
 							const arrayDiff = this.arrayDiff(oldPropValue, newPropValue);
 							if (arrayDiff) {
 								if (arrayDiff.added.length) {

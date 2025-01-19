@@ -15,8 +15,8 @@ import {
 	Model,
 } from "npm:sequelize";
 import { sequelize } from "@backend/service/dbconnector.ts";
-import DepartmentModel from "@backend/model/Department.ts";
-import ActionModel from "@backend/model/Action.ts";
+import Department from "@backend/model/Department.ts";
+import Action from "@backend/model/Action.ts";
 import { DTORole, DTORoleCreate } from "@backend/schemes_and_types/dto_objects.ts";
 import { ServersideRole } from "@backend/schemes_and_types/serverside_types.ts";
 
@@ -38,8 +38,22 @@ import { ServersideRole } from "@backend/schemes_and_types/serverside_types.ts";
  *   }
  * ```
  */
+export interface ServersideRoleModel extends Model<ServersideRole> {
+	getDepartment: BelongsToGetAssociationMixin<Department>;
+	setDepartment: BelongsToSetAssociationMixin<Department, number>;
 
-export default class RoleModel extends Model<DTORole, DTORoleCreate> implements DTORole {
+	getActions: HasManyGetAssociationsMixin<Action>;
+	addAction: HasManyAddAssociationMixin<Action, number>;
+	addActions: HasManyAddAssociationsMixin<Action, number>;
+	setActions: HasManySetAssociationsMixin<Action, number>;
+	removeAction: HasManyRemoveAssociationMixin<Action, number>;
+	removeActions: HasManyRemoveAssociationsMixin<Action, number>;
+	hasAction: HasManyHasAssociationMixin<Action, number>;
+	hasActions: HasManyHasAssociationsMixin<Action, number>;
+	countActions: HasManyCountAssociationsMixin;
+}
+
+export default class Role extends Model<DTORole, DTORoleCreate> implements DTORole {
 	// Properties
 	declare pk_role_id: CreationOptional<DTORole["pk_role_id"]>;
 	declare role_name: DTORole["role_name"];
@@ -48,69 +62,69 @@ export default class RoleModel extends Model<DTORole, DTORoleCreate> implements 
 	// Since TS cannot determine model association at compile time
 	// we have to declare them here purely virtually
 	// these will not exist until `Model.init` was called.
-	declare getDepartment: BelongsToGetAssociationMixin<DepartmentModel>;
-	declare setDepartment: BelongsToSetAssociationMixin<DepartmentModel, number>;
+	declare getDepartment: BelongsToGetAssociationMixin<Department>;
+	declare setDepartment: BelongsToSetAssociationMixin<Department, number>;
 
-	declare getActions: HasManyGetAssociationsMixin<ActionModel>;
-	declare addAction: HasManyAddAssociationMixin<ActionModel, number>;
-	declare addActions: HasManyAddAssociationsMixin<ActionModel, number>;
-	declare setActions: HasManySetAssociationsMixin<ActionModel, number>;
-	declare removeAction: HasManyRemoveAssociationMixin<ActionModel, number>;
-	declare removeActions: HasManyRemoveAssociationsMixin<ActionModel, number>;
-	declare hasAction: HasManyHasAssociationMixin<ActionModel, number>;
-	declare hasActions: HasManyHasAssociationsMixin<ActionModel, number>;
+	declare getActions: HasManyGetAssociationsMixin<Action>;
+	declare addAction: HasManyAddAssociationMixin<Action, number>;
+	declare addActions: HasManyAddAssociationsMixin<Action, number>;
+	declare setActions: HasManySetAssociationsMixin<Action, number>;
+	declare removeAction: HasManyRemoveAssociationMixin<Action, number>;
+	declare removeActions: HasManyRemoveAssociationsMixin<Action, number>;
+	declare hasAction: HasManyHasAssociationMixin<Action, number>;
+	declare hasActions: HasManyHasAssociationsMixin<Action, number>;
 	declare countActions: HasManyCountAssociationsMixin;
 
 	// Static Methods
 	static async getRoleByName(
 		role_name: string,
 		department_id: number,
-	): Promise<Model<ServersideRole> | null> {
-		const role = await RoleModel.findOne({
+	): Promise<ServersideRoleModel | null> {
+		const role = await Role.findOne({
 			where: { role_name: role_name },
 			include: [{
-				model: DepartmentModel,
+				model: Department,
 				as: "department",
 				where: {
 					pk_department_id: department_id,
 				},
 				required: true,
 			}, {
-				model: ActionModel,
+				model: Action,
 				as: "actions",
 				required: true,
 				through: {
 					attributes: [],
 				},
 			}],
-		}) as unknown as Model<ServersideRole>;
+		}) as unknown as ServersideRoleModel;
 
 		if (!role) return null;
 		return role;
 	}
-	static async getRoleById(role_id: number): Promise<Model<ServersideRole> | null> {
-		const role = await RoleModel.findOne({
+	static async getRoleById(role_id: number): Promise<ServersideRoleModel | null> {
+		const role = await Role.findOne({
 			where: { pk_role_id: role_id },
 			include: [{
-				model: DepartmentModel,
+				model: Department,
 				as: "department",
 				required: true,
 			}, {
-				model: ActionModel,
+				model: Action,
 				as: "actions",
 				required: true,
 				through: {
 					attributes: [],
 				},
 			}],
-		}) as unknown as Model<ServersideRole>;
+		}) as unknown as (ServersideRoleModel);
 
 		if (!role) return null;
 		return role;
 	}
 }
 
-RoleModel.init({
+Role.init({
 	pk_role_id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,

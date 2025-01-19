@@ -24,15 +24,14 @@ import { DTOAction } from "@backend/schemes_and_types/dto_objects.ts";
  * ```
  */
 
-export default class ActionModel
-	extends Model<InferAttributes<ActionModel>, InferCreationAttributes<ActionModel>>
+export default class Action extends Model<InferAttributes<Action>, InferCreationAttributes<Action>>
 	implements DTOAction {
 	// Properties
 	declare pk_action_id: CreationOptional<DTOAction["pk_action_id"]>;
 	declare action_name: DTOAction["action_name"];
 }
 
-ActionModel.init({
+Action.init({
 	pk_action_id: {
 		type: DataTypes.INTEGER,
 		autoIncrement: true,
