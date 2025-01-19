@@ -9,6 +9,7 @@ import {
 	Actions,
 	Department,
 	DepartmentCreate,
+	EventType,
 	Role,
 	RoleCreate,
 	TicketStatus,
@@ -46,6 +47,11 @@ export async function prefillDB() {
 	Object.values(TicketStatus).forEach(async (k, _) => {
 		if (typeof k === "string") {
 			await dbController.addStatus(k);
+		}
+	});
+	Object.values(EventType).forEach(async (k, _) => {
+		if (typeof k === "string") {
+			await dbController.addEventType(k);
 		}
 	});
 	// #region Admin

@@ -66,6 +66,11 @@ const S_DTOStatus = z.object({
 	status_name: z.string(),
 });
 
+const S_DTOEventType = z.object({
+	pk_event_type_id: ID,
+	event_type_name: z.string(),
+});
+
 export type DTOAction = z.infer<typeof S_DTOAction>;
 
 export type DTODepartmentCreate = z.infer<typeof S_DTODepartmentCreate>;
@@ -79,11 +84,13 @@ export type DTOUserCreate = z.infer<typeof S_DTOUserCreate>;
 export type DTOUser = z.infer<typeof S_DTOUser>;
 
 export type DTOStatus = z.infer<typeof S_DTOStatus>;
+export type DTOEventType = z.infer<typeof S_DTOEventType>;
 
 export {
 	S_DTOAction,
 	S_DTODepartment,
 	S_DTODepartmentCreate,
+	S_DTOEventType,
 	S_DTORole,
 	S_DTORoleCreate,
 	S_DTORoleParsed,

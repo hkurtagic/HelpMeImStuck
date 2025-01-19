@@ -130,5 +130,6 @@ export {
 	S_UserLogin,
 	UUID,
 	zAction,
+	zEventType,
 	zTicketStatus,
 };

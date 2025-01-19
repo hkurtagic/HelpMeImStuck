@@ -6,6 +6,7 @@ import { default as ActionModel } from "@backend/model/Action.ts";
 import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.ts";
 import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
 import { default as StatusModel } from "@backend/model/Status.ts";
+import { default as EventTypeModel } from "@backend/model/EventType.ts";
 import {
 	SQLNoActionFound,
 	SQLNoDepartmentFound,
@@ -395,9 +396,13 @@ const addEvent = async () => {};
 const editEvent = async () => {};
 const deleteEvent = async () => {};
 
-const addEventType = async () => {};
-const editEventType = async () => {};
-const deleteEventType = async () => {};
+export const addEventType = async (eventType: string) => {
+	return await EventTypeModel.create({
+		event_type_name: eventType,
+	});
+};
+// const editEventType = async () => {};
+// const deleteEventType = async () => {};
 
 // const addUserToDepartment = async () => {};
 // const removeUserFromDepartment = async () => {};

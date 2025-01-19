@@ -5,12 +5,13 @@ import {
 	S_User,
 	UUID,
 	zAction,
+	zEventType,
 	zTicketStatus,
 } from "@shared/shared_schemas.ts";
 import {
-	// DTOStatusSchema,
 	S_DTOAction,
 	S_DTODepartment,
+	S_DTOEventType,
 	S_DTORoleParsed,
 	S_DTOStatus,
 	S_DTOUserExtendedParsed,
@@ -88,6 +89,13 @@ const S_StatusServer = z.union([
 	zTicketStatus.array(),
 ]);
 
+const S_EventTypeServer = z.union([
+	S_DTOEventType.transform(({ pk_event_type_id, ..._ }) => {
+		return pk_event_type_id;
+	}),
+	zEventType.array(),
+]);
+
 const JWTExtraPayload = z.object({
 	user_id: UUID,
 });
@@ -102,6 +110,7 @@ export {
 	JWTPayload,
 	RequesterActionPreset,
 	S_Action,
+	S_EventTypeServer,
 	S_ServerDepartment,
 	S_ServersideRole,
 	S_ServersideUser,
