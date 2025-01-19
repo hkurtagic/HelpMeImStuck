@@ -12,16 +12,9 @@ import {
 	S_DTOAction,
 	S_DTODepartment,
 	S_DTORoleParsed,
+	S_DTOStatus,
 	S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
-
-// const S_Status = z.union([
-// 	DTOStatusSchema,
-// 	z.object({
-// 		status_id: z.number().nonnegative(),
-// 		status_name: zTicketStatus,
-// 	}),
-// ]);
 
 const S_Action = z.union([
 	S_DTOAction,
@@ -88,6 +81,13 @@ const S_ServersideUser = z.union([
 	}),
 ]);
 
+const S_StatusServer = z.union([
+	S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
+		return pk_status_id;
+	}),
+	zTicketStatus.array(),
+]);
+
 const JWTExtraPayload = z.object({
 	user_id: UUID,
 });
@@ -105,6 +105,6 @@ export {
 	S_ServerDepartment,
 	S_ServersideRole,
 	S_ServersideUser,
-	// S_Status,
+	S_StatusServer,
 	SupporterActionPreset,
 };

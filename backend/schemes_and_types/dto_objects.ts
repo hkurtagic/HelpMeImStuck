@@ -1,16 +1,6 @@
 import { z } from "zod";
 import { ID, UUID } from "@shared/shared_schemas.ts";
 
-const DTOStatusSchema = z.object({
-	pk_status_id: ID,
-	status_name: z.string(),
-}).transform(({ pk_status_id, ...rest }) => {
-	return {
-		status_id: pk_status_id,
-		...rest,
-	};
-});
-
 const S_DTOAction = z.object({
 	pk_action_id: ID,
 	action_name: z.string(),
@@ -70,6 +60,12 @@ const S_DTOUserExtendedParsed = S_DTOUser.extend({
 		...rest,
 	};
 });
+
+const S_DTOStatus = z.object({
+	pk_status_id: ID,
+	status_name: z.string(),
+});
+
 export type DTOAction = z.infer<typeof S_DTOAction>;
 
 export type DTODepartmentCreate = z.infer<typeof S_DTODepartmentCreate>;
@@ -82,14 +78,16 @@ export type DTORole = z.infer<typeof S_DTORole>;
 export type DTOUserCreate = z.infer<typeof S_DTOUserCreate>;
 export type DTOUser = z.infer<typeof S_DTOUser>;
 
+export type DTOStatus = z.infer<typeof S_DTOStatus>;
+
 export {
-	// DTOStatusSchema,
 	S_DTOAction,
 	S_DTODepartment,
 	S_DTODepartmentCreate,
 	S_DTORole,
 	S_DTORoleCreate,
 	S_DTORoleParsed,
+	S_DTOStatus,
 	S_DTOUser,
 	S_DTOUserCreate,
 	S_DTOUserExtendedParsed,

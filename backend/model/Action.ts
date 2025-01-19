@@ -1,10 +1,4 @@
-import {
-	CreationOptional,
-	DataTypes,
-	InferAttributes,
-	InferCreationAttributes,
-	Model,
-} from "npm:sequelize";
+import { CreationOptional, DataTypes, InferCreationAttributes, Model } from "npm:sequelize";
 import { sequelize } from "@backend/service/dbconnector.ts";
 import { DTOAction } from "@backend/schemes_and_types/dto_objects.ts";
 
@@ -24,7 +18,7 @@ import { DTOAction } from "@backend/schemes_and_types/dto_objects.ts";
  * ```
  */
 
-export default class Action extends Model<InferAttributes<Action>, InferCreationAttributes<Action>>
+export default class Action extends Model<DTOAction, InferCreationAttributes<Action>>
 	implements DTOAction {
 	// Properties
 	declare pk_action_id: CreationOptional<DTOAction["pk_action_id"]>;

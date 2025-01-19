@@ -1,10 +1,11 @@
 import { sequelize } from "@backend/service/dbconnector.ts";
 import { Model } from "sequelize";
-import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
-import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.ts";
-import { default as ActionModel } from "@backend/model/Action.ts";
-import { default as DepartmentModel } from "@backend/model/Department.ts";
 import { ObjectUtils } from "./objectDiff.ts";
+import { default as DepartmentModel } from "@backend/model/Department.ts";
+import { default as ActionModel } from "@backend/model/Action.ts";
+import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.ts";
+import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
+import { default as StatusModel } from "@backend/model/Status.ts";
 import {
 	SQLNoActionFound,
 	SQLNoDepartmentFound,
@@ -169,7 +170,7 @@ export const addAction = async (
 	action: string,
 ): Promise<ActionModel> => {
 	return await ActionModel.create({
-		action_name: action.toString(),
+		action_name: action,
 	});
 };
 // const editAction = async () => {};
@@ -378,9 +379,13 @@ const addTicket = async () => {};
 const editTicket = async () => {};
 const deleteTicket = async () => {};
 
-const addStatus = async () => {};
-const editStatus = async () => {};
-const deleteStatus = async () => {};
+export const addStatus = async (status: string) => {
+	return await StatusModel.create({
+		status_name: status,
+	});
+};
+// const editStatus = async () => {};
+// const deleteStatus = async () => {};
 
 const addTag = async () => {};
 const editTag = async () => {};
@@ -394,7 +399,7 @@ const addEventType = async () => {};
 const editEventType = async () => {};
 const deleteEventType = async () => {};
 
-const addUserToDepartment = async () => {};
-const removeUserFromDepartment = async () => {};
+// const addUserToDepartment = async () => {};
+// const removeUserFromDepartment = async () => {};
 const addRoleToUser = async () => {};
 const removeRoleFromUser = async () => {};

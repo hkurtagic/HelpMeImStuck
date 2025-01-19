@@ -11,6 +11,7 @@ import {
 	DepartmentCreate,
 	Role,
 	RoleCreate,
+	TicketStatus,
 	UserCreate,
 } from "@shared/shared_types.ts";
 import {
@@ -37,9 +38,14 @@ export async function prefillDB() {
 	// 		});
 	// 	}
 	// });
-	Object.values(Actions).forEach(async (k, v) => {
+	Object.values(Actions).forEach(async (k, _) => {
 		if (typeof k === "string") {
 			await dbController.addAction(k);
+		}
+	});
+	Object.values(TicketStatus).forEach(async (k, _) => {
+		if (typeof k === "string") {
+			await dbController.addStatus(k);
 		}
 	});
 	// #region Admin
