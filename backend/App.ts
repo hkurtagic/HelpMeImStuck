@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 // import { cors } from "hono/cors";
-import user from "@backend/route/User.ts";
+//import user from "@backend/route/User.ts";
+import user from "@backend/route/Test.User.ts";
 import test from "@backend/route/Test.ts";
 // import database from "@backend/service/database.ts";
 import department from "@backend/route/Department.ts";
