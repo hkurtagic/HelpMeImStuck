@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { EventType as event_type, TicketStatus as ticket_status } from "./shared_types.ts";
+import { Actions, EventType as event_type, TicketStatus as ticket_status } from "./shared_types.ts";
 
 const zTicketStatus = z.nativeEnum(ticket_status);
 const EventType = z.nativeEnum(event_type);
+const zAction = z.nativeEnum(Actions);
 
 // const UUIDScheme = z.string().refine(
 // 	(value) =>
@@ -23,10 +24,20 @@ const DepartmentScheme = NewDepartmentScheme.extend({
 	department_id: ID,
 });
 
+const TestNewDepartmentScheme = z.object({
+	department_name: z.string().optional(),
+	department_description: z.string().optional(),
+});
+
+const TestDepartmentScheme = TestNewDepartmentScheme.extend({
+	department_id: ID,
+});
+
 const NewRoleScheme = z.object({
 	role_name: z.string(),
 	role_description: z.string().optional(),
 	department: DepartmentScheme,
+	actions: zAction.array().optional(),
 });
 
 const RoleScheme = NewRoleScheme.extend({
@@ -44,6 +55,16 @@ const NewUserScheme = LoginUserScheme.extend({
 
 const UserScheme = NewUserScheme.extend({
 	user_id: UUID,
+}).omit({
+	password: true,
+});
+
+const TestNewUserScheme = LoginUserScheme.extend({
+	roles: RoleScheme.array().optional(),
+});
+
+const TestUserScheme = TestNewUserScheme.extend({
+	user_id: z.string(),
 }).omit({
 	password: true,
 });
@@ -121,6 +142,9 @@ export {
 	NewUserScheme,
 	RoleScheme,
 	TagScheme,
+	TestDepartmentScheme,
+	TestNewDepartmentScheme,
+	TestUserScheme,
 	TicketEventScheme,
 	TicketHistoryScheme,
 	TicketScheme,
