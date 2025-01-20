@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { JWTAuthController } from "../controller/AuthenticationController.ts";
+import { JWTAuthController } from "../controller/Test.AuthenticationController.ts";
 import { Department, NewDepartment } from "@shared/shared_types.ts";
 import db from "@backend/service/database.ts";
 import { DepartmentScheme, ID, NewDepartmentScheme } from "@shared/shared_schemas.ts";
