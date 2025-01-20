@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
 	S_Department,
 	S_Role,
+	S_Ticket,
 	S_User,
 	UUID,
 	zAction,
@@ -14,6 +15,8 @@ import {
 	S_DTOEventType,
 	S_DTORoleParsed,
 	S_DTOStatus,
+	S_DTOTicket,
+	S_DTOTicketExtendedParsed,
 	S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
 
@@ -82,7 +85,7 @@ const S_ServersideUser = z.union([
 	}),
 ]);
 
-const S_StatusServer = z.union([
+const S_ServerStatus = z.union([
 	S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
 		return pk_status_id;
 	}),
@@ -94,6 +97,11 @@ const S_EventTypeServer = z.union([
 		return pk_event_type_id;
 	}),
 	zEventType.array(),
+]);
+
+const S_ServerTicket = z.union([
+	S_DTOTicketExtendedParsed,
+	S_Ticket,
 ]);
 
 const JWTExtraPayload = z.object({
@@ -114,6 +122,7 @@ export {
 	S_ServerDepartment,
 	S_ServersideRole,
 	S_ServersideUser,
-	S_StatusServer,
+	S_ServerStatus,
+	S_ServerTicket,
 	SupporterActionPreset,
 };

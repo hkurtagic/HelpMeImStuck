@@ -17,6 +17,15 @@ const S_DTODepartmentCreate = z.object({
 const S_DTODepartment = S_DTODepartmentCreate.extend({
 	pk_department_id: ID,
 });
+const S_DTODepartmentParsed = S_DTODepartment.transform(
+	({ pk_department_id, department_name, department_description }) => {
+		return {
+			department_id: pk_department_id,
+			department_name: department_name,
+			department_description: department_description,
+		};
+	},
+);
 
 const S_DTORoleCreate = z.object({
 	role_name: z.string(),
@@ -26,17 +35,13 @@ const S_DTORole = S_DTORoleCreate.extend({
 	pk_role_id: ID,
 });
 const S_DTORoleParsed = S_DTORole.extend({
-	department: S_DTODepartment,
+	department: S_DTODepartmentParsed,
 	actions: S_DTOAction.array(),
 }).transform(({ pk_role_id, actions, department, ...rest }) => {
 	return {
 		role_id: pk_role_id,
 		...rest,
-		department: {
-			department_id: department.pk_department_id,
-			department_name: department.department_name,
-			department_description: department.department_description,
-		},
+		department,
 		actions: actions.map(({ pk_action_id }) => pk_action_id),
 	};
 });
@@ -66,9 +71,68 @@ const S_DTOStatus = z.object({
 	status_name: z.string(),
 });
 
+const S_DTOTag = z.object({
+	pk_tag_id: ID,
+	tag_name: z.string(),
+	tag_abbreviation: z.string(),
+	tag_description: z.string(),
+	tag_style: z.string(),
+});
+const S_DTOTagExtended = S_DTOTag.extend({
+	department: S_DTODepartment,
+});
+
 const S_DTOEventType = z.object({
 	pk_event_type_id: ID,
 	event_type_name: z.string(),
+});
+
+const S_DTOEvent = z.object({
+	pk_event_id: ID,
+	event_description: z.string().optional().nullable(),
+	event_content: z.string(),
+});
+
+const S_DTOImage = z.object({
+	pk_image_id: UUID,
+	image_content: z.string(),
+	image_type: z.string().nullable().optional(),
+});
+
+const S_DTOTicketCreate = z.object({
+	ticket_title: z.string(),
+	ticket_description: z.string(),
+});
+
+const S_DTOTicket = S_DTOTicketCreate.extend({
+	pk_ticket_id: UUID,
+});
+const S_DTOTicketExtendedParsed = S_DTOTicket.extend({
+	departments: S_DTODepartmentParsed.array(),
+	author: S_DTOUser.omit({ password_hash: true }),
+	// Status: S_DTOStatus.omit({ pk_status_id: true }).transform(({ status_name, ..._ }) => {
+	// 	return status_name;
+	// }),
+	Status: S_DTOStatus.omit({ status_name: true }).transform(({ pk_status_id, ..._ }) => {
+		return pk_status_id;
+	}),
+	Tags: S_DTOTag.array().nullable(),
+	Images: S_DTOImage.array().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+}).transform(({ pk_ticket_id, Status, author, departments, Tags, Images, ...rest }) => {
+	return {
+		ticket_id: pk_ticket_id,
+		ticket_status: Status,
+		author: {
+			user_id: author.pk_user_id,
+			user_name: author.user_name,
+		},
+		departments,
+		tags: Tags,
+		images: Images,
+		...rest,
+	};
 });
 
 export type DTOAction = z.infer<typeof S_DTOAction>;
@@ -83,18 +147,27 @@ export type DTORole = z.infer<typeof S_DTORole>;
 export type DTOUserCreate = z.infer<typeof S_DTOUserCreate>;
 export type DTOUser = z.infer<typeof S_DTOUser>;
 
-export type DTOStatus = z.infer<typeof S_DTOStatus>;
+export type DTOTicketCreate = z.infer<typeof S_DTOTicketCreate>;
+export type DTOTicket = z.infer<typeof S_DTOTicket>;
+
 export type DTOEventType = z.infer<typeof S_DTOEventType>;
+export type DTOEvent = z.infer<typeof S_DTOEvent>;
+
+export type DTOImage = z.infer<typeof S_DTOImage>;
 
 export {
 	S_DTOAction,
 	S_DTODepartment,
 	S_DTODepartmentCreate,
+	S_DTOEvent,
 	S_DTOEventType,
+	S_DTOImage,
 	S_DTORole,
 	S_DTORoleCreate,
 	S_DTORoleParsed,
 	S_DTOStatus,
+	S_DTOTicket,
+	S_DTOTicketExtendedParsed,
 	S_DTOUser,
 	S_DTOUserCreate,
 	S_DTOUserExtendedParsed,

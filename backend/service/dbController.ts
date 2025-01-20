@@ -7,10 +7,13 @@ import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.t
 import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
 import { default as StatusModel } from "@backend/model/Status.ts";
 import { default as EventTypeModel } from "@backend/model/EventType.ts";
+import { default as TicketModel, TicketModelExtended } from "@backend/model/Ticket.ts";
+import { default as ImageModel } from "@backend/model/Image.ts";
 import {
 	SQLNoActionFound,
 	SQLNoDepartmentFound,
 	SQLNoRoleFound,
+	SQLNoTicketFound,
 	SQLNoUserFound,
 } from "@backend/model/Errors.ts";
 import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
@@ -25,6 +28,8 @@ import {
 	Department,
 	DepartmentCreate,
 	RoleCreate,
+	TicketCreate,
+	TicketStatus,
 	UserCreate,
 } from "@shared/shared_types.ts";
 
@@ -376,7 +381,71 @@ export const deleteDepartment = async (
 	return true;
 };
 
-const addTicket = async () => {};
+export const addTicket = async (
+	new_ticket: TicketCreate,
+): Promise<TicketModelExtended | null> => {
+	const t = await sequelize.transaction();
+	let ticket = null;
+	try {
+		// check if departments exist
+		const ticket_department_ids: number[] = [];
+		for (const dept of (new_ticket.departments)) {
+			const d = await DepartmentModel.getDepartmentById(dept.department_id);
+			if (!d) throw SQLNoDepartmentFound(dept.department_id, dept.department_name);
+			ticket_department_ids.push(d.toJSON().pk_department_id);
+		}
+		// check if user exists
+		const u = await UserModel.findByPk(new_ticket.author.user_id);
+		if (!u) throw SQLNoUserFound(new_ticket.author.user_id, new_ticket.author.user_name);
+		// create ticket
+		ticket = await TicketModel.create({
+			ticket_title: new_ticket.ticket_title,
+			ticket_description: new_ticket.ticket_description,
+		}, { transaction: t });
+
+		// assign ticket to department
+		await ticket.setDepartments(ticket_department_ids, { transaction: t });
+		// assign ticket to user
+		await ticket.setAuthor(u, { transaction: t });
+		await ticket.setStatus(TicketStatus.OPEN, { transaction: t });
+
+		const image_ids: string[] = [];
+		if (new_ticket.images) {
+			for (const image of new_ticket.images) {
+				image_ids.push(
+					(await ImageModel.create({ image_content: image }, { transaction: t })).toJSON()
+						.pk_image_id,
+				);
+			}
+			await ticket.setImages(image_ids, { transaction: t });
+		}
+		await t.commit();
+	} catch (error) {
+		console.error(error);
+		// If the execution reaches this line, an error was thrown.
+		// We rollback the transaction.
+		await t.rollback();
+		return null;
+	}
+
+	const res = await TicketModel.getTicketById(ticket.toJSON().pk_ticket_id);
+	if (!res) {
+		throw SQLNoTicketFound(
+			ticket.toJSON().pk_ticket_id,
+			new_ticket.author.user_id,
+			new_ticket.author.user_name,
+		);
+	}
+	return res;
+};
+// const getTicket = async (
+// 	ticket_id: string,
+// ): Promise<TicketModel> => {
+// };
+// const getTickets = async (
+// 	ticket: {author_id:string}|{department_id:number} ,
+// ): Promise<TicketModel> => {
+// };
 const editTicket = async () => {};
 const deleteTicket = async () => {};
 

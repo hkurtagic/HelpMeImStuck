@@ -12,6 +12,7 @@ import {
 	S_User,
 	S_UserCreate,
 	S_UserLogin,
+	S_UserPreview,
 } from "./shared_schemas.ts";
 
 enum Actions {
@@ -48,7 +49,7 @@ enum EventType {
 	statusChange = 1,
 	departmentAdded,
 	departmentForwarded,
-	Comment,
+	comment,
 }
 
 enum TicketStatus {
@@ -64,6 +65,7 @@ export type Role = z.infer<typeof S_Role>;
 export type UserLogin = z.infer<typeof S_UserLogin>;
 export type UserCreate = z.infer<typeof S_UserCreate>;
 export type User = z.infer<typeof S_User>;
+export type UserPreview = z.infer<typeof S_UserPreview>;
 export type TicketCreate = z.infer<typeof S_TicketCreate>;
 export type Ticket = z.infer<typeof S_Ticket>;
 export type TicketEvent = z.infer<typeof S_TicketEvent>;

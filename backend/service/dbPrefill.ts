@@ -12,6 +12,8 @@ import {
 	EventType,
 	Role,
 	RoleCreate,
+	TicketCreate,
+	TicketEvent,
 	TicketStatus,
 	UserCreate,
 } from "@shared/shared_types.ts";
@@ -21,9 +23,10 @@ import {
 	S_ServerDepartment,
 	S_ServersideRole,
 	S_ServersideUser,
+	S_ServerTicket,
 	SupporterActionPreset,
 } from "@backend/schemes_and_types/serverside_schemas.ts";
-import { S_Department } from "@shared/shared_schemas.ts";
+import { S_Department, S_Ticket } from "@shared/shared_schemas.ts";
 import * as dbController from "./dbController.ts";
 import { S_DTOUserExtendedParsed } from "@backend/schemes_and_types/dto_objects.ts";
 import { AlgorithmName, hash } from "@stdext/crypto/hash";
@@ -172,6 +175,27 @@ async function testDB() {
 	// const d_delete_parsed = S_ServerDepartment.parse(d_delete!.toJSON());
 	console.info("> department deleted?: " + JSON.stringify(d_delete));
 	*/
+
+	// test_ticket
+	const test_create_t: TicketCreate = {
+		author: { user_id: u_update_parsed.user_id, user_name: u_update_parsed.user_name },
+		departments: [d_update_parsed],
+		ticket_title: "test_ticket",
+		ticket_description: "ticket description",
+	};
+
+	console.info("> new ticket: " + JSON.stringify(test_create_t));
+	const t_create = await dbController.addTicket(test_create_t);
+	console.info("> created ticket: " + JSON.stringify(t_create.toJSON()));
+	const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
+	console.info("> created ticket: " + JSON.stringify(t_create_parsed));
+	S_Ticket.parse(t_create_parsed);
+
+	//test event
+	// const test_create_e:TicketEvent = {
+	//     author_id: u_update_parsed.user_id,
+	//     ticket_id:
+	// }
 }
 
 /*

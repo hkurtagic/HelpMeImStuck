@@ -50,6 +50,11 @@ const S_User = S_UserCreate.extend({
 }).omit({
 	password: true,
 });
+// intended for ticket history and non admin purposes
+const S_UserPreview = S_User.omit({
+	actions: true,
+	roles: true,
+});
 
 const S_Tag = z.object({
 	tag_name: z.string(),
@@ -60,7 +65,7 @@ const S_Tag = z.object({
 });
 
 const S_TicketCreate = z.object({
-	author: z.string(),
+	author: S_UserPreview,
 	departments: S_Department.array(),
 	ticket_title: z.string(),
 	ticket_description: z.string(),
@@ -74,26 +79,26 @@ const S_Ticket = S_TicketCreate.extend({
 });
 
 const S_TicketEventBase = z.object({
-	event_id: UUID,
+	// event_id: UUID,
 	ticket_id: z.string(),
-	author: z.string(),
+	author: S_UserPreview,
 	created_at: z.string().datetime({ offset: true }),
 });
 
 const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.statusChange),
-	new_status: zTicketStatus,
+	content: zTicketStatus,
 });
 const S_TicketEvent_DepartmentAdded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentAdded),
-	department: S_Department,
+	content: S_Department,
 });
 const S_TicketEvent_DepartmentForwarded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentForwarded),
-	department: S_Department,
+	content: S_Department,
 });
 const S_TicketEvent_Comment = S_TicketEventBase.extend({
-	event_type: z.literal(zEventType.enum.Comment),
+	event_type: z.literal(zEventType.enum.comment),
 	content: z.string(),
 	images: z.string().optional().nullable(),
 });
@@ -128,6 +133,7 @@ export {
 	S_User,
 	S_UserCreate,
 	S_UserLogin,
+	S_UserPreview,
 	UUID,
 	zAction,
 	zEventType,
