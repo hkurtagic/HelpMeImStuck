@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 // import { cors } from "hono/cors";
 //import user from "@backend/route/User.ts";
 import user from "@backend/route/Test.User.ts";
+import role from "@backend/route/Test.Role.ts";
 import test from "@backend/route/Test.ts";
 // import database from "@backend/service/database.ts";
 import department from "@backend/route/Test.Department.ts";
@@ -29,6 +30,8 @@ app.use(logger());
 app.route("/user", user);
 
 app.route("/department", department);
+app.route("/role", role);
+
 app.route("/ticket", tickets);
 
 app.route("/test", test);

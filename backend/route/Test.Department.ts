@@ -34,14 +34,17 @@ department.post(
 		}
 		return parsed.data as NewDepartment;
 	}),
-	async (c) => {
-		const req = await c.req.valid("json");
-		const depts = db.addDepartment(req.department_name, req.department_description);
-		if (depts instanceof Error) {
-			console.log(depts);
-			return c.json({ message: "Serverside error" }, 500);
-		}
-		return c.json(depts, 200);
+	(c) => {
+		const new_dept = c.req.valid("json") as NewDepartment;
+		testData.departments.push(
+			{
+				department_id: testData.departments.length,
+				department_name: new_dept.department_name,
+				department_description: new_dept.department_description,
+			},
+		);
+		setTestData(testData);
+		return c.json({ message: "Successfully created Department" }, 200);
 	},
 );
 // update
