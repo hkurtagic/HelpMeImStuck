@@ -5,7 +5,7 @@ import { logger } from "hono/logger";
 import user from "@backend/route/Test.User.ts";
 import test from "@backend/route/Test.ts";
 // import database from "@backend/service/database.ts";
-import department from "@backend/route/Department.ts";
+import department from "@backend/route/Test.Department.ts";
 import tickets from "./route/Ticket.ts";
 
 const app: Hono = new Hono().basePath("/api");
