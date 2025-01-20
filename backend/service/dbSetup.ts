@@ -81,6 +81,7 @@ export default async (): Promise<void> => {
 	Department.belongsToMany(Ticket, {
 		through: "DepartmentTicket",
 		foreignKey: "fk_department_id",
+		onDelete: "NO ACTION",
 	});
 
 	//Events
@@ -91,7 +92,7 @@ export default async (): Promise<void> => {
 	User.hasMany(Event, { foreignKey: "fk_user_id" });
 	Event.belongsTo(User, { foreignKey: "fk_user_id" });
 	//One Ticket can have many Events
-	Ticket.hasMany(Event, { foreignKey: "fk_ticket_id" });
+	Ticket.hasMany(Event, { foreignKey: "fk_ticket_id", onDelete: "CASCADE" });
 	Event.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });
 	//One Image belongs to one Event / One Event can have multiple Images
 	Image.belongsTo(Event, { foreignKey: "fk_event_id" });
@@ -104,14 +105,14 @@ export default async (): Promise<void> => {
 
 	//Tickets
 	//One User can have multiple Tickets
-	User.hasMany(Ticket, { foreignKey: "fk_user_id" });
+	User.hasMany(Ticket, { foreignKey: "fk_user_id", onDelete: "NO ACTION" });
 	Ticket.belongsTo(User, { foreignKey: "fk_user_id", as: "author" });
 	// Multiple Tickets can have the same status
 	Status.hasMany(Ticket, { foreignKey: "fk_status_id" });
 	Ticket.belongsTo(Status, { foreignKey: "fk_status_id" });
 	// One Tickets can have multiple images / One Image blengs to one Event
 	Image.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });
-	Ticket.hasMany(Image, { foreignKey: "fk_ticket_id" });
+	Ticket.hasMany(Image, { foreignKey: "fk_ticket_id", onDelete: "CASCADE" });
 
 	try {
 		await sequelize.sync({ force: true });

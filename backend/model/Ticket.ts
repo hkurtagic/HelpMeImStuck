@@ -136,19 +136,19 @@ export default class Ticket extends Model<DTOTicket, DTOTicketCreate> implements
 			include: [{
 				model: DepartmentModel,
 				as: "departments",
-				// required: true,
+				required: true,
 				through: {
 					attributes: [],
 				},
 			}, {
 				model: UserModel,
 				as: "author",
-				// required: true,
+				required: true,
 				attributes: ["pk_user_id", "user_name"],
 			}, {
 				model: StatusModel,
 				// as: "ticket_status",
-				// required: true,
+				required: true,
 				attributes: ["pk_status_id"],
 				// through: {
 				// 	attributes: [],

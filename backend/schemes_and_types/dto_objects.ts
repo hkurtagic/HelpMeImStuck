@@ -118,8 +118,8 @@ const S_DTOTicketExtendedParsed = S_DTOTicket.extend({
 	}),
 	Tags: S_DTOTag.array().nullable(),
 	Images: S_DTOImage.array().nullable(),
-	createdAt: z.date(),
-	updatedAt: z.date(),
+	// createdAt: z.date(),
+	// updatedAt: z.date(),
 }).transform(({ pk_ticket_id, Status, author, departments, Tags, Images, ...rest }) => {
 	return {
 		ticket_id: pk_ticket_id,

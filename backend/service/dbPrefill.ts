@@ -186,11 +186,19 @@ async function testDB() {
 
 	console.info("> new ticket: " + JSON.stringify(test_create_t));
 	const t_create = await dbController.addTicket(test_create_t);
-	console.info("> created ticket: " + JSON.stringify(t_create.toJSON()));
 	const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
 	console.info("> created ticket: " + JSON.stringify(t_create_parsed));
-	S_Ticket.parse(t_create_parsed);
 
+	const t_all_of_user = await dbController.getAllTicketsOf({
+		author_id: test_create_t.author.user_id,
+	});
+	const t_all_of_user_parsed = t_all_of_user?.map((ticket) =>
+		S_ServerTicket.parse(ticket.toJSON())
+	);
+	console.info(
+		"> all tickets of " + test_create_t.author.user_name + ": " +
+			JSON.stringify(t_all_of_user_parsed),
+	);
 	//test event
 	// const test_create_e:TicketEvent = {
 	//     author_id: u_update_parsed.user_id,

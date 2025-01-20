@@ -438,17 +438,72 @@ export const addTicket = async (
 	}
 	return res;
 };
-// const getTicket = async (
-// 	ticket_id: string,
-// ): Promise<TicketModel> => {
-// };
-// const getTickets = async (
-// 	ticket: {author_id:string}|{department_id:number} ,
-// ): Promise<TicketModel> => {
-// };
-const editTicket = async () => {};
-const deleteTicket = async () => {};
+export const getTicket = async (
+	ticket_id: string,
+): Promise<TicketModelExtended> => {
+	const res = await TicketModel.getTicketById(ticket_id);
+	if (!res) {
+		throw SQLNoTicketFound(
+			ticket_id,
+		);
+	}
+	return res;
+};
+export const getAllTicketsOf = async (
+	search_for: { author_id: string } | { department_id: number },
+): Promise<TicketModelExtended[] | null> => {
+	let ticket_ids = [];
+	if ("author_id" in search_for) {
+		ticket_ids = (await TicketModel.findAll({
+			include: [{
+				model: UserModel,
+				as: "author",
+				// required: true,
+				attributes: ["pk_user_id"],
+				where: {
+					pk_user_id: search_for.author_id,
+				},
+			}],
+		})).map((o) => (o.toJSON()).pk_ticket_id);
+	} else {
+		ticket_ids = (await TicketModel.findAll({
+			include: [{
+				model: DepartmentModel,
+				as: "departments",
+				// required: true,
+				attributes: ["pk_department_id"],
+				where: {
+					pk_department_id: search_for.department_id,
+				},
+			}],
+		})).map((o) => (o.toJSON()).pk_ticket_id);
+	}
+	if (!ticket_ids.length) return null;
+	const res = [];
+	for (const id of ticket_ids) {
+		res.push((await TicketModel.getTicketById(id))!);
+	}
+	return res;
+};
+// const editTicket = async () => {};
+export const deleteTicket = async (
+	ticket_id: string,
+): Promise<boolean> => {
+	const t = await sequelize.transaction();
+	try {
+		await TicketModel.destroy({
+			where: { pk_ticket_id: ticket_id },
+			transaction: t,
+		});
 
+		await t.commit();
+	} catch (error) {
+		console.error(error);
+		await t.rollback();
+		return false;
+	}
+	return true;
+};
 export const addStatus = async (status: string) => {
 	return await StatusModel.create({
 		status_name: status,
@@ -462,8 +517,8 @@ const editTag = async () => {};
 const deleteTag = async () => {};
 
 const addEvent = async () => {};
-const editEvent = async () => {};
-const deleteEvent = async () => {};
+// const editEvent = async () => {};
+// const deleteEvent = async () => {};
 
 export const addEventType = async (eventType: string) => {
 	return await EventTypeModel.create({
