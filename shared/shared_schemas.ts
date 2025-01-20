@@ -24,14 +24,14 @@ const DepartmentScheme = NewDepartmentScheme.extend({
 	department_id: ID,
 });
 
-const TestNewDepartmentScheme = z.object({
-	department_name: z.string().optional(),
-	department_description: z.string().optional(),
-});
+// const TestNewDepartmentScheme = z.object({
+// 	department_name: z.string().optional(),
+// 	department_description: z.string().optional(),
+// });
 
-const TestDepartmentScheme = TestNewDepartmentScheme.extend({
-	department_id: ID,
-});
+// const TestDepartmentScheme = TestNewDepartmentScheme.extend({
+// 	department_id: ID,
+// });
 
 const NewRoleScheme = z.object({
 	role_name: z.string(),
@@ -59,15 +59,15 @@ const UserScheme = NewUserScheme.extend({
 	password: true,
 });
 
-const TestNewUserScheme = LoginUserScheme.extend({
-	roles: RoleScheme.array().optional(),
-});
+// const TestNewUserScheme = LoginUserScheme.extend({
+// 	roles: RoleScheme.array().optional(),
+// });
 
-const TestUserScheme = TestNewUserScheme.extend({
-	user_id: z.string(),
-}).omit({
-	password: true,
-});
+// const TestUserScheme = TestNewUserScheme.extend({
+// 	user_id: z.string(),
+// }).omit({
+// 	password: true,
+// });
 
 const TagScheme = z.object({
 	tag_name: z.string(),
@@ -142,9 +142,9 @@ export {
 	NewUserScheme,
 	RoleScheme,
 	TagScheme,
-	TestDepartmentScheme,
-	TestNewDepartmentScheme,
-	TestUserScheme,
+	// TestDepartmentScheme,
+	// TestNewDepartmentScheme,
+	// TestUserScheme,
 	TicketEventScheme,
 	TicketHistoryScheme,
 	TicketScheme,

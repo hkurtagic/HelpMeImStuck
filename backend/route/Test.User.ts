@@ -9,11 +9,11 @@ import {
 import { Actions, Department, LoginUser, NewUser, User } from "@shared/shared_types.ts";
 import { NewUserScheme, UserScheme } from "@shared/shared_schemas.ts";
 import { getTestData, setTestData } from "../../tests/backend/sync.ts";
-import {
-	DepartmentScheme,
-	TestDepartmentScheme,
-	TestUserScheme,
-} from "../../shared/shared_schemas.ts";
+// import {
+// 	DepartmentScheme,
+// 	TestDepartmentScheme,
+// 	TestUserScheme,
+// } from "../../shared/shared_schemas.ts";
 import { Role } from "../../shared/shared_types.ts";
 
 const user = new Hono();
@@ -81,7 +81,7 @@ user.put(
 	"/:user_id",
 	JWTAuthController,
 	validator("json", (value, c) => {
-		const parsed = TestUserScheme.safeParse(value);
+		const parsed = UserScheme.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Object" }, 400);
 		}
