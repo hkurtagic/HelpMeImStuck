@@ -3,7 +3,7 @@ import { ValidationFunction, validator } from "hono/validator";
 // import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import { ID, S_Department, S_Ticket, UUID, zUUIDparam } from "@shared/shared_schemas.ts";
+import { S_Department, S_Ticket, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
 
 function UserValidator(
 	all_actions_needed: Actions[],
@@ -55,7 +55,7 @@ function UserValidator(
 
 function TicketIDValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = UUID.safeParse(value);
+		const ticket_id = zUUIDparam.safeParse(value);
 		if (ticket_id.success) {
 			return ticket_id.data;
 		}
@@ -73,7 +73,7 @@ function TicketValidator() {
 }
 function DepartmentIDValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = ID.safeParse(value);
+		const ticket_id = zIDparam.safeParse(value);
 		if (ticket_id.success) {
 			return ticket_id.data;
 		}

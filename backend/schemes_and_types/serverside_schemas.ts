@@ -1,9 +1,9 @@
 import { z } from "zod";
 import {
 	S_Department,
-	S_Role,
+	S_RoleAdmin,
 	S_Ticket,
-	S_User,
+	S_UserAdmin,
 	UUID,
 	zAction,
 	zEventType,
@@ -67,21 +67,22 @@ const S_ServerDepartment = z.union([
 	S_Department,
 ]);
 
-const S_RoleExtended = S_Role.extend({
-	actions: zAction.array(),
-});
+// const S_RoleExtended = S_Role.extend({
+// 	actions: zAction.array(),
+// });
 
-const S_ServersideRole = z.union([S_RoleExtended, S_DTORoleParsed]);
+const S_ServersideRole = z.union([S_RoleAdmin, S_DTORoleParsed]);
 
 const S_ServersideUser = z.union([
 	S_DTOUserExtendedParsed,
-	S_User.omit({
-		roles: true,
-	}).extend({
-		password: z.string(),
-		roles: S_ServersideRole.array(),
-		actions: zAction.array().optional().nullable(),
-	}),
+	S_UserAdmin,
+	// S_User.omit({
+	// 	roles: true,
+	// }).extend({
+	// 	password: z.string(),
+	// 	roles: S_ServersideRole.array(),
+	// 	actions: zAction.array().optional().nullable(),
+	// }),
 ]);
 
 const S_ServerStatus = z.union([

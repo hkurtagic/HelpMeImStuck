@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { AlgorithmName, hash, verify as crypto_verify } from "jsr:@stdext/crypto/hash";
+import { AlgorithmName, verify as crypto_verify } from "jsr:@stdext/crypto/hash";
 import {
 	createJWTAuthToken,
 	createJWTRefreshToken,
@@ -10,8 +10,14 @@ import {
 import { UserValidator } from "@backend/controller/ValidationController.ts";
 // import db from "@backend/service/database.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import { Actions, UserCreate, UserLogin } from "@shared/shared_types.ts";
-import { S_User, S_UserCreate, S_UserLogin, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
+import {
+	S_User,
+	S_UserAdmin,
+	S_UserCreate,
+	S_UserLogin,
+	zIDparam,
+	zUUIDparam,
+} from "@shared/shared_schemas.ts";
 import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const user = new Hono();
@@ -92,24 +98,35 @@ user.put(
 	"/:user_id",
 	JWTAuthController,
 	// UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
+	validator("param", (value, c) => {
+		const parsed = zUUIDparam.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid User ID" }, 400);
+		}
+		return parsed.data;
+	}),
 	validator("json", (value, c) => {
-		const parsed = S_User.safeParse(value);
+		const parsed = S_UserAdmin.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid User Object" }, 400);
 		}
 		return parsed.data;
 	}),
 	async (c) => {
+		if (c.req.valid("param") != c.req.valid("json").user_id) {
+			return c.json({ message: "User ID of path and body does not match!" }, 400);
+		}
 		const updated_user_model = await db2.editUser(c.req.valid("json"));
 		if (!updated_user_model) {
-			return c.json({ message: "User update failed" }, 500);
+			return c.json({ message: "User modification failed" }, 500);
 		}
 		const updated_user = S_User.safeParse(updated_user_model.toJSON());
 		if (!updated_user.success) {
+			console.error(updated_user.error);
 			return c.json({ message: "Serverside error" }, 500);
 		}
 
-		return c.json(updated_user, 200);
+		return c.json(updated_user.data, 200);
 	},
 );
 // delete

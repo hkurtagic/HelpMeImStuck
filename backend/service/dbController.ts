@@ -31,16 +31,21 @@ import {
 	DepartmentCreate,
 	EventType,
 	ID,
+	Role,
 	RoleCreate,
 	TicketCreate,
 	TicketEvent,
 	TicketHistory,
 	TicketStatus,
 	User,
+	UserAdmin,
 	UserCreate,
 	UUID,
 } from "@shared/shared_types.ts";
-import { S_DTOUserExtendedParsed } from "@backend/schemes_and_types/dto_objects.ts";
+import {
+	S_DTORoleParsed,
+	S_DTOUserExtendedParsed,
+} from "@backend/schemes_and_types/dto_objects.ts";
 
 export const addUser = async (
 	user: UserCreate,
@@ -98,7 +103,7 @@ export const getUser = async (
 
 export const getAllUsersInDepartment = async (
 	department_id: ID,
-): Promise<ServersideUser[] | null> => {
+): Promise<ServersideUser[]> => {
 	const users = await UserModel.findAll({
 		include: [
 			{
@@ -131,14 +136,14 @@ export const getAllUsersInDepartment = async (
 			},
 		],
 	}) as unknown as ServersideUserModel[];
-	if (!users) return null;
+	if (!users) return [];
 	const parsed_users: ServersideUser[] = [];
 	users.forEach((user) => parsed_users.push(S_DTOUserExtendedParsed.parse(user.toJSON())));
 	return parsed_users;
 };
 
 export const editUser = async (
-	user: User,
+	user: UserAdmin,
 ): Promise<ServersideUserModel | null> => {
 	const t = await sequelize.transaction();
 	try {
@@ -195,7 +200,7 @@ export const editUser = async (
 			}
 		}
 
-		await old_u.update(user, { transaction: t });
+		await old_u.update(userDiff.updated as UserAdmin, { transaction: t });
 		await t.commit();
 	} catch (error) {
 		console.error(error);
@@ -237,7 +242,7 @@ export const addAction = async (
 
 export const addRole = async (
 	role: RoleCreate,
-): Promise<Model<ServersideRole>> => {
+): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	const d = await DepartmentModel.getDepartmentById(role.department.department_id);
 	if (!d) throw SQLNoDepartmentFound;
@@ -262,11 +267,9 @@ export const addRole = async (
 		// If the execution reaches this line, an error was thrown.
 		// We rollback the transaction.
 		await t.rollback();
+		return false;
 	}
-
-	const res = await RoleModel.getRoleByName(role.role_name, role.department.department_id);
-	if (!res) throw SQLNoRoleFound(undefined, role.role_name);
-	return res;
+	return true;
 };
 
 export const getRole = async (
@@ -282,9 +285,34 @@ export const getRole = async (
 	}
 	return role;
 };
+export const getAllRolesInDepartment = async (
+	department_id: ID,
+): Promise<ServersideRole[]> => {
+	const roles = await RoleModel.findAll({
+		include: [{
+			model: DepartmentModel,
+			as: "department",
+			where: {
+				pk_department_id: department_id,
+			},
+			required: true,
+		}, {
+			model: ActionModel,
+			as: "actions",
+			required: true,
+			through: {
+				attributes: [],
+			},
+		}],
+	});
+	if (!roles) return [];
+	const parsed_roles: ServersideRole[] = [];
+	roles.forEach((roles) => parsed_roles.push(S_DTORoleParsed.parse(roles.toJSON())));
+	return parsed_roles;
+};
 
 export const editRole = async (
-	role: ServersideRole,
+	role: Role,
 ): Promise<Model<ServersideRole> | null> => {
 	const t = await sequelize.transaction();
 	try {
@@ -343,12 +371,12 @@ export const editRole = async (
 	return res;
 };
 export const deleteRole = async (
-	role: ServersideRole,
+	role_id: ID,
 ): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	try {
 		await RoleModel.destroy({
-			where: { pk_role_id: role.role_id },
+			where: { pk_role_id: role_id },
 			transaction: t,
 		});
 
@@ -382,6 +410,15 @@ export const getDepartment = async (
 	}
 	return department;
 };
+export const getAllDepartments = async (): Promise<Department[]> => {
+	const departments = await DepartmentModel.findAll();
+	if (!departments) return [];
+	const parsed_departments = departments.map((d) => {
+		return S_ServerDepartment.parse(d);
+	});
+	return parsed_departments as Department[];
+};
+
 export const editDepartment = async (
 	department: Department,
 ): Promise<DepartmentModel | null> => {
@@ -416,12 +453,12 @@ export const editDepartment = async (
 	return res;
 };
 export const deleteDepartment = async (
-	department: Department,
+	department_id: ID,
 ): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	try {
 		await DepartmentModel.destroy({
-			where: { pk_department_id: department.department_id },
+			where: { pk_department_id: department_id },
 			transaction: t,
 		});
 
