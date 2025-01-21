@@ -7,13 +7,7 @@ import {
 	removeJWTTokens,
 } from "@backend/controller/Test.AuthenticationController.ts";
 import { Actions, Department, LoginUser, NewRole, NewUser, User } from "@shared/shared_types.ts";
-import {
-	ID,
-	NewRoleScheme,
-	NewUserScheme,
-	RoleScheme,
-	UserScheme,
-} from "@shared/shared_schemas.ts";
+import { ID, NewRoleScheme, RoleScheme, zIDparam } from "@shared/shared_schemas.ts";
 import { getTestData, setTestData } from "../../tests/backend/sync.ts";
 // import {
 // 	DepartmentScheme,
@@ -30,9 +24,9 @@ role.get(
 	"/dept/:department_id",
 	JWTAuthController,
 	validator("param", (value, c) => {
-		const parsed = ID.safeParse(value);
+		const parsed = zIDparam.safeParse(value);
 		if (!parsed.success) {
-			return c.json({ message: "Not a valid Role ID" }, 400);
+			return c.json({ message: "Not a valid Department ID" }, 400);
 		}
 		return parsed.data;
 	}),
@@ -112,7 +106,7 @@ role.delete(
 	"/:role_id",
 	JWTAuthController,
 	validator("param", (value, c) => {
-		const parsed = ID.safeParse(value);
+		const parsed = zIDparam.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Role ID" }, 400);
 		}

@@ -3,7 +3,7 @@ import { validator } from "hono/validator";
 import { JWTAuthController } from "../controller/Test.AuthenticationController.ts";
 import { Department, NewDepartment } from "@shared/shared_types.ts";
 import db from "@backend/service/database.ts";
-import { DepartmentScheme, ID, NewDepartmentScheme } from "@shared/shared_schemas.ts";
+import { DepartmentScheme, ID, NewDepartmentScheme, zIDparam } from "@shared/shared_schemas.ts";
 
 import { getTestData, setTestData } from "../../tests/backend/sync.ts";
 
@@ -86,7 +86,7 @@ department.delete(
 	"/:department_id",
 	JWTAuthController,
 	validator("param", (value, c) => {
-		const parsed = ID.safeParse(value);
+		const parsed = zIDparam.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Department ID" }, 400);
 		}

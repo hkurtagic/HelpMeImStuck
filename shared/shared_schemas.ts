@@ -14,6 +14,12 @@ const zAction = z.nativeEnum(Actions);
 // );
 const UUID = z.string().uuid("ID is not a valid UUID");
 const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
+const zIDparam = z.record(z.string(), z.preprocess((v) => Number(v), ID)).transform(({ ...k }) => {
+	return Object.values(k)[0];
+});
+const zUUIDparam = z.record(z.string(), UUID).transform(({ ...k }) => {
+	return Object.values(k)[0];
+});
 
 const NewDepartmentScheme = z.object({
 	department_name: z.string(),
@@ -78,7 +84,7 @@ const TagScheme = z.object({
 });
 
 const NewTicketScheme = z.object({
-	author: z.string(),
+	author: UserScheme.omit({ roles: true }),
 	departments: DepartmentScheme.array(),
 	ticket_title: z.string(),
 	ticket_description: z.string(),
@@ -94,7 +100,7 @@ const TicketScheme = NewTicketScheme.extend({
 const BaseTicketEventScheme = z.object({
 	event_id: UUID,
 	ticket_id: z.string(),
-	author: z.string(),
+	author: UserScheme.omit({ roles: true }),
 	created_at: z.string().datetime({ offset: true }),
 });
 
@@ -150,5 +156,7 @@ export {
 	TicketScheme,
 	UserScheme,
 	UUID,
+	zIDparam,
 	zTicketStatus,
+	zUUIDparam,
 };

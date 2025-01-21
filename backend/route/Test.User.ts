@@ -7,7 +7,7 @@ import {
 	removeJWTTokens,
 } from "@backend/controller/Test.AuthenticationController.ts";
 import { Actions, Department, LoginUser, NewUser, User } from "@shared/shared_types.ts";
-import { NewUserScheme, UserScheme } from "@shared/shared_schemas.ts";
+import { NewUserScheme, UserScheme, zIDparam } from "@shared/shared_schemas.ts";
 import { getTestData, setTestData } from "../../tests/backend/sync.ts";
 // import {
 // 	DepartmentScheme,
@@ -122,9 +122,18 @@ user.delete(
 // get all users from dep
 user.get(
 	"/dept/:department_id",
-	JWTAuthController,
+	// JWTAuthController,
+	validator("param", (value, c) => {
+		const parsed = zIDparam.safeParse(value);
+		console.log(parsed.error);
+
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Department ID" }, 400);
+		}
+		return parsed.data;
+	}),
 	(c) => {
-		const department_id = Number(c.req.param("department_id"));
+		const department_id = c.req.valid("param");
 		const users = testData.users.map((u) => u.roles.map((r) => r.department.department_id));
 		const index = users.map((u) => u.includes(department_id));
 		let res: User[] = [];
@@ -133,18 +142,6 @@ user.get(
 			if (index[i]) res.push(testData.users.at(i)!);
 		}
 
-		/*if (!roles) {
-			console.log(department_id);
-			return c.json({ message: "Serverside error" }, 500);
-		}*/
-
-		// if (user_id instanceof Error) {
-		// 	console.log(user_id);
-		// 	return c.json({ message: "Serverside error" }, 500);
-		// }
-		// user.roles.forEach((role) => {
-		// 	db.addUserToDepartment(user_id, role.department.department_id, role.role_id);
-		// });
 		return c.json({ ...res }, 200);
 	},
 );
