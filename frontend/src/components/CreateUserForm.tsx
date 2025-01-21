@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { appendAuthHeader, EP_department } from "@/route_helper/routes_helper.tsx";
-import { Actions, Department } from "@shared/shared_types.ts";
+import { Actions, Department, Role, UserCreate } from "@shared/shared_types.ts";
 
 interface CreateUserProps {
     setView: (view: "overview" | "userCreate") => void;
@@ -96,15 +96,13 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
                     department_description: dept.department_description,
                 },
                 actions: roleDetails.actions,
-            }))
+            } as Role))
         );
 
-        const newUser = {
-            [userId]: {
-                user_id: userId.toString(),
-                user_name: username,
-                roles: roles,
-            },
+        const newUser: UserCreate = {
+            user_name: username,
+            password: "",
+            roles: roles,
         };
 
         console.log("Submitting new user:", JSON.stringify(newUser, null, 2));
@@ -130,9 +128,28 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
     };
 
     const roleOptions: RoleOption[] = [
-        { value: 1, label: "Requester", actions: [Actions.ticket_create, Actions.ticket_pullBack, Actions.ticket_closeOwn] },
-        { value: 4, label: "Supporter", actions: [Actions.ticket_create, Actions.ticket_pullBack, Actions.ticket_seeDepartmentTickets, Actions.ticket_accept, Actions.ticket_close, Actions.ticket_forward] },
-        { value: 5, label: "Administrator", actions: Object.values(Actions).filter((v) => typeof v === "number") as Actions[] },
+        {
+            value: 1,
+            label: "Requester",
+            actions: [Actions.ticket_create, Actions.ticket_pullBack, Actions.ticket_closeOwn],
+        },
+        {
+            value: 4,
+            label: "Supporter",
+            actions: [
+                Actions.ticket_create,
+                Actions.ticket_pullBack,
+                Actions.ticket_seeDepartmentTickets,
+                Actions.ticket_accept,
+                Actions.ticket_close,
+                Actions.ticket_forward,
+            ],
+        },
+        {
+            value: 5,
+            label: "Administrator",
+            actions: Object.values(Actions).filter((v) => typeof v === "number") as Actions[],
+        },
     ];
 
     return (
@@ -140,7 +157,10 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
             <Card className="w-full md:w-2/3 lg:w-1/2 shadow-lg">
                 <CardHeader>
                     <div className="flex flex-row justify-between">
-                        <Button className="bg-red-500 hover:bg-red-600 w-1/5" onClick={() => setView("overview")}>
+                        <Button
+                            className="bg-red-500 hover:bg-red-600 w-1/5"
+                            onClick={() => setView("overview")}
+                        >
                             Back
                         </Button>
                     </div>
@@ -150,7 +170,14 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <Label htmlFor="username">Username</Label>
-                            <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="w-full p-2 border rounded-md" />
+                            <Input
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                                className="w-full p-2 border rounded-md"
+                            />
                         </div>
 
                         <div className="mb-4">
@@ -162,7 +189,8 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
                                             type="checkbox"
                                             value={role.value}
                                             checked={selectedRoles.includes(role.value)}
-                                            onChange={() => handleRoleChange(role.value)}
+                                            onChange={() =>
+                                                handleRoleChange(role.value)}
                                             className="form-checkbox"
                                         />
                                         <span>{role.label}</span>
@@ -175,12 +203,18 @@ export default function CreateUserForm({ setView, maxUserId }: CreateUserProps) 
                             <Label>Departments</Label>
                             <div className="flex flex-col">
                                 {departments.map((dept) => (
-                                    <label key={dept.department_id} className="flex items-center space-x-2">
+                                    <label
+                                        key={dept.department_id}
+                                        className="flex items-center space-x-2"
+                                    >
                                         <input
                                             type="checkbox"
                                             value={dept.department_name}
-                                            checked={selectedDepartments.includes(dept.department_name)}
-                                            onChange={() => handleDepartmentChange(dept.department_name)}
+                                            checked={selectedDepartments.includes(
+                                                dept.department_name,
+                                            )}
+                                            onChange={() =>
+                                                handleDepartmentChange(dept.department_name)}
                                             className="form-checkbox"
                                         />
                                         <span>{dept.department_name}</span>
