@@ -90,7 +90,7 @@ export default async (): Promise<void> => {
 	Event.belongsTo(EventType, { foreignKey: "fk_event_type_id" });
 	//One User can have multiple Events
 	User.hasMany(Event, { foreignKey: "fk_user_id" });
-	Event.belongsTo(User, { foreignKey: "fk_user_id" });
+	Event.belongsTo(User, { foreignKey: "fk_user_id", as: "author" });
 	//One Ticket can have many Events
 	Ticket.hasMany(Event, { foreignKey: "fk_ticket_id", onDelete: "CASCADE" });
 	Event.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });

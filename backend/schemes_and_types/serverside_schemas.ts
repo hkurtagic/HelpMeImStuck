@@ -15,7 +15,6 @@ import {
 	S_DTOEventType,
 	S_DTORoleParsed,
 	S_DTOStatus,
-	S_DTOTicket,
 	S_DTOTicketExtendedParsed,
 	S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
@@ -51,8 +50,8 @@ const SupporterActionPreset = AllowedActions.parse({
 const AdminActionPreset = AllowedActions.parse({
 	actions: [
 		...SupporterActionPreset.actions,
-		...Object.values(zAction).filter((a) => {
-			if (typeof a === "number" && !SupporterActionPreset.actions.includes(a)) return a;
+		...Object.values(zAction.enum).filter((a) => {
+			if (typeof a === "number" && !(SupporterActionPreset.actions.includes(a))) return a;
 			return;
 		}),
 	],
@@ -92,7 +91,7 @@ const S_ServerStatus = z.union([
 	zTicketStatus.array(),
 ]);
 
-const S_EventTypeServer = z.union([
+const S_ServerEventType = z.union([
 	S_DTOEventType.transform(({ pk_event_type_id, ..._ }) => {
 		return pk_event_type_id;
 	}),
@@ -118,8 +117,8 @@ export {
 	JWTPayload,
 	RequesterActionPreset,
 	S_Action,
-	S_EventTypeServer,
 	S_ServerDepartment,
+	S_ServerEventType,
 	S_ServersideRole,
 	S_ServersideUser,
 	S_ServerStatus,

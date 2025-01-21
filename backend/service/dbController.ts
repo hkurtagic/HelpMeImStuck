@@ -7,11 +7,13 @@ import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.t
 import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
 import { default as StatusModel } from "@backend/model/Status.ts";
 import { default as EventTypeModel } from "@backend/model/EventType.ts";
-import { default as TicketModel, TicketModelExtended } from "@backend/model/Ticket.ts";
+import { default as EventModel } from "@backend/model/Event.ts";
+import { default as TicketModel, ServerTicketModel } from "@backend/model/Ticket.ts";
 import { default as ImageModel } from "@backend/model/Image.ts";
 import {
 	SQLNoActionFound,
 	SQLNoDepartmentFound,
+	SQLNoEventType,
 	SQLNoRoleFound,
 	SQLNoTicketFound,
 	SQLNoUserFound,
@@ -27,10 +29,15 @@ import {
 	Actions,
 	Department,
 	DepartmentCreate,
+	EventType,
+	ID,
 	RoleCreate,
 	TicketCreate,
+	TicketEvent,
+	TicketHistory,
 	TicketStatus,
 	UserCreate,
+	UUID,
 } from "@shared/shared_types.ts";
 
 export const addUser = async (
@@ -47,15 +54,18 @@ export const addUser = async (
 		const u = await UserModel.create({
 			user_name: user.user_name,
 			password_hash: user.password,
-		});
-		await u.addRoles(roles);
+		}, { transaction: t });
+		await u.addRoles(roles, { transaction: t });
 		if (user.actions) {
+			const a_id = [];
 			for (const action of user.actions) {
 				const dbA = await ActionModel.findByPk(action);
 				if (dbA) {
-					await u.addAction(dbA);
+					// await u.addAction(dbA, { transaction: t });
+					a_id.push(dbA.toJSON().pk_action_id);
 				}
 			}
+			await u.setActions(a_id, { transaction: t });
 		}
 		await t.commit();
 	} catch (error) {
@@ -71,16 +81,16 @@ export const addUser = async (
 };
 
 export const getUser = async (
-	search_param: { user_id?: string; user_name?: string },
+	search_param: { user_id: UUID } | { user_name: string },
 ): Promise<ServersideUserModel | null> => {
 	let user = null;
-	if (search_param.user_id) {
+	if ("user_id" in search_param) {
 		user = await UserModel.getUserById(search_param.user_id);
-	}
-	if (search_param.user_name) {
+		if (!user) throw SQLNoUserFound(search_param.user_id, undefined);
+	} else {
 		user = await UserModel.getUserByName(search_param.user_name);
+		if (!user) throw SQLNoUserFound(undefined, search_param.user_name);
 	}
-	if (!user) throw SQLNoUserFound(search_param.user_id, search_param.user_name);
 	return user;
 };
 
@@ -217,7 +227,7 @@ export const addRole = async (
 };
 
 export const getRole = async (
-	search_param: { role_id: number } | { role_name: string; department_id: number },
+	search_param: { role_id: ID } | { role_name: string; department_id: ID },
 ): Promise<ServersideRoleModel | null> => {
 	let role = null;
 	if ("role_id" in search_param) {
@@ -317,7 +327,7 @@ export const addDepartment = async (
 	return d;
 };
 export const getDepartment = async (
-	search_param: { department_id: number } | { department_name: string },
+	search_param: { department_id: ID } | { department_name: string },
 ): Promise<DepartmentModel | null> => {
 	let department = null;
 	if ("department_id" in search_param) {
@@ -383,7 +393,7 @@ export const deleteDepartment = async (
 
 export const addTicket = async (
 	new_ticket: TicketCreate,
-): Promise<TicketModelExtended | null> => {
+): Promise<ServerTicketModel | null> => {
 	const t = await sequelize.transaction();
 	let ticket = null;
 	try {
@@ -439,8 +449,8 @@ export const addTicket = async (
 	return res;
 };
 export const getTicket = async (
-	ticket_id: string,
-): Promise<TicketModelExtended> => {
+	ticket_id: UUID,
+): Promise<ServerTicketModel> => {
 	const res = await TicketModel.getTicketById(ticket_id);
 	if (!res) {
 		throw SQLNoTicketFound(
@@ -450,8 +460,8 @@ export const getTicket = async (
 	return res;
 };
 export const getAllTicketsOf = async (
-	search_for: { author_id: string } | { department_id: number },
-): Promise<TicketModelExtended[] | null> => {
+	search_for: { author_id: UUID } | { department_id: ID },
+): Promise<ServerTicketModel[] | null> => {
 	let ticket_ids = [];
 	if ("author_id" in search_for) {
 		ticket_ids = (await TicketModel.findAll({
@@ -487,7 +497,7 @@ export const getAllTicketsOf = async (
 };
 // const editTicket = async () => {};
 export const deleteTicket = async (
-	ticket_id: string,
+	ticket_id: UUID,
 ): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	try {
@@ -516,9 +526,87 @@ const addTag = async () => {};
 const editTag = async () => {};
 const deleteTag = async () => {};
 
-const addEvent = async () => {};
+export const addEvent = async (
+	new_event: TicketEvent,
+): Promise<boolean> => {
+	const t = await sequelize.transaction();
+	try {
+		let e = null;
+		switch (new_event.event_type) {
+			case EventType.createTicket:
+				e = await EventModel.create({ event_content: "" }, { transaction: t });
+				await e.setEventType(EventType.createTicket, { transaction: t });
+				await e.setAuthor(new_event.author.user_id, { transaction: t });
+				await e.setTicket(new_event.ticket_id, { transaction: t });
+				break;
+			case EventType.statusChange:
+				e = await EventModel.create({ event_content: new_event.new_status.toString() }, {
+					transaction: t,
+				});
+				await e.setEventType(EventType.statusChange, { transaction: t });
+				await TicketModel.findByPk(new_event.ticket_id, { transaction: t })
+					.then((ticket) => ticket?.setStatus(new_event.new_status, { transaction: t }));
+				break;
+			case EventType.departmentAdded:
+				e = await EventModel.create({ event_content: new_event.department_id.toString() }, {
+					transaction: t,
+				});
+				await e.setEventType(EventType.departmentForwarded, { transaction: t });
+				await TicketModel.findByPk(new_event.ticket_id, { transaction: t })
+					.then((ticket) =>
+						ticket?.addDepartment(new_event.department_id, { transaction: t })
+					);
+				break;
+			case EventType.departmentForwarded:
+				e = await EventModel.create({ event_content: new_event.department_id.toString() }, {
+					transaction: t,
+				});
+				await e.setEventType(EventType.departmentForwarded, { transaction: t });
+				await TicketModel.findByPk(new_event.ticket_id, { transaction: t })
+					.then((ticket) =>
+						ticket?.setDepartments([new_event.department_id], { transaction: t })
+					);
+				break;
+			case EventType.comment:
+				e = await EventModel.create({ event_content: new_event.comment }, {
+					transaction: t,
+				});
+				if (new_event.images) {
+					const image_ids = [];
+					for (const i of new_event.images) {
+						// push each image to DB and svae its id
+						image_ids.push(
+							(await ImageModel.create({ image_content: i }, { transaction: t }))
+								.toJSON().pk_image_id,
+						);
+					}
+					// link images to event
+					await e.setImages(image_ids, { transaction: t });
+				}
+				break;
+		}
+		await e.setAuthor(new_event.author.user_id, { transaction: t });
+		await e.setTicket(new_event.ticket_id, { transaction: t });
+		await t.commit();
+	} catch (error) {
+		console.error(error);
+		// If the execution reaches this line, an error was thrown.
+		// We rollback the transaction.
+		await t.rollback();
+		return false;
+	}
+
+	return true;
+};
 // const editEvent = async () => {};
 // const deleteEvent = async () => {};
+export const getTicketHistory = async (ticket_id: UUID): Promise<TicketHistory | null> => {
+	// const t = await sequelize.transaction();
+	const e = await EventModel.getTicketHistory(ticket_id);
+
+	if (!e) return null;
+	return e;
+};
 
 export const addEventType = async (eventType: string) => {
 	return await EventTypeModel.create({
@@ -530,5 +618,5 @@ export const addEventType = async (eventType: string) => {
 
 // const addUserToDepartment = async () => {};
 // const removeUserFromDepartment = async () => {};
-const addRoleToUser = async () => {};
-const removeRoleFromUser = async () => {};
+// const addRoleToUser = async () => {};
+// const removeRoleFromUser = async () => {};

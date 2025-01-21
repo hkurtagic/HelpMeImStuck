@@ -12,8 +12,10 @@ const zAction = z.nativeEnum(Actions);
 // 		),
 // 	"ID should be a valid UUID",
 // );
-const UUID = z.string().uuid("ID is not a valid UUID");
-const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
+const UUID = z.string(); //.uuid("ID is not a valid UUID");
+const ID = z.coerce.number().int("ID is not a valid Number").nonnegative(
+	"ID should not be negative",
+);
 
 const S_DepartmentCreate = z.object({
 	department_name: z.string(),
@@ -76,39 +78,46 @@ const S_Ticket = S_TicketCreate.extend({
 	ticket_id: UUID,
 	ticket_status: zTicketStatus,
 	tags: S_Tag.array().optional().nullable(),
+	created_at: z.date(),
 });
 
 const S_TicketEventBase = z.object({
 	// event_id: UUID,
-	ticket_id: z.string(),
+	ticket_id: UUID,
 	author: S_UserPreview,
-	created_at: z.string().datetime({ offset: true }),
+	created_at: z.date().optional(),
+});
+
+const S_TicketEvent_Create = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.createTicket),
 });
 
 const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.statusChange),
-	content: zTicketStatus,
+	new_status: zTicketStatus,
 });
 const S_TicketEvent_DepartmentAdded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentAdded),
-	content: S_Department,
+	department_id: ID,
 });
 const S_TicketEvent_DepartmentForwarded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentForwarded),
-	content: S_Department,
+	department_id: ID,
 });
 const S_TicketEvent_Comment = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.comment),
-	content: z.string(),
-	images: z.string().optional().nullable(),
+	comment: z.string(),
+	images: z.string().array().optional().nullable(),
 });
 const S_TicketEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_Create,
 	S_TicketEvent_StatusChange,
 	S_TicketEvent_DepartmentAdded,
 	S_TicketEvent_DepartmentForwarded,
 	S_TicketEvent_Comment,
 ]);
 const S_TicketHistoryEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_Create.omit({ ticket_id: true }),
 	S_TicketEvent_StatusChange.omit({ ticket_id: true }),
 	S_TicketEvent_DepartmentAdded.omit({ ticket_id: true }),
 	S_TicketEvent_DepartmentForwarded.omit({ ticket_id: true }),
@@ -129,7 +138,13 @@ export {
 	S_Ticket,
 	S_TicketCreate,
 	S_TicketEvent,
+	S_TicketEvent_Comment,
+	S_TicketEvent_Create,
+	S_TicketEvent_DepartmentAdded,
+	S_TicketEvent_DepartmentForwarded,
+	S_TicketEvent_StatusChange,
 	S_TicketHistory,
+	S_TicketHistoryEvent,
 	S_User,
 	S_UserCreate,
 	S_UserLogin,

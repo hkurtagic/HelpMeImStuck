@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+	ID,
 	S_Department,
 	S_DepartmentCreate,
 	S_Role,
@@ -8,11 +9,18 @@ import {
 	S_Ticket,
 	S_TicketCreate,
 	S_TicketEvent,
+	S_TicketEvent_Comment,
+	S_TicketEvent_Create,
+	S_TicketEvent_DepartmentAdded,
+	S_TicketEvent_DepartmentForwarded,
+	S_TicketEvent_StatusChange,
 	S_TicketHistory,
+	S_TicketHistoryEvent,
 	S_User,
 	S_UserCreate,
 	S_UserLogin,
 	S_UserPreview,
+	UUID,
 } from "./shared_schemas.ts";
 
 enum Actions {
@@ -46,7 +54,8 @@ enum Actions {
 	department_delete,
 }
 enum EventType {
-	statusChange = 1,
+	createTicket = 1,
+	statusChange,
 	departmentAdded,
 	departmentForwarded,
 	comment,
@@ -68,9 +77,17 @@ export type User = z.infer<typeof S_User>;
 export type UserPreview = z.infer<typeof S_UserPreview>;
 export type TicketCreate = z.infer<typeof S_TicketCreate>;
 export type Ticket = z.infer<typeof S_Ticket>;
+export type TicketEvent_Create = z.infer<typeof S_TicketEvent_Create>;
+export type TicketEvent_StatusChange = z.infer<typeof S_TicketEvent_StatusChange>;
+export type TicketEvent_DepartmentAdded = z.infer<typeof S_TicketEvent_DepartmentAdded>;
+export type TicketEvent_DepartmentForwarded = z.infer<typeof S_TicketEvent_DepartmentForwarded>;
+export type TicketEvent_Comment = z.infer<typeof S_TicketEvent_Comment>;
 export type TicketEvent = z.infer<typeof S_TicketEvent>;
+export type TicketHistoryEvent = z.infer<typeof S_TicketHistoryEvent>;
 export type TicketHistory = z.infer<typeof S_TicketHistory>;
 export type Tag = z.infer<typeof S_Tag>;
+export type UUID = z.infer<typeof UUID>;
+export type ID = z.infer<typeof ID>;
 
 // interface LoginRequestBody {
 // 	username: string;

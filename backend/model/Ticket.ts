@@ -34,6 +34,7 @@ import { default as StatusModel } from "@backend/model/Status.ts";
 import { default as EventModel } from "@backend/model/Event.ts";
 import { default as TagModel } from "@backend/model/Tag.ts";
 import { default as ImageModel } from "@backend/model/Image.ts";
+import { ServersideTicket } from "@backend/schemes_and_types/serverside_types.ts";
 
 /**
  * ```js
@@ -53,7 +54,8 @@ import { default as ImageModel } from "@backend/model/Image.ts";
  *     }
  * ```
  */
-export interface TicketModelExtended extends Ticket {}
+export interface ServerTicketModel extends Model<ServersideTicket> {
+}
 
 export default class Ticket extends Model<DTOTicket, DTOTicketCreate> implements DTOTicket {
 	// Properties
@@ -130,7 +132,7 @@ export default class Ticket extends Model<DTOTicket, DTOTicketCreate> implements
 	//#endregion Association Mixins
 
 	//#region Static Methods
-	static async getTicketById(ticket_id: string): Promise<TicketModelExtended | null> {
+	static async getTicketById(ticket_id: string): Promise<ServerTicketModel | null> {
 		const ticket = await Ticket.findOne({
 			where: { pk_ticket_id: ticket_id },
 			include: [{
@@ -168,7 +170,7 @@ export default class Ticket extends Model<DTOTicket, DTOTicketCreate> implements
 				// 	attributes: [],
 				// },
 			}],
-		}) as unknown as (TicketModelExtended);
+		}) as unknown as (ServerTicketModel);
 
 		if (!ticket) return null;
 		return ticket;
