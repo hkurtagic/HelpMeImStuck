@@ -25,7 +25,7 @@
         "./backend/"
       ]
     },
-    "useTabs": true,
+    "useTabs": false,
     "lineWidth": 100,
     "indentWidth": 4,
     "singleQuote": false,
