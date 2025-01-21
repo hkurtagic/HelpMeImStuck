@@ -8,6 +8,8 @@ import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/r
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import { Department } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
+import HistoryPage from "@/pages/HistoryPage.tsx";
+import HistoryFeed from "@/components/HistoryFeed.tsx";
 
 export default function RequesterDashboard() {
 	const [view, setView] = useState<"overview" | "create">("overview");
@@ -15,6 +17,13 @@ export default function RequesterDashboard() {
 	const [departments, setDepartments] = useState<Department[]>([]);
 	const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 	const navigate = useNavigate();
+	const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+
+	const updateHistory = (newEntry: HistoryEntry) => {
+		setHistory((prev) => [newEntry, ...prev]); // Neues Ticket oben einfügen
+	};
+
 
 	// Sidebar-Toggle
 	const toggleSidebar = () => {
@@ -215,12 +224,14 @@ export default function RequesterDashboard() {
 				}`}
 			>
 				{view === "overview" && (
-					<RequesterTicketOverview
+/*					<RequesterTicketOverview
 						setView={setView}
 						selectedDepartment={selectedDepartment}
-					/>
+					/>*/
+
+					<HistoryPage/>
 				)}
-				{view === "create" && <CreateTicketForm setView={setView} />}
+				{view === "create" && <CreateTicketForm setView={setView} updateHistory={updateHistory}/>}
 				{view === "statistics" && <StatisticsPage />}
 				{view === "tickets" && (
 					<RequesterTicketOverview
@@ -228,7 +239,7 @@ export default function RequesterDashboard() {
 						selectedDepartment={selectedDepartment}
 					/>
 				)}
-				{view === "history" && <TicketHistory setView={setView}/>}
+				{view === "history" && <TicketHistory setView={setView} history={history}/>}
 			</div>
 		</div>
 	);

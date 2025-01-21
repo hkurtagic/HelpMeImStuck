@@ -5,7 +5,7 @@ import user from "@backend/route/User.ts";
 // import database from "@backend/service/database.ts";
 import role from "@backend/route/Role.ts";
 import department from "@backend/route/Department.ts";
-import tickets from "@backend/route/Ticket.ts";
+import ticket from "@backend/route/Ticket.ts";
 
 import test from "@backend/route/Test.ts";
 // import { StatusSchema } from "@backend/model/serverside_schemas.ts";
@@ -33,7 +33,7 @@ app.route("/user", user);
 
 app.route("/department", department);
 app.route("/role", role);
-app.route("/ticket", tickets);
+app.route("/ticket", ticket);
 
 app.route("/test", test);
 

@@ -41,36 +41,52 @@ export const testFinDepartment: Department = {
 	department_description: "GRAB THAT MONEE",
 };
 
+export const departments: Department[] = [testAdminDepartment, testITDepartment, testFinDepartment];
+
 export const testITReqRole: Role = {
 	role_id: 1,
 	role_name: "testITReqRole",
 	role_description: "Requester role of IT Department",
 	department: testITDepartment,
+	actions: RequesterActionPreset.actions,
 };
 export const testITSuppRole: Role = {
 	role_id: 2,
 	role_name: "testITSuppRole",
 	role_description: "Supporter role of IT Department",
 	department: testITDepartment,
+	actions: SupporterActionPreset.actions,
 };
 export const testFinReqRole: Role = {
 	role_id: 3,
 	role_name: "testFinReqRole",
 	role_description: "Requester role of Financing Department",
 	department: testFinDepartment,
+	actions: RequesterActionPreset.actions,
 };
 export const testFinSuppRole: Role = {
 	role_id: 4,
 	role_name: "testFinSuppRole",
 	role_description: "Supporter role  of Financing Department",
 	department: testFinDepartment,
+	actions: SupporterActionPreset.actions,
 };
 export const testAdminRole: Role = {
 	role_id: 5,
 	role_name: "testAdminRole",
 	role_description: "Admin Role of System Admin Department",
 	department: testAdminDepartment,
+	actions: AdminActionPreset.actions,
 };
+
+export const roles: Role[] = [
+	testITReqRole,
+	testITSuppRole,
+	testFinReqRole,
+	testFinSuppRole,
+	testAdminRole,
+];
+
 export const testUser1: User = {
 	user_id: "1",
 	user_name: "testUser1",
@@ -86,12 +102,16 @@ export const testAdmin: User = {
 	user_name: "testAdmin",
 	roles: [testAdminRole],
 };
+
+export const users: User[] = [testAdmin, testUser1, testUser2];
+
 export const testNewTicket1: NewTicket = {
-	author: testUser1.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "Financeing help",
 	ticket_description: "need som cash fast & quick",
 	departments: [testITDepartment],
 };
+
 export const testTicket1: Ticket = {
 	ticket_id: "ticket1",
 	author: testNewTicket1.author,
@@ -103,7 +123,7 @@ export const testTicket1: Ticket = {
 export const testTicket1Event1: TicketEvent = {
 	ticket_id: testTicket1.ticket_id,
 	event_id: "event1",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.OPEN,
 	created_at: "2025-01-012T12:00:00+02:00",
@@ -114,7 +134,7 @@ export const testTicket1History: TicketHistory = {
 };
 
 export const testNewTicket2: NewTicket = {
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "PC not working",
 	ticket_description: "Help my PC does not work",
 	departments: [testITDepartment],
@@ -130,7 +150,7 @@ export const testTicket2: Ticket = {
 export const testTicket2Event1: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event21",
-	author: testUser2.user_name,
+	author: { user_id: testUser2.user_id, user_name: testUser2.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.OPEN,
 	created_at: "2025-01-012T13:00:00+02:00",
@@ -138,7 +158,7 @@ export const testTicket2Event1: TicketEvent = {
 export const testTicket2Event2: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event22",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.IN_PROGRESS,
 	created_at: "2025-01-012T13:05:00+02:00",
@@ -146,15 +166,18 @@ export const testTicket2Event2: TicketEvent = {
 export const testTicket2Event3: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event23",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.Comment,
 	content: "R u stupid?",
 	created_at: "2025-01-012T13:05:00+02:00",
 };
 export const testTicket2History: TicketHistory = {
 	ticket_id: "ticket2",
-	events: [testTicket2Event1, testTicket2Event2, testTicket2Event3],
+	events: [testTicket2Event1, testTicket2Event2],
 };
+
+export const tickets: Ticket[] = [testTicket1, testTicket2];
+export const ticketHistories: TicketHistory[] = [testTicket1History, testTicket2History];
 
 export const testITTag1: Tag = {
 	tag_name: "Level2",
@@ -163,39 +186,3 @@ export const testITTag1: Tag = {
 	description: "Level 2 Support",
 	style: "some hex encoded styling idk",
 };
-
-function getTestRequesterServerRole(role: Role): ServersideRole {
-	return {
-		...role,
-		...RequesterActionPreset,
-	};
-}
-function getTestSupporterServerRole(role: Role): ServersideRole {
-	return {
-		...role,
-		...SupporterActionPreset,
-	};
-}
-function getTestAdminServerRole(role: Role): ServersideRole {
-	return {
-		...role,
-		...AdminActionPreset,
-	};
-}
-export function getTestServerRole(role: Role): ServersideRole {
-	if (role.role_name.match("(admin)/i")) {
-		return getTestAdminServerRole(role);
-	}
-	if (role.role_name.match("(support)/i")) {
-		return getTestSupporterServerRole(role);
-	}
-	return getTestRequesterServerRole(role);
-}
-export function getTestServerUser(user: User): ServersideUser {
-	const server_roles: ServersideRole[] = [];
-	user.roles.forEach((r) => server_roles.push(getTestServerRole(r)));
-	return {
-		...user,
-		roles: server_roles,
-	};
-}
