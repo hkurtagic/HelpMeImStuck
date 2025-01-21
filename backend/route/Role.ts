@@ -23,7 +23,7 @@ role.get(
 );
 
 // get all roles of acting user
-role.get("/own", JWTAuthController, async (c) => {
+role.get("/", JWTAuthController, async (c) => {
 	const u = await db2.getUser({ user_id: c.var.user_id });
 	if (!u) {
 		return c.redirect("/user/logout");

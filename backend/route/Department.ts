@@ -12,8 +12,8 @@ import { S_Department, S_DepartmentCreate } from "@shared/shared_schemas.ts";
 const department = new Hono();
 
 // get all departments
-department.get("/", JWTAuthController, (c) => {
-	const depts = db2.getAllDepartments();
+department.get("/", JWTAuthController, async (c) => {
+	const depts = await db2.getAllDepartments();
 	return c.json(depts, 200);
 });
 // // get all departments of acting user

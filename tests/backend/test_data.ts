@@ -1,10 +1,11 @@
 import {
 	Department,
 	EventType,
-	NewTicket,
 	Role,
+	RoleAdmin,
 	Tag,
 	Ticket,
+	TicketCreate,
 	TicketEvent,
 	TicketHistory,
 	TicketStatus,
@@ -43,35 +44,35 @@ export const testFinDepartment: Department = {
 
 export const departments: Department[] = [testAdminDepartment, testITDepartment, testFinDepartment];
 
-export const testITReqRole: Role = {
+export const testITReqRole: RoleAdmin = {
 	role_id: 1,
 	role_name: "testITReqRole",
 	role_description: "Requester role of IT Department",
 	department: testITDepartment,
 	actions: RequesterActionPreset.actions,
 };
-export const testITSuppRole: Role = {
+export const testITSuppRole: RoleAdmin = {
 	role_id: 2,
 	role_name: "testITSuppRole",
 	role_description: "Supporter role of IT Department",
 	department: testITDepartment,
 	actions: SupporterActionPreset.actions,
 };
-export const testFinReqRole: Role = {
+export const testFinReqRole: RoleAdmin = {
 	role_id: 3,
 	role_name: "testFinReqRole",
 	role_description: "Requester role of Financing Department",
 	department: testFinDepartment,
 	actions: RequesterActionPreset.actions,
 };
-export const testFinSuppRole: Role = {
+export const testFinSuppRole: RoleAdmin = {
 	role_id: 4,
 	role_name: "testFinSuppRole",
 	role_description: "Supporter role  of Financing Department",
 	department: testFinDepartment,
 	actions: SupporterActionPreset.actions,
 };
-export const testAdminRole: Role = {
+export const testAdminRole: RoleAdmin = {
 	role_id: 5,
 	role_name: "testAdminRole",
 	role_description: "Admin Role of System Admin Department",
@@ -105,7 +106,7 @@ export const testAdmin: User = {
 
 export const users: User[] = [testAdmin, testUser1, testUser2];
 
-export const testNewTicket1: NewTicket = {
+export const testNewTicket1: TicketCreate = {
 	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "Financeing help",
 	ticket_description: "need som cash fast & quick",
@@ -133,7 +134,7 @@ export const testTicket1History: TicketHistory = {
 	events: [testTicket1Event1],
 };
 
-export const testNewTicket2: NewTicket = {
+export const testNewTicket2: TicketCreate = {
 	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "PC not working",
 	ticket_description: "Help my PC does not work",

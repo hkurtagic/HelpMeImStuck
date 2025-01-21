@@ -12,6 +12,7 @@ import {
 } from "@shared/shared_types.ts";
 import {
 	AdminActionPreset,
+	ManagerActionPreset,
 	RequesterActionPreset,
 	S_ServerDepartment,
 	S_ServersideRole,
@@ -73,12 +74,82 @@ export async function prefillDB() {
 		user_name: "Administrator",
 		password: "admin",
 		roles: [parsed_r],
-		actions: SupporterActionPreset.actions,
+		// actions: SupporterActionPreset.actions,
 	};
 	await dbController.addUser(new_u);
 	// #endregion Admin
 
-	await testDB();
+	const ITDepartment: DepartmentCreate = {
+		department_name: "IT Department",
+		department_description: "The IT Nannies",
+	};
+
+	const FinanceDepartment: DepartmentCreate = {
+		department_name: "Finance Department",
+		department_description: "GRAB THAT MONEE",
+	};
+	const itDept = S_ServerDepartment.parse(
+		(await dbController.addDepartment(ITDepartment)).toJSON(),
+	);
+	const financeDept = S_ServerDepartment.parse(
+		(await dbController.addDepartment(FinanceDepartment)).toJSON(),
+	);
+	const depts = [itDept, financeDept];
+
+	for (const d of depts) {
+		const Requester: RoleCreate = {
+			role_name: "Requester",
+			role_description: "Requester role of " + d.department_name,
+			department: d,
+			actions: RequesterActionPreset.actions,
+		};
+		const Supporter: RoleCreate = {
+			role_name: "Supporter",
+			role_description: "Supporter role of " + d.department_name,
+			department: d,
+			actions: SupporterActionPreset.actions,
+		};
+		const Manager: RoleCreate = {
+			role_name: "Manager",
+			role_description: "Manager role of " + d.department_name,
+			department: d,
+			actions: ManagerActionPreset.actions,
+		};
+		await dbController.addRole(Requester);
+		await dbController.addRole(Supporter);
+		await dbController.addRole(Manager);
+	}
+	const itRoles = await dbController.getAllRolesInDepartment(itDept.department_id);
+	const financeRoles = await dbController.getAllRolesInDepartment(financeDept.department_id);
+	const user1_create: UserCreate = {
+		user_name: "User1",
+		password: "test",
+		// supporter of IT and manager of Finance
+		roles: [itRoles[1], financeRoles[2]],
+		// actions: SupporterActionPreset.actions,
+	};
+	const user2_create: UserCreate = {
+		user_name: "User2",
+		password: "test",
+		// manager of IT
+		roles: [itRoles[2]],
+		// actions: SupporterActionPreset.actions,
+	};
+	const user3_create: UserCreate = {
+		user_name: "User3",
+		password: "test",
+		// requester of finance
+		roles: [financeRoles[0]],
+		// actions: SupporterActionPreset.actions,
+	};
+	console.log(user1_create);
+	console.log(user2_create);
+	console.log(user3_create);
+	await dbController.addUser(user1_create);
+	await dbController.addUser(user2_create);
+	await dbController.addUser(user3_create);
+
+	// await testDB();
 }
 async function testDB() {
 	//test department creation
@@ -186,7 +257,11 @@ async function testDB() {
 	};
 
 	console.info("> new ticket: " + JSON.stringify(test_create_t));
-	const t_create = (await dbController.addTicket(test_create_t))!;
+	(await dbController.addTicket(test_create_t))!;
+	const user_t_create = await dbController.getAllTicketsOf({
+		author_id: u_update_parsed.user_id,
+	});
+	const t_create = user_t_create[user_t_create.length - 1];
 	const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
 	console.info("> created ticket: " + JSON.stringify(t_create_parsed));
 

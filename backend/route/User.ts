@@ -140,7 +140,7 @@ user.delete(
 
 // get all users of provided department
 user.get(
-	"/department/:department_id",
+	"/dept/:department_id",
 	JWTAuthController,
 	DepartmentIDValidator(),
 	async (c) => {

@@ -47,11 +47,24 @@ const SupporterActionPreset = AllowedActions.parse({
 		zAction.enum.ticket_removeTag,
 	],
 });
-const AdminActionPreset = AllowedActions.parse({
+const ManagerActionPreset = AllowedActions.parse({
 	actions: [
 		...SupporterActionPreset.actions,
+		zAction.enum.tag_ownDeartment_manage,
+		zAction.enum.user_ownDeartment_create,
+		zAction.enum.user_ownDeartment_modify,
+		zAction.enum.role_ownDeartment_create,
+		zAction.enum.role_ownDeartment_modify,
+		zAction.enum.role_ownDeartment_delete,
+		zAction.enum.department_ownDeartment_modify,
+	],
+});
+
+const AdminActionPreset = AllowedActions.parse({
+	actions: [
+		...ManagerActionPreset.actions,
 		...Object.values(zAction.enum).filter((a) => {
-			if (typeof a === "number" && !(SupporterActionPreset.actions.includes(a))) return a;
+			if (typeof a === "number" && !(ManagerActionPreset.actions.includes(a))) return a;
 			return;
 		}),
 	],
@@ -116,6 +129,7 @@ export {
 	AdminActionPreset,
 	JWTExtraPayload,
 	JWTPayload,
+	ManagerActionPreset,
 	RequesterActionPreset,
 	S_Action,
 	S_ServerDepartment,

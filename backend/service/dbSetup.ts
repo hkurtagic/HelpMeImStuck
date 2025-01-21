@@ -96,7 +96,7 @@ export default async (): Promise<void> => {
 	Event.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });
 	//One Image belongs to one Event / One Event can have multiple Images
 	Image.belongsTo(Event, { foreignKey: "fk_event_id" });
-	Event.hasMany(Image, { foreignKey: "fk_event_id" });
+	Event.hasMany(Image, { foreignKey: "fk_event_id", onDelete: "CASCADE" });
 
 	//Tags
 	//One Department has many Tags
