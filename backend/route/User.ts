@@ -7,7 +7,10 @@ import {
 	JWTAuthController,
 	removeJWTTokens,
 } from "@backend/controller/AuthenticationController.ts";
-import { UserValidator } from "@backend/controller/ValidationController.ts";
+import {
+	DepartmentIDValidator,
+	UserIDValidator,
+} from "@backend/controller/ValidationController.ts";
 // import db from "@backend/service/database.ts";
 import * as db2 from "@backend/service/dbController.ts";
 import {
@@ -98,13 +101,7 @@ user.put(
 	"/:user_id",
 	JWTAuthController,
 	// UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
-	validator("param", (value, c) => {
-		const parsed = zUUIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid User ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	UserIDValidator(),
 	validator("json", (value, c) => {
 		const parsed = S_UserAdmin.safeParse(value);
 		if (!parsed.success) {
@@ -134,15 +131,7 @@ user.delete(
 	"/:user_id",
 	JWTAuthController,
 	// UserValidator([Actions.user_delete], [Actions.user_ownDeartment_delete]),
-	validator("param", (value, c) => {
-		const parsed = zUUIDparam.safeParse(value);
-		console.log(parsed.error);
-
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid User ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	UserIDValidator(),
 	async (c) => {
 		const user_id = c.req.valid("param");
 		const user_delete_success = await db2.deleteUser(user_id);
@@ -157,15 +146,7 @@ user.delete(
 user.get(
 	"/department/:department_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		console.log(parsed.error);
-
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Department ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	DepartmentIDValidator(),
 	async (c) => {
 		const users = await db2.getAllUsersInDepartment(c.req.valid("param"));
 		return c.json(users, 200);

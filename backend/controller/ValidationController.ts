@@ -4,7 +4,7 @@ import { ValidationFunction, validator } from "hono/validator";
 import { Actions } from "@shared/shared_types.ts";
 import * as db2 from "@backend/service/dbController.ts";
 import { S_Department, S_Ticket, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
-
+/*
 function UserValidator(
 	all_actions_needed: Actions[],
 	ownDepartment_actions_needed: Actions[],
@@ -52,14 +52,24 @@ function UserValidator(
 		return user_id.data;
 	});
 }
+*/
+function UserIDValidator() {
+	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
+		const parsed = zUUIDparam.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid User ID!" }, 400);
+		}
+		return parsed.data;
+	});
+}
 
 function TicketIDValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = zUUIDparam.safeParse(value);
-		if (ticket_id.success) {
-			return ticket_id.data;
+		const parsed = zUUIDparam.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Ticket ID!" }, 400);
 		}
-		return c.json({ message: "Not a valid Ticket ID!" }, 400);
+		return parsed.data;
 	});
 }
 function TicketValidator() {
@@ -73,14 +83,14 @@ function TicketValidator() {
 }
 function DepartmentIDValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const ticket_id = zIDparam.safeParse(value);
-		if (ticket_id.success) {
-			return ticket_id.data;
+		const parsed = zIDparam.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Department ID!" }, 400);
 		}
-		return c.json({ message: "Not a valid Department ID!" }, 400);
+		return parsed.data;
 	});
 }
-function DepartmentValidator() {
+function DepartmentObjectValidator() {
 	return validator("json", (value: ValidationFunction<string, string>, c: Context) => {
 		const parsed = S_Department.safeParse(value);
 		if (!parsed.success) {
@@ -89,10 +99,22 @@ function DepartmentValidator() {
 		return parsed.data;
 	});
 }
+function RoleIDValidator() {
+	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
+		const parsed = zIDparam.safeParse(value);
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Role ID!" }, 400);
+		}
+		return parsed.data;
+	});
+}
+
 export {
 	DepartmentIDValidator,
-	DepartmentValidator,
+	DepartmentObjectValidator,
+	RoleIDValidator,
 	TicketIDValidator,
 	TicketValidator,
-	UserValidator,
+	UserIDValidator,
+	// UserValidator,
 };

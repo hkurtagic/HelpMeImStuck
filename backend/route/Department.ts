@@ -2,8 +2,12 @@ import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
 import * as db2 from "@backend/service/dbController.ts";
+import {
+	DepartmentIDValidator,
+	DepartmentObjectValidator,
+} from "@backend/controller/ValidationController.ts";
 
-import { S_Department, S_DepartmentCreate, zIDparam } from "@shared/shared_schemas.ts";
+import { S_Department, S_DepartmentCreate } from "@shared/shared_schemas.ts";
 
 const department = new Hono();
 
@@ -49,20 +53,8 @@ department.post(
 department.put(
 	"/:department_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Department ID" }, 400);
-		}
-		return parsed.data;
-	}),
-	validator("json", (value, c) => {
-		const parsed = S_Department.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Object" }, 400);
-		}
-		return parsed.data;
-	}),
+	DepartmentIDValidator(),
+	DepartmentObjectValidator(),
 	async (c) => {
 		if (c.req.valid("param") != c.req.valid("json").department_id) {
 			return c.json({ message: "Department ID of path and body does not match!" }, 400);
@@ -84,13 +76,7 @@ department.put(
 department.delete(
 	"/:department_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Department ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	DepartmentIDValidator(),
 	async (c) => {
 		const dept_delete_success = await db2.deleteDepartment(c.req.valid("param"));
 		if (!dept_delete_success) {

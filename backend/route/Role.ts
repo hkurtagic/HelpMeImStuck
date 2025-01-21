@@ -2,8 +2,12 @@ import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import { S_Role, S_RoleCreate, zIDparam } from "@shared/shared_schemas.ts";
+import {
+	DepartmentIDValidator,
+	RoleIDValidator,
+} from "@backend/controller/ValidationController.ts";
 import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
+import { S_Role, S_RoleCreate } from "@shared/shared_schemas.ts";
 
 const role = new Hono();
 
@@ -11,13 +15,7 @@ const role = new Hono();
 role.get(
 	"/dept/:department_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Department ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	DepartmentIDValidator(),
 	async (c) => {
 		const roles = await db2.getAllRolesInDepartment(c.req.valid("param"));
 		return c.json(roles, 200);
@@ -68,13 +66,7 @@ role.post(
 role.put(
 	"/:role_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Role ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	RoleIDValidator(),
 	validator("json", (value, c) => {
 		const parsed = S_Role.safeParse(value);
 		if (!parsed.success) {
@@ -104,13 +96,7 @@ role.put(
 role.delete(
 	"/:role_id",
 	JWTAuthController,
-	validator("param", (value, c) => {
-		const parsed = zIDparam.safeParse(value);
-		if (!parsed.success) {
-			return c.json({ message: "Not a valid Role ID" }, 400);
-		}
-		return parsed.data;
-	}),
+	RoleIDValidator(),
 	async (c) => {
 		const role_delete_success = await db2.deleteRole(c.req.valid("param"));
 		if (!role_delete_success) {
