@@ -16,11 +16,15 @@ const EP_department_tickets = (department_id: number) => `${EP_ticket}/${departm
 const EP_ticket_create = EP_ticket; // + "/";
 
 const EP_user = "/api/user";	// GET REQUEST get userdata of current user
-const EP_user_management = "/user/dept/:department_id";	// GET REQUEST get all users of provided department
+const EP_users_of_selected_department = "api/user/dept";	// GET REQUEST get all users of provided department
 
 const EP_login = EP_user + "/login";
 const EP_logout = EP_user + "/logout";
 
+
+
+
+// Es gibt einen Role Endpoint den wir auch zum Updaten benutzen
 //user/department/:department_id --> gibt alle user eines provided department zurück
 
 
@@ -37,7 +41,8 @@ export {
 	rootPath,
 	ticketHistoryPath,
 	statisticsPath,
-	EP_user_management,
+	EP_users_of_selected_department,
+	EP_user
 };
 
 // helper functions

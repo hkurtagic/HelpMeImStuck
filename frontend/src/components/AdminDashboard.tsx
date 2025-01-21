@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import RequesterSidebarItem from "./RequesterSidebarItem.tsx";
 import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
-import { Department } from "@shared/shared_types.ts";
 import AdminOverview from "@/components/AdminOverview.tsx";
+import CreateUserForm from "@/components/CreateUserForm.tsx";
+import ModifyUserForm from "@/components/ModifyUserForm.tsx";
 
-export default function RequesterDashboard() {
-    const [view, setView] = useState<"overview" | "create" | "statistics" | "tickets" | "history">("overview");
+export default function AdminDashboard() {
+    const [view, setView] = useState("overview");
     const [isOpen, setIsOpen] = useState(true);
-    const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+    const [maxUserId, setMaxUserId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     // Sidebar-Toggle
@@ -24,7 +24,7 @@ export default function RequesterDashboard() {
         try {
             console.log("Logging out...");
 
-            const response = await fetch(EP_logout, {
+            const response = await fetch("/api/user/logout", {
                 method: "POST",
             });
 
@@ -96,8 +96,10 @@ export default function RequesterDashboard() {
             {/* Dashboard Content */}
             <div className={`flex-1 overflow-auto p-5 transition-all duration-300 ${isOpen ? "md:ml-64" : "md:ml-16"}`}>
                 {view === "statistics" && <StatisticsPage />}
-                {view === "overview" &&   <AdminOverview/>}
-                {/*view === "history" && <TicketHistory setView={setView} />*/}
+                {view === "overview" &&   <AdminOverview setView={setView} setMaxUserId={setMaxUserId} setSelectedUserId={setSelectedUserId}/>}
+                {view === "userCreate" && <CreateUserForm setView={setView} maxUserId={maxUserId}/>}
+                {view === "userModify" && selectedUserId !== null && <ModifyUserForm setView={setView} userId={selectedUserId} />}
+
             </div>
         </div>
     );
