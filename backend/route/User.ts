@@ -11,16 +11,8 @@ import {
 	DepartmentIDValidator,
 	UserIDValidator,
 } from "@backend/controller/ValidationController.ts";
-// import db from "@backend/service/database.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import {
-	S_User,
-	S_UserAdmin,
-	S_UserCreate,
-	S_UserLogin,
-	zIDparam,
-	zUUIDparam,
-} from "@shared/shared_schemas.ts";
+import { S_User, S_UserAdmin, S_UserCreate, S_UserLogin } from "@shared/shared_schemas.ts";
 import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const user = new Hono();

@@ -3,7 +3,7 @@ import { ValidationFunction, validator } from "hono/validator";
 // import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import { S_Department, S_Ticket, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
+import { S_Department, S_TicketEvent, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
 /*
 function UserValidator(
 	all_actions_needed: Actions[],
@@ -72,11 +72,11 @@ function TicketIDValidator() {
 		return parsed.data;
 	});
 }
-function TicketValidator() {
+function TicketEventValidator() {
 	return validator("json", (value: ValidationFunction<string, string>, c: Context) => {
-		const parsed = S_Ticket.safeParse(value);
+		const parsed = S_TicketEvent.safeParse(value);
 		if (!parsed.success) {
-			return c.json({ message: "Not a valid Ticket object!" }, 400);
+			return c.json({ message: "Not a valid TicketEvent object!" }, 400);
 		}
 		return parsed.data;
 	});
@@ -113,8 +113,8 @@ export {
 	DepartmentIDValidator,
 	DepartmentObjectValidator,
 	RoleIDValidator,
+	TicketEventValidator,
 	TicketIDValidator,
-	TicketValidator,
 	UserIDValidator,
 	// UserValidator,
 };

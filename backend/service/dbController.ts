@@ -473,7 +473,7 @@ export const deleteDepartment = async (
 
 export const addTicket = async (
 	new_ticket: TicketCreate,
-): Promise<ServerTicketModel | null> => {
+): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	let ticket = null;
 	try {
@@ -515,18 +515,18 @@ export const addTicket = async (
 		// If the execution reaches this line, an error was thrown.
 		// We rollback the transaction.
 		await t.rollback();
-		return null;
+		return false;
 	}
 
-	const res = await TicketModel.getTicketById(ticket.toJSON().pk_ticket_id);
-	if (!res) {
-		throw SQLNoTicketFound(
-			ticket.toJSON().pk_ticket_id,
-			new_ticket.author.user_id,
-			new_ticket.author.user_name,
-		);
-	}
-	return res;
+	// const res = await TicketModel.getTicketById(ticket.toJSON().pk_ticket_id);
+	// if (!res) {
+	// 	throw SQLNoTicketFound(
+	// 		ticket.toJSON().pk_ticket_id,
+	// 		new_ticket.author.user_id,
+	// 		new_ticket.author.user_name,
+	// 	);
+	// }
+	return true;
 };
 export const getTicket = async (
 	ticket_id: UUID,
@@ -541,7 +541,7 @@ export const getTicket = async (
 };
 export const getAllTicketsOf = async (
 	search_for: { author_id: UUID } | { department_id: ID },
-): Promise<ServerTicketModel[] | null> => {
+): Promise<ServerTicketModel[]> => {
 	let ticket_ids = [];
 	if ("author_id" in search_for) {
 		ticket_ids = (await TicketModel.findAll({
@@ -568,7 +568,7 @@ export const getAllTicketsOf = async (
 			}],
 		})).map((o) => (o.toJSON()).pk_ticket_id);
 	}
-	if (!ticket_ids.length) return null;
+	if (!ticket_ids.length) return [];
 	const res = [];
 	for (const id of ticket_ids) {
 		res.push((await TicketModel.getTicketById(id))!);
@@ -683,8 +683,6 @@ export const addEvent = async (
 export const getTicketHistory = async (ticket_id: UUID): Promise<TicketHistory | null> => {
 	// const t = await sequelize.transaction();
 	const e = await EventModel.getTicketHistory(ticket_id);
-
-	if (!e) return null;
 	return e;
 };
 
