@@ -103,7 +103,7 @@ export const testAdmin: User = {
 export const users: User[] = [testAdmin, testUser1, testUser2];
 
 export const testNewTicket1: NewTicket = {
-	author: testUser1.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "Financeing help",
 	ticket_description: "need som cash fast & quick",
 	departments: [testITDepartment],
@@ -120,7 +120,7 @@ export const testTicket1: Ticket = {
 export const testTicket1Event1: TicketEvent = {
 	ticket_id: testTicket1.ticket_id,
 	event_id: "event1",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.OPEN,
 	created_at: "2025-01-012T12:00:00+02:00",
@@ -131,7 +131,7 @@ export const testTicket1History: TicketHistory = {
 };
 
 export const testNewTicket2: NewTicket = {
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	ticket_title: "PC not working",
 	ticket_description: "Help my PC does not work",
 	departments: [testITDepartment],
@@ -147,7 +147,7 @@ export const testTicket2: Ticket = {
 export const testTicket2Event1: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event21",
-	author: testUser2.user_name,
+	author: { user_id: testUser2.user_id, user_name: testUser2.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.OPEN,
 	created_at: "2025-01-012T13:00:00+02:00",
@@ -155,7 +155,7 @@ export const testTicket2Event1: TicketEvent = {
 export const testTicket2Event2: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event22",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.statusChange,
 	new_status: TicketStatus.IN_PROGRESS,
 	created_at: "2025-01-012T13:05:00+02:00",
@@ -163,15 +163,18 @@ export const testTicket2Event2: TicketEvent = {
 export const testTicket2Event3: TicketEvent = {
 	ticket_id: testTicket2.ticket_id,
 	event_id: "event23",
-	author: testUser2.user_name,
+	author: { user_id: testUser1.user_id, user_name: testUser1.user_name },
 	event_type: EventType.Comment,
 	content: "R u stupid?",
 	created_at: "2025-01-012T13:05:00+02:00",
 };
 export const testTicket2History: TicketHistory = {
 	ticket_id: "ticket2",
-	events: [testTicket2Event1, testTicket2Event2, testTicket2Event3],
+	events: [testTicket2Event1, testTicket2Event2],
 };
+
+export const tickets: Ticket[] = [testTicket1, testTicket2];
+export const ticketHistories: TicketHistory[] = [testTicket1History, testTicket2History];
 
 export const testITTag1: Tag = {
 	tag_name: "Level2",

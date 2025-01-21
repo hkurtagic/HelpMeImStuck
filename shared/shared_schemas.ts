@@ -12,7 +12,7 @@ const zAction = z.nativeEnum(Actions);
 // 		),
 // 	"ID should be a valid UUID",
 // );
-const UUID = z.string().uuid("ID is not a valid UUID");
+const UUID = z.string(); //.uuid("ID is not a valid UUID");
 const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
 const zIDparam = z.record(z.string(), z.preprocess((v) => Number(v), ID)).transform(({ ...k }) => {
 	return Object.values(k)[0];

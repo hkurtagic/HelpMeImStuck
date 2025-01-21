@@ -57,6 +57,7 @@ const JWTAuthController = createMiddleware<{
 			}
 		}
 		const user = testData.users.filter((u) => u.user_id === user_id)[0];
+		console.log(user);
 		if (!user) {
 			removeJWTTokens(c);
 			return c.json({ message: "User does not exist" }, 401);
@@ -116,7 +117,7 @@ function verifyJWTToken(token: string | undefined, secret: string): Promise<JWTP
 		if (token) {
 			return verify(token, secret)
 				.then((decoded) => {
-					console.log("verified token" + JSON.stringify(decoded));
+					console.log("verified token: " + JSON.stringify(decoded));
 					resolve(decoded as JWTPayload);
 				})
 				.catch((error) => {

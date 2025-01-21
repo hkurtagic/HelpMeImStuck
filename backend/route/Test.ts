@@ -5,10 +5,12 @@ import { setCookie } from "hono/cookie";
 import { JWTExtraPayload } from "@backend/model/serverside_types.ts";
 import { getCookie } from "hono/cookie";
 import db from "@backend/service/database.ts";
+import { getTestData } from "../../tests/backend/sync.ts";
 // import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
 // import { Base64, ImageType } from "@shared/shared_types.ts";
 
 const test = new Hono();
+const testData = getTestData();
 
 const JWT_SECRET: string = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY: number = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
@@ -18,19 +20,20 @@ const JWT_REFRESH_EXPIRY: number = parseInt(
 );
 
 test.get("/login", async (c) => {
-	const user = db.getUserByUsername("Admin");
-	if (user instanceof Error) {
-		return c.json({ error: user.message }, 500);
-	}
+	// const user = db.getUserByUsername("Admin");
+	// if (user instanceof Error) {
+	// 	return c.json({ error: user.message }, 500);
+	// }
 
-	if (user == undefined) {
-		return c.json({ error: "Invalid Credentials" }, 401);
-	}
+	// if (user == undefined) {
+	// 	return c.json({ error: "Invalid Credentials" }, 401);
+	// }
+	const user = testData.users.filter((u) => u.user_id === "2")[0];
 	const iat: number = Math.floor(Date.now() / 1000);
 	const a_exp: number = JWT_ACCESS_EXPIRY + iat;
 	const accessToken = await sign(
 		{
-			user_id: user.pk_user_id,
+			user_id: user.user_id,
 			iat: iat,
 			exp: a_exp,
 		},
@@ -39,7 +42,7 @@ test.get("/login", async (c) => {
 	const r_exp: number = JWT_REFRESH_EXPIRY + iat;
 	const refreshToken = await sign(
 		{
-			user_id: user.pk_user_id,
+			user_id: user.user_id,
 			iat: iat,
 			exp: r_exp,
 		},
@@ -48,7 +51,7 @@ test.get("/login", async (c) => {
 	console.log("maxAge: " + JWT_REFRESH_EXPIRY);
 	setCookie(c, "refreshToken", refreshToken, { maxAge: JWT_REFRESH_EXPIRY });
 	c.header("Authorization", accessToken);
-	return c.json({ user_id: user.pk_user_id, username: user.user_name }, 200);
+	return c.json({ user_id: user.user_id, username: user.user_name }, 200);
 });
 
 test.get("/logged_in", JWTAuthController, async (c) => {

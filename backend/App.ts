@@ -7,7 +7,7 @@ import role from "@backend/route/Test.Role.ts";
 import test from "@backend/route/Test.ts";
 // import database from "@backend/service/database.ts";
 import department from "@backend/route/Test.Department.ts";
-import tickets from "./route/Ticket.ts";
+import ticket from "@backend/route/Test.Ticket.ts";
 
 const app: Hono = new Hono().basePath("/api");
 
@@ -32,7 +32,7 @@ app.route("/user", user);
 app.route("/department", department);
 app.route("/role", role);
 
-app.route("/ticket", tickets);
+app.route("/ticket", ticket);
 
 app.route("/test", test);
 
