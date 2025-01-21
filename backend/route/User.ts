@@ -105,6 +105,10 @@ user.put(
 		if (c.req.valid("param") != c.req.valid("json").user_id) {
 			return c.json({ message: "User ID of path and body does not match!" }, 400);
 		}
+		// deny update if last role of user would be deleted
+		if (!c.req.valid("json").roles) {
+			return c.json({ message: "User must have at least one Role!" }, 400);
+		}
 		const updated_user_model = await db2.editUser(c.req.valid("json"));
 		if (!updated_user_model) {
 			return c.json({ message: "User modification failed" }, 500);
