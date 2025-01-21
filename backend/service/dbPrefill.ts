@@ -7,6 +7,7 @@ import {
 	TicketCreate,
 	TicketEvent,
 	TicketStatus,
+	UserAdmin,
 	UserCreate,
 } from "@shared/shared_types.ts";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@backend/schemes_and_types/serverside_schemas.ts";
 import * as dbController from "./dbController.ts";
 import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
-import { S_User } from "@shared/shared_schemas.ts";
+import { S_User, S_UserAdmin } from "@shared/shared_schemas.ts";
 
 export async function prefillDB() {
 	// prefill possible actions
@@ -62,9 +63,12 @@ export async function prefillDB() {
 		actions: AdminActionPreset.actions,
 	};
 
-	const r = await dbController.addRole(new_r);
-
-	const parsed_r = S_ServersideRole.parse(r.toJSON());
+	await dbController.addRole(new_r);
+	const r = await dbController.getRole({
+		role_name: new_r.role_name,
+		department_id: new_r.department.department_id,
+	});
+	const parsed_r = S_ServersideRole.parse(r!.toJSON());
 	const new_u: UserCreate = {
 		user_name: "Administrator",
 		password: "admin",
@@ -93,8 +97,12 @@ async function testDB() {
 		department: d_create_parsed,
 		actions: SupporterActionPreset.actions,
 	};
-	const r_create = await dbController.addRole(test_create_r);
-	const r_create_parsed = S_ServersideRole.parse(r_create.toJSON());
+	await dbController.addRole(test_create_r);
+	const r_create = await dbController.getRole({
+		role_name: test_create_r.role_name,
+		department_id: test_create_r.department.department_id,
+	});
+	const r_create_parsed = S_ServersideRole.parse(r_create!.toJSON());
 
 	// test user creation
 	const test_create_u: UserCreate = {
@@ -138,7 +146,7 @@ async function testDB() {
 	});
 	const r2_parsed = S_ServersideRole.parse(r2!.toJSON());
 	// test user update
-	const test_update_u: ServersideUser = {
+	const test_update_u: UserAdmin = {
 		user_id: u_create_parsed.user_id,
 		user_name: "ITsupporter",
 		password: u_create_parsed.password,
@@ -146,7 +154,7 @@ async function testDB() {
 		actions: SupporterActionPreset.actions,
 	};
 	console.log("> old user: " + JSON.stringify(u_create_parsed));
-	const u_update = await dbController.editUser(S_User.parse(test_update_u));
+	const u_update = await dbController.editUser(S_UserAdmin.parse(test_update_u));
 	const u_update_parsed = S_ServersideUser.parse(u_update!.toJSON());
 	console.log("updated user: " + JSON.stringify(u_update_parsed));
 	/*

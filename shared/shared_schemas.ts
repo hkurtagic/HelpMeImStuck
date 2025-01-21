@@ -39,8 +39,12 @@ const S_RoleCreate = z.object({
 	actions: zAction.array(),
 });
 
-const S_Role = S_RoleCreate.extend({
+const S_Role = S_RoleCreate.omit({ actions: true }).extend({
 	role_id: ID,
+});
+
+const S_RoleAdmin = S_Role.extend({
+	actions: zAction.array(),
 });
 
 const S_UserLogin = z.object({
@@ -57,10 +61,20 @@ const S_User = S_UserCreate.extend({
 	user_id: UUID,
 }).omit({
 	password: true,
+	actions: true,
 });
+
+const S_UserAdmin = S_User.omit({
+	roles: true,
+}).extend({
+	user_id: UUID,
+	password: z.string(),
+	roles: S_RoleAdmin.array(),
+	actions: zAction.array(),
+});
+
 // intended for ticket history and non admin purposes
 const S_UserPreview = S_User.omit({
-	actions: true,
 	roles: true,
 });
 
@@ -139,6 +153,7 @@ export {
 	S_Department,
 	S_DepartmentCreate,
 	S_Role,
+	S_RoleAdmin,
 	S_RoleCreate,
 	S_Tag,
 	S_Ticket,
@@ -152,6 +167,7 @@ export {
 	S_TicketHistory,
 	S_TicketHistoryEvent,
 	S_User,
+	S_UserAdmin,
 	S_UserCreate,
 	S_UserLogin,
 	S_UserPreview,

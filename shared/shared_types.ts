@@ -4,6 +4,7 @@ import {
 	S_Department,
 	S_DepartmentCreate,
 	S_Role,
+	S_RoleAdmin,
 	S_RoleCreate,
 	S_Tag,
 	S_Ticket,
@@ -17,6 +18,7 @@ import {
 	S_TicketHistory,
 	S_TicketHistoryEvent,
 	S_User,
+	S_UserAdmin,
 	S_UserCreate,
 	S_UserLogin,
 	S_UserPreview,
@@ -71,10 +73,12 @@ export type DepartmentCreate = z.infer<typeof S_DepartmentCreate>;
 export type Department = z.infer<typeof S_Department>;
 export type RoleCreate = z.infer<typeof S_RoleCreate>;
 export type Role = z.infer<typeof S_Role>;
+export type RoleAdmin = z.infer<typeof S_RoleAdmin>;
 export type UserLogin = z.infer<typeof S_UserLogin>;
 export type UserCreate = z.infer<typeof S_UserCreate>;
 export type User = z.infer<typeof S_User>;
 export type UserPreview = z.infer<typeof S_UserPreview>;
+export type UserAdmin = z.infer<typeof S_UserAdmin>;
 export type TicketCreate = z.infer<typeof S_TicketCreate>;
 export type Ticket = z.infer<typeof S_Ticket>;
 export type TicketEvent_Create = z.infer<typeof S_TicketEvent_Create>;
