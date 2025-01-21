@@ -36,13 +36,15 @@ import {
 	TicketEvent,
 	TicketHistory,
 	TicketStatus,
+	User,
 	UserCreate,
 	UUID,
 } from "@shared/shared_types.ts";
+import { S_DTOUserExtendedParsed } from "@backend/schemes_and_types/dto_objects.ts";
 
 export const addUser = async (
 	user: UserCreate,
-): Promise<Model<ServersideUser> | null> => {
+): Promise<boolean> => {
 	const roles = [];
 	for (const role of user.roles) {
 		const r = await RoleModel.findByPk(role.role_id);
@@ -73,11 +75,11 @@ export const addUser = async (
 		// If the execution reaches this line, an error was thrown.
 		// We rollback the transaction.
 		await t.rollback();
-		return null;
+		return false;
 	}
-	const res = await UserModel.getUserByName(user.user_name);
-	if (!res) throw SQLNoUserFound;
-	return res;
+	// const res = await UserModel.getUserByName(user.user_name);
+	// if (!res) throw SQLNoUserFound;
+	return true;
 };
 
 export const getUser = async (
@@ -94,8 +96,49 @@ export const getUser = async (
 	return user;
 };
 
+export const getAllUsersInDepartment = async (
+	department_id: ID,
+): Promise<ServersideUser[] | null> => {
+	const users = await UserModel.findAll({
+		include: [
+			{
+				model: RoleModel,
+				as: "roles",
+				required: true,
+				include: [{
+					model: DepartmentModel,
+					as: "department",
+					required: true,
+
+					where: { pk_department_id: department_id },
+				}, {
+					model: ActionModel,
+					as: "actions",
+					through: {
+						attributes: [],
+					},
+				}],
+				through: {
+					attributes: [],
+				},
+			},
+			{
+				model: ActionModel,
+				as: "actions",
+				through: {
+					attributes: [],
+				},
+			},
+		],
+	}) as unknown as ServersideUserModel[];
+	if (!users) return null;
+	const parsed_users: ServersideUser[] = [];
+	users.forEach((user) => parsed_users.push(S_DTOUserExtendedParsed.parse(user.toJSON())));
+	return parsed_users;
+};
+
 export const editUser = async (
-	user: ServersideUser,
+	user: User,
 ): Promise<ServersideUserModel | null> => {
 	const t = await sequelize.transaction();
 	try {
@@ -129,8 +172,8 @@ export const editUser = async (
 		}
 		// check if somethin removed
 		if (userDiff.removed) {
-			// remove actions if needed
-			if (Object.keys(userDiff.removed).includes("actions")) {
+			// remove actions if needed only if user was sent with actions
+			if (Object.keys(userDiff.removed).includes("actions") && user.actions) {
 				const removed_actions = Object.values(
 					(userDiff.removed as { [propName: string]: unknown[] }).actions,
 				) as Actions[];
@@ -165,11 +208,11 @@ export const editUser = async (
 	return res;
 };
 
-export const deleteUser = async (user: ServersideUser): Promise<boolean> => {
+export const deleteUser = async (user_id: UUID): Promise<boolean> => {
 	const t = await sequelize.transaction();
 	try {
 		await UserModel.destroy({
-			where: { pk_user_id: user.user_id },
+			where: { pk_user_id: user_id },
 			transaction: t,
 		});
 
