@@ -1,16 +1,11 @@
-import { default as StatusModel } from "@backend/model/Status.ts";
-import { default as TagModel } from "@backend/model/Tag.ts";
-import { default as TicketModel } from "@backend/model/Ticket.ts";
-import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
-import { default as RoleModel } from "@backend/model/Role.ts";
-import { default as ActionModel } from "@backend/model/Action.ts";
-import { default as DepartmentModel } from "@backend/model/Department.ts";
 import {
 	Actions,
 	Department,
 	DepartmentCreate,
-	Role,
+	EventType,
 	RoleCreate,
+	TicketCreate,
+	TicketEvent,
 	TicketStatus,
 	UserCreate,
 } from "@shared/shared_types.ts";
@@ -20,12 +15,10 @@ import {
 	S_ServerDepartment,
 	S_ServersideRole,
 	S_ServersideUser,
+	S_ServerTicket,
 	SupporterActionPreset,
 } from "@backend/schemes_and_types/serverside_schemas.ts";
-import { S_Department } from "@shared/shared_schemas.ts";
 import * as dbController from "./dbController.ts";
-import { S_DTOUserExtendedParsed } from "@backend/schemes_and_types/dto_objects.ts";
-import { AlgorithmName, hash } from "@stdext/crypto/hash";
 import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
 
 export async function prefillDB() {
@@ -48,6 +41,12 @@ export async function prefillDB() {
 			await dbController.addStatus(k);
 		}
 	});
+	Object.values(EventType).forEach(async (k, _) => {
+		if (typeof k === "string") {
+			await dbController.addEventType(k);
+		}
+	});
+
 	// #region Admin
 	const new_d: DepartmentCreate = {
 		department_name: "System Administration",
@@ -61,11 +60,12 @@ export async function prefillDB() {
 		department: S_ServerDepartment.parse(d.toJSON()),
 		actions: AdminActionPreset.actions,
 	};
+
 	const r = await dbController.addRole(new_r);
 
 	const parsed_r = S_ServersideRole.parse(r.toJSON());
 	const new_u: UserCreate = {
-		user_name: "admin",
+		user_name: "Administrator",
 		password: "admin",
 		roles: [parsed_r],
 		actions: SupporterActionPreset.actions,
@@ -166,6 +166,55 @@ async function testDB() {
 	// const d_delete_parsed = S_ServerDepartment.parse(d_delete!.toJSON());
 	console.info("> department deleted?: " + JSON.stringify(d_delete));
 	*/
+
+	// test_ticket
+	const test_create_t: TicketCreate = {
+		author: { user_id: u_update_parsed.user_id, user_name: u_update_parsed.user_name },
+		departments: [d_update_parsed],
+		ticket_title: "test_ticket",
+		ticket_description: "ticket description",
+	};
+
+	console.info("> new ticket: " + JSON.stringify(test_create_t));
+	const t_create = (await dbController.addTicket(test_create_t))!;
+	const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
+	console.info("> created ticket: " + JSON.stringify(t_create_parsed));
+
+	const t_all_of_user = await dbController.getAllTicketsOf({
+		author_id: test_create_t.author.user_id,
+	});
+	const t_all_of_user_parsed = t_all_of_user?.map((ticket) =>
+		S_ServerTicket.parse(ticket.toJSON())
+	);
+	console.info(
+		"> all tickets of " + test_create_t.author.user_name + ": " +
+			JSON.stringify(t_all_of_user_parsed),
+	);
+	// test add event
+	const test_create_e: TicketEvent = {
+		author: t_create_parsed.author,
+		ticket_id: t_create_parsed.ticket_id,
+		// created_at: t_create.toJSON().created_at,
+		event_type: EventType.createTicket,
+	};
+	await dbController.addEvent(test_create_e);
+	const u_create_e2 = S_ServersideUser.parse(
+		(await dbController.getUser({ user_name: "Administrator" }))!.toJSON()!,
+	);
+	console.log("> second ticket event user:");
+	console.log({ user_id: u_create_e2.user_id, user_name: u_create_e2.user_name });
+
+	const test_create_e2: TicketEvent = {
+		author: { user_id: u_create_e2.user_id, user_name: u_create_e2.user_name },
+		ticket_id: t_create_parsed.ticket_id,
+		event_type: EventType.statusChange,
+		new_status: TicketStatus.IN_PROGRESS,
+	};
+	await dbController.addEvent(test_create_e2);
+
+	const ticketHist = await dbController.getTicketHistory(t_create_parsed.ticket_id);
+	console.log("> getTicketHistory");
+	console.log(ticketHist);
 }
 
 /*

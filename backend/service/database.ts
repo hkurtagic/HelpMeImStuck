@@ -953,8 +953,8 @@ function assertIsError(error: unknown): asserts error is Error {
 }
 
 export default {
-	db_conn,
-	initDB,
+	// db_conn,
+	// initDB,
 	closeDB,
 	addTicketToDepartment,
 	updateTicketOfDepartment,

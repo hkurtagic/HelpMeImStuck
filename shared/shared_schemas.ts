@@ -12,8 +12,10 @@ const zAction = z.nativeEnum(Actions);
 // 		),
 // 	"ID should be a valid UUID",
 // );
-const UUID = z.string().uuid("ID is not a valid UUID");
-const ID = z.number().int("ID is not a valid Number").nonnegative("ID should not be negative");
+const UUID = z.string(); //.uuid("ID is not a valid UUID");
+const ID = z.coerce.number().int("ID is not a valid Number").nonnegative(
+	"ID should not be negative",
+);
 
 const S_DepartmentCreate = z.object({
 	department_name: z.string(),
@@ -50,6 +52,11 @@ const S_User = S_UserCreate.extend({
 }).omit({
 	password: true,
 });
+// intended for ticket history and non admin purposes
+const S_UserPreview = S_User.omit({
+	actions: true,
+	roles: true,
+});
 
 const S_Tag = z.object({
 	tag_name: z.string(),
@@ -60,7 +67,7 @@ const S_Tag = z.object({
 });
 
 const S_TicketCreate = z.object({
-	author: z.string(),
+	author: S_UserPreview,
 	departments: S_Department.array(),
 	ticket_title: z.string(),
 	ticket_description: z.string(),
@@ -71,13 +78,18 @@ const S_Ticket = S_TicketCreate.extend({
 	ticket_id: UUID,
 	ticket_status: zTicketStatus,
 	tags: S_Tag.array().optional().nullable(),
+	created_at: z.date(),
 });
 
 const S_TicketEventBase = z.object({
-	event_id: UUID,
-	ticket_id: z.string(),
-	author: z.string(),
-	created_at: z.string().datetime({ offset: true }),
+	// event_id: UUID,
+	ticket_id: UUID,
+	author: S_UserPreview,
+	created_at: z.date().optional(),
+});
+
+const S_TicketEvent_Create = S_TicketEventBase.extend({
+	event_type: z.literal(zEventType.enum.createTicket),
 });
 
 const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
@@ -86,24 +98,26 @@ const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
 });
 const S_TicketEvent_DepartmentAdded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentAdded),
-	department: S_Department,
+	department_id: ID,
 });
 const S_TicketEvent_DepartmentForwarded = S_TicketEventBase.extend({
 	event_type: z.literal(zEventType.enum.departmentForwarded),
-	department: S_Department,
+	department_id: ID,
 });
 const S_TicketEvent_Comment = S_TicketEventBase.extend({
-	event_type: z.literal(zEventType.enum.Comment),
-	content: z.string(),
-	images: z.string().optional().nullable(),
+	event_type: z.literal(zEventType.enum.comment),
+	comment: z.string(),
+	images: z.string().array().optional().nullable(),
 });
 const S_TicketEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_Create,
 	S_TicketEvent_StatusChange,
 	S_TicketEvent_DepartmentAdded,
 	S_TicketEvent_DepartmentForwarded,
 	S_TicketEvent_Comment,
 ]);
 const S_TicketHistoryEvent = z.discriminatedUnion("event_type", [
+	S_TicketEvent_Create.omit({ ticket_id: true }),
 	S_TicketEvent_StatusChange.omit({ ticket_id: true }),
 	S_TicketEvent_DepartmentAdded.omit({ ticket_id: true }),
 	S_TicketEvent_DepartmentForwarded.omit({ ticket_id: true }),
@@ -124,11 +138,19 @@ export {
 	S_Ticket,
 	S_TicketCreate,
 	S_TicketEvent,
+	S_TicketEvent_Comment,
+	S_TicketEvent_Create,
+	S_TicketEvent_DepartmentAdded,
+	S_TicketEvent_DepartmentForwarded,
+	S_TicketEvent_StatusChange,
 	S_TicketHistory,
+	S_TicketHistoryEvent,
 	S_User,
 	S_UserCreate,
 	S_UserLogin,
+	S_UserPreview,
 	UUID,
 	zAction,
+	zEventType,
 	zTicketStatus,
 };

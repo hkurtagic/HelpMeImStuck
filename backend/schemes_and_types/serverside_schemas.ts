@@ -2,17 +2,20 @@ import { z } from "zod";
 import {
 	S_Department,
 	S_Role,
+	S_Ticket,
 	S_User,
 	UUID,
 	zAction,
+	zEventType,
 	zTicketStatus,
 } from "@shared/shared_schemas.ts";
 import {
-	// DTOStatusSchema,
 	S_DTOAction,
 	S_DTODepartment,
+	S_DTOEventType,
 	S_DTORoleParsed,
 	S_DTOStatus,
+	S_DTOTicketExtendedParsed,
 	S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
 
@@ -47,8 +50,8 @@ const SupporterActionPreset = AllowedActions.parse({
 const AdminActionPreset = AllowedActions.parse({
 	actions: [
 		...SupporterActionPreset.actions,
-		...Object.values(zAction).filter((a) => {
-			if (typeof a === "number" && !SupporterActionPreset.actions.includes(a)) return a;
+		...Object.values(zAction.enum).filter((a) => {
+			if (typeof a === "number" && !(SupporterActionPreset.actions.includes(a))) return a;
 			return;
 		}),
 	],
@@ -81,11 +84,23 @@ const S_ServersideUser = z.union([
 	}),
 ]);
 
-const S_StatusServer = z.union([
+const S_ServerStatus = z.union([
 	S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
 		return pk_status_id;
 	}),
 	zTicketStatus.array(),
+]);
+
+const S_ServerEventType = z.union([
+	S_DTOEventType.transform(({ pk_event_type_id, ..._ }) => {
+		return pk_event_type_id;
+	}),
+	zEventType.array(),
+]);
+
+const S_ServerTicket = z.union([
+	S_DTOTicketExtendedParsed,
+	S_Ticket,
 ]);
 
 const JWTExtraPayload = z.object({
@@ -103,8 +118,10 @@ export {
 	RequesterActionPreset,
 	S_Action,
 	S_ServerDepartment,
+	S_ServerEventType,
 	S_ServersideRole,
 	S_ServersideUser,
-	S_StatusServer,
+	S_ServerStatus,
+	S_ServerTicket,
 	SupporterActionPreset,
 };

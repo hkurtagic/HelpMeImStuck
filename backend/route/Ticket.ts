@@ -1,10 +1,10 @@
 import { Context, Hono } from "hono";
 import { ValidationFunction, validator } from "hono/validator";
 import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
-import { Department, NewTicket, Ticket, TicketStatus } from "@shared/shared_types.ts";
+import { Department, Ticket, TicketCreate, TicketStatus } from "@shared/shared_types.ts";
 import { TicketIDValidator, TicketValidator } from "@backend/controller/ValidationController.ts";
 import db from "@backend/service/database.ts";
-import { ID, NewTicketScheme, TicketScheme } from "@shared/shared_schemas.ts";
+import { ID, S_Ticket, S_TicketCreate } from "@shared/shared_schemas.ts";
 
 import { testTicket1History } from "../../tests/backend/test_data.ts";
 
@@ -42,7 +42,7 @@ tickets.get("/:department_id", JWTAuthController, (c) => {
 });
 // create a new ticket
 tickets.post("/", JWTAuthController, async (c) => {
-	const req = NewTicketScheme.safeParse(await c.req.json());
+	const req = S_TicketCreate.safeParse(await c.req.json());
 	if (!req.success) {
 		console.log(req.error);
 		return c.json({ message: "Not a valid Ticket" }, 400);
@@ -109,7 +109,7 @@ tickets.put(
 	JWTAuthController,
 	TicketIDValidator,
 	validator("json", (value: ValidationFunction<string, string>, c: Context) => {
-		const parsed = TicketScheme.safeParse(value);
+		const parsed = S_Ticket.safeParse(value);
 		if (!parsed.success) {
 			return c.json({ message: "Not a valid Ticket object!" }, 400);
 		}

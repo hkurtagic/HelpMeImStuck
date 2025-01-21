@@ -21,7 +21,7 @@ import { DTOUser, DTOUserCreate } from "@backend/schemes_and_types/dto_objects.t
 import Department from "@backend/model/Department.ts";
 
 /**
- * ```
+ * ```js
  *     pk_user_id: {
  *       type: DataTypes.UUID,
  *       primaryKey: true,

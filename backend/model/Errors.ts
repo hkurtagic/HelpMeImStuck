@@ -8,3 +8,9 @@ export const SQLNoDepartmentFound = (department_id?: number, department_name?: s
 	);
 export const SQLNoActionFound = (action_id?: number, action_name?: string) =>
 	new Error(`!> Action with id=${action_id} and actionname=${action_name} not found.`);
+export const SQLNoTicketFound = (ticket_id?: string, author_id?: string, author_name?: string) =>
+	new Error(
+		`!> Ticket with id=${ticket_id}, author_id=${author_id} and author_name=${author_name} not found.`,
+	);
+export const SQLNoEventType = (event_type: number) =>
+	new Error(`!> EventType id=${event_type}not found.`);
