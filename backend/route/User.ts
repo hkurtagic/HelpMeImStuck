@@ -11,7 +11,7 @@ import { UserValidator } from "@backend/controller/ValidationController.ts";
 // import db from "@backend/service/database.ts";
 import * as db2 from "@backend/service/dbController.ts";
 import { Actions, UserCreate, UserLogin } from "@shared/shared_types.ts";
-import { S_User, S_UserCreate, S_UserLogin } from "@shared/shared_schemas.ts";
+import { S_User, S_UserCreate, S_UserLogin, zIDparam, zUUIDparam } from "@shared/shared_schemas.ts";
 import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const user = new Hono();
@@ -27,11 +27,8 @@ user.post(
 	}),
 	async (c) => {
 		const login_user = c.req.valid("json");
-		console.log(
-			"login attempt with: " + login_user.user_name + "\nand pw: " + login_user.password,
-		);
 		const user = S_ServersideUser.safeParse(
-			(await db2.getUser(undefined, login_user.user_name))?.toJSON(),
+			(await db2.getUser({ user_name: login_user.user_name }))?.toJSON(),
 		);
 		if (
 			!user.success ||
@@ -39,6 +36,7 @@ user.post(
 		) {
 			return c.json({ error: "Invalid Credentials" }, 401);
 		}
+		// TODO create token uuid, by saving to DB -> create token only with token uuid
 		await createJWTAuthToken(c, { user_id: user.data.user_id });
 		await createJWTRefreshToken(c, { user_id: user.data.user_id });
 		return c.json({ user_id: user.data.user_id, user_name: user.data.user_name }, 200);
@@ -46,25 +44,25 @@ user.post(
 );
 
 user.post("/logout", JWTAuthController, (c) => {
-	console.log(
-		"logout initiated with access token: \n" + c.req.header("Authorization"),
-	);
+	// console.log(
+	// 	"logout initiated with access token: \n" + c.req.header("Authorization"),
+	// );
 	removeJWTTokens(c);
+	// TODO delete token from DB
 	return c.json({ message: "User logged out successfully" }, 200);
 });
 
 // get data of user itself
 user.get("/", JWTAuthController, async (c) => {
-	const user = await db2.getUser(c.var.user_id);
-	if (!user) {
+	const user_model = await db2.getUser({ user_id: c.var.user_id });
+	if (!user_model) {
 		return c.json({ error: "Invalid Credentials" }, 401);
 	}
-	return c.json({ user_id: user.pk_user_id, user_name: user.user_name }, 200);
-});
-
-// get all users of provided department
-user.get("/department/:department_id", JWTAuthController, async (c) => {
-	return c.json({ message: "" }, 200);
+	const user = S_ServersideUser.safeParse(user_model.toJSON());
+	if (!user.success) {
+		return c.json({ message: "Serverside error" }, 500);
+	}
+	return c.json({ user_id: user.data.user_id, user_name: user.data.user_name }, 200);
 });
 
 // create
@@ -72,7 +70,7 @@ user.post(
 	"/",
 	JWTAuthController,
 	// failure potential as it checks for parameter
-	UserValidator([Actions.user_create], [Actions.user_ownDeartment_create]),
+	// UserValidator([Actions.user_create], [Actions.user_ownDeartment_create]),
 	validator("json", (value, c) => {
 		const parsed = S_UserCreate.safeParse(value);
 		if (!parsed.success) {
@@ -80,26 +78,12 @@ user.post(
 		}
 		return parsed.data;
 	}),
-	(c) => {
-		const newUser = c.req.valid("json");
-		// db2.addUser(			{ user_name: newUser.user_name, password_hash: newUser.password },
-		// 	newUser.roles,
-		// );
+	async (c) => {
+		const user_create_success = await db2.addUser(c.req.valid("json"));
 
-		// const user_id = db.addUser(
-		// 	newUser.user_name,
-		// 	hash(
-		// 		AlgorithmName.Argon2,
-		// 		newUser.password,
-		// 	),
-		// );
-		if (user_id instanceof Error) {
-			console.log(user_id);
-			return c.json({ message: "Serverside error" }, 500);
+		if (!user_create_success) {
+			return c.json({ message: "User creation failed" }, 500);
 		}
-		newUser.roles.forEach((role) => {
-			db.addUserToDepartment(user_id, role.department.department_id, role.role_id);
-		});
 		return c.json({ message: "Successfully created User" }, 200);
 	},
 );
@@ -107,36 +91,67 @@ user.post(
 user.put(
 	"/:user_id",
 	JWTAuthController,
-	UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
+	// UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
 	validator("json", (value, c) => {
 		const parsed = S_User.safeParse(value);
 		if (!parsed.success) {
-			return c.json({ message: "Not a valid Object" }, 400);
+			return c.json({ message: "Not a valid User Object" }, 400);
 		}
 		return parsed.data;
 	}),
-	(c) => {
-		// const user = c.req.valid("json") as User;
-		// if (user_id instanceof Error) {
-		// 	console.log(user_id);
-		// 	return c.json({ message: "Serverside error" }, 500);
-		// }
-		// user.roles.forEach((role) => {
-		// 	db.addUserToDepartment(user_id, role.department.department_id, role.role_id);
-		// });
-		return c.json({ message: "Successfully modified User" }, 200);
+	async (c) => {
+		const updated_user_model = await db2.editUser(c.req.valid("json"));
+		if (!updated_user_model) {
+			return c.json({ message: "User update failed" }, 500);
+		}
+		const updated_user = S_User.safeParse(updated_user_model.toJSON());
+		if (!updated_user.success) {
+			return c.json({ message: "Serverside error" }, 500);
+		}
+
+		return c.json(updated_user, 200);
 	},
 );
 // delete
 user.delete(
 	"/:user_id",
 	JWTAuthController,
-	UserValidator([Actions.user_delete], [Actions.user_ownDeartment_delete]),
-	(c) => {
-		const user_id = c.req.valid("param");
-		db.deleteUserById(user_id);
+	// UserValidator([Actions.user_delete], [Actions.user_ownDeartment_delete]),
+	validator("param", (value, c) => {
+		const parsed = zUUIDparam.safeParse(value);
+		console.log(parsed.error);
 
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid User ID" }, 400);
+		}
+		return parsed.data;
+	}),
+	async (c) => {
+		const user_id = c.req.valid("param");
+		const user_delete_success = await db2.deleteUser(user_id);
+		if (!user_delete_success) {
+			return c.json({ message: "User deletion failed" }, 500);
+		}
 		return c.json({ message: "Successfully deleted User" }, 200);
+	},
+);
+
+// get all users of provided department
+user.get(
+	"/department/:department_id",
+	JWTAuthController,
+	validator("param", (value, c) => {
+		const parsed = zIDparam.safeParse(value);
+		console.log(parsed.error);
+
+		if (!parsed.success) {
+			return c.json({ message: "Not a valid Department ID" }, 400);
+		}
+		return parsed.data;
+	}),
+	async (c) => {
+		const users = await db2.getAllUsersInDepartment(c.req.valid("param"));
+		return c.json(users, 200);
 	},
 );
 

@@ -1,51 +1,58 @@
 import { Context } from "hono";
 import { ValidationFunction, validator } from "hono/validator";
-import db from "@backend/service/database.ts";
+// import db from "@backend/service/database.ts";
 import { Actions } from "@shared/shared_types.ts";
-import { ID, S_Department, S_Ticket, UUID } from "@shared/shared_schemas.ts";
+import * as db2 from "@backend/service/dbController.ts";
+import { ID, S_Department, S_Ticket, UUID, zUUIDparam } from "@shared/shared_schemas.ts";
 
 function UserValidator(
-	allowed_actions: Actions[],
-	allowed_ownDepartment_actions: Actions[],
+	all_actions_needed: Actions[],
+	ownDepartment_actions_needed: Actions[],
 ) {
-	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
-		const user_id = UUID.safeParse(value);
-		if (user_id.success) {
-			if (user_id.data === c.var.user_id) {
-				return user_id.data;
-			}
-			const user = db.getUserById(user_id.data);
-			if (user !== undefined) {
-				const acting_user_actions = db.getUserActionsByUserId(c.var.user_id);
-				const acting_user_depts = db.getDepartmentsOfUser(c.var.user_id);
-				const user_depts = db.getDepartmentsOfUser(user_id.data);
-				if (
-					acting_user_actions instanceof Error || acting_user_depts instanceof Error ||
-					user_depts instanceof Error
-				) {
-					console.log(acting_user_actions);
-					console.log(acting_user_depts);
-					console.log(user_depts);
-					return c.json({ message: "Serverside error" }, 500);
-				}
-				if (
-					acting_user_actions.map((a) => a.actions).filter((value) =>
-							allowed_actions.includes(value)
-						).length > 0 ||
-					(acting_user_actions.map((a) => a.actions).filter((value) =>
-								allowed_ownDepartment_actions.includes(value)
-							).length > 0 &&
-						acting_user_depts.map((d) => d.department_id).filter((value) =>
-							user_depts.map((d) => d.department_id).includes(value)
-						))
-				) {
-					return user_id.data;
-				}
-			}
+	return validator("param", async (value: ValidationFunction<string, string>, c: Context) => {
+		const user_id = zUUIDparam.safeParse(value);
+		if (!user_id.success) {
+			return c.json({ message: "Not a valid User ID" }, 400);
 		}
-		return c.json({ message: "Not a valid User ID!" }, 400);
+		const user_model = await db2.getUser({ user_id: user_id.data });
+		if (!user_model) {
+			return c.json({ message: "User does not exist" }, 400);
+		}
+		const user = user_model.toJSON();
+		const acting_user_model = await db2.getUser({ user_id: c.var.user_id });
+		if (!acting_user_model) {
+			return c.json({ message: "Serverside Error" }, 500);
+		}
+		const acting_user = acting_user_model.toJSON();
+		const all_actions_set = new Set(all_actions_needed);
+		const user_actions_set = new Set(acting_user.actions);
+		if (all_actions_set.intersection(user_actions_set).size) {
+			// return user_id if user has permissions
+			return user_id.data;
+		}
+		// check if acting user and user to be accessed have a shared department
+		const acting_user_depts = new Set(acting_user.roles.map((r) => r.department.department_id));
+		const user_depts = new Set(user.roles.map((r) => r.department.department_id));
+		const shared_departments = Array.from(acting_user_depts.intersection(user_depts));
+		if (!shared_departments.length) {
+			return c.json({ message: "Permission denied" }, 403);
+		}
+		const acting_user_shared_dept_role_actions = acting_user.roles.map((r) => {
+			if (shared_departments.includes(r.department.department_id)) {
+				return r.actions;
+			}
+		}).flat();
+
+		const ownDept_actions_set = new Set(all_actions_needed);
+		const shared_dept_role_actions_set = new Set(acting_user_shared_dept_role_actions);
+		if (!shared_dept_role_actions_set.intersection(ownDept_actions_set).size) {
+			return c.json({ message: "Permission denied" }, 403);
+		}
+		// missing department specific restriction
+		return user_id.data;
 	});
 }
+
 function TicketIDValidator() {
 	return validator("param", (value: ValidationFunction<string, string>, c: Context) => {
 		const ticket_id = UUID.safeParse(value);

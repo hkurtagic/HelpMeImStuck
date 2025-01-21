@@ -16,6 +16,12 @@ const UUID = z.string(); //.uuid("ID is not a valid UUID");
 const ID = z.coerce.number().int("ID is not a valid Number").nonnegative(
 	"ID should not be negative",
 );
+const zIDparam = z.record(z.string(), z.preprocess((v) => Number(v), ID)).transform(({ ...k }) => {
+	return Object.values(k)[0];
+});
+const zUUIDparam = z.record(z.string(), UUID).transform(({ ...k }) => {
+	return Object.values(k)[0];
+});
 
 const S_DepartmentCreate = z.object({
 	department_name: z.string(),
@@ -152,5 +158,7 @@ export {
 	UUID,
 	zAction,
 	zEventType,
+	zIDparam,
 	zTicketStatus,
+	zUUIDparam,
 };

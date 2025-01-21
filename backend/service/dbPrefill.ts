@@ -20,6 +20,7 @@ import {
 } from "@backend/schemes_and_types/serverside_schemas.ts";
 import * as dbController from "./dbController.ts";
 import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
+import { S_User } from "@shared/shared_schemas.ts";
 
 export async function prefillDB() {
 	// prefill possible actions
@@ -102,7 +103,8 @@ async function testDB() {
 		roles: [r_create_parsed],
 		// actions: SupporterActionPreset.actions,
 	};
-	const u_create = await dbController.addUser(test_create_u);
+	await dbController.addUser(test_create_u);
+	const u_create = await dbController.getUser({ user_name: test_create_u.user_name });
 	const u_create_parsed = S_ServersideUser.parse(u_create?.toJSON());
 
 	// test department update
@@ -144,7 +146,7 @@ async function testDB() {
 		actions: SupporterActionPreset.actions,
 	};
 	console.log("> old user: " + JSON.stringify(u_create_parsed));
-	const u_update = await dbController.editUser(test_update_u);
+	const u_update = await dbController.editUser(S_User.parse(test_update_u));
 	const u_update_parsed = S_ServersideUser.parse(u_update!.toJSON());
 	console.log("updated user: " + JSON.stringify(u_update_parsed));
 	/*
