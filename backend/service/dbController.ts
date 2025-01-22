@@ -99,10 +99,10 @@ export const getUser = async (
     let user = null;
     if ("user_id" in search_param) {
         user = await UserModel.getUserById(search_param.user_id);
-        if (!user) throw SQLNoUserFound(search_param.user_id, undefined);
+        // if (!user) throw SQLNoUserFound(search_param.user_id, undefined);
     } else {
         user = await UserModel.getUserByName(search_param.user_name);
-        if (!user) throw SQLNoUserFound(undefined, search_param.user_name);
+        // if (!user) throw SQLNoUserFound(undefined, search_param.user_name);
     }
     const parsed_u = S_ServersideUser.safeParse(user);
     if (!parsed_u.success) return null;
@@ -166,7 +166,7 @@ export const editUser = async (
             old_u.roles.map((o) => o.role_id),
             user.roles.map((o) => o.role_id),
         );
-        if (!(userDiff && userRoleDiff)) return null;
+        if (!(userDiff && userRoleDiff)) return old_u;
         const old_u_model = await UserModel.findByPk(user.user_id);
         // console.log("!> userDiff:");
         // console.log(userDiff);

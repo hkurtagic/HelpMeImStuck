@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { AlgorithmName, verify as crypto_verify } from "jsr:@stdext/crypto/hash";
 import {
+    AuthPrep,
     createJWTAuthToken,
     createJWTRefreshToken,
     JWTAuthController,
@@ -11,7 +12,7 @@ import {
     DepartmentIDValidator,
     UserIDValidator,
 } from "@backend/controller/ValidationController.ts";
-import * as db2 from "@backend/service/dbController.ts";
+import * as dbConroller from "@backend/service/dbController.ts";
 import {
     S_User,
     S_UserAdmin,
@@ -19,9 +20,9 @@ import {
     S_UserLogin,
     S_UserPreview,
 } from "@shared/shared_schemas.ts";
-import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const user = new Hono();
+const ADMIN_USER_ID = Deno.env.get("ADMIN_USER_ID")!;
 
 user.post(
     "/login",
@@ -35,7 +36,7 @@ user.post(
     }),
     async (c) => {
         const login_user = c.req.valid("json");
-        const user = await db2.getUser({ user_name: login_user.user_name });
+        const user = await dbConroller.getUser({ user_name: login_user.user_name });
         if (!user) {
             return c.json({ error: "Invalid Credentials" }, 401);
         }
@@ -64,7 +65,7 @@ user.post("/logout", JWTAuthController, (c) => {
 
 // get data of user itself
 user.get("/", JWTAuthController, async (c) => {
-    const server_user = await db2.getUser({ user_id: c.var.user_id });
+    const server_user = await dbConroller.getUser({ user_id: c.var.user_id });
     if (!server_user) {
         return c.json({ error: "Invalid Credentials" }, 401);
     }
@@ -78,8 +79,8 @@ user.get("/", JWTAuthController, async (c) => {
 });
 
 // get data of specified user
-user.get("/:user_id", JWTAuthController, UserIDValidator(), async (c) => {
-    const server_user = await db2.getUser({ user_id: c.req.valid("param") });
+user.get("/:user_id", JWTAuthController, UserIDValidator(), AuthPrep, async (c) => {
+    const server_user = await dbConroller.getUser({ user_id: c.req.valid("param") });
     if (!server_user) {
         return c.json({ error: "User not found" }, 400);
     }
@@ -106,7 +107,7 @@ user.post(
         return parsed.data;
     }),
     async (c) => {
-        const user_create_success = await db2.addUser(c.req.valid("json"));
+        const user_create_success = await dbConroller.addUser(c.req.valid("json"));
 
         if (!user_create_success) {
             return c.json({ message: "User creation failed" }, 500);
@@ -120,14 +121,13 @@ user.put(
     JWTAuthController,
     // UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
     UserIDValidator(),
+    AuthPrep,
     validator("json", (value, c) => {
         const parsed = S_UserAdmin.safeParse(value);
         if (!parsed.success) {
             console.error(parsed.error);
             return c.json({ message: "Not a valid User Object" }, 400);
         }
-        console.info("i> update user; new user object: ");
-        console.info(parsed.data);
         return parsed.data;
     }),
     async (c) => {
@@ -138,7 +138,13 @@ user.put(
         if (!c.req.valid("json").roles) {
             return c.json({ message: "User must have at least one Role!" }, 400);
         }
-        const updated_user = await db2.editUser(c.req.valid("json"));
+        // prevent admin role removal from admin user
+        // if(c.req.valid("json").user_id === ADMIN_USER_ID){
+        //     if(!c.req.valid("json").roles.some())
+        // }
+        // const user = await dbConroller.getUser({user_id:});
+
+        const updated_user = await dbConroller.editUser(c.req.valid("json"));
         if (!updated_user) {
             return c.json({ message: "User modification failed" }, 500);
         }
@@ -159,7 +165,7 @@ user.delete(
     UserIDValidator(),
     async (c) => {
         const user_id = c.req.valid("param");
-        const user_delete_success = await db2.deleteUser(user_id);
+        const user_delete_success = await dbConroller.deleteUser(user_id);
         if (!user_delete_success) {
             return c.json({ message: "User deletion failed" }, 500);
         }
@@ -173,7 +179,7 @@ user.get(
     JWTAuthController,
     DepartmentIDValidator(),
     async (c) => {
-        const users = await db2.getAllUsersInDepartment(c.req.valid("param"));
+        const users = await dbConroller.getAllUsersInDepartment(c.req.valid("param"));
         return c.json(users, 200);
     },
 );

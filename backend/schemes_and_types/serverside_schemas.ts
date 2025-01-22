@@ -18,6 +18,7 @@ import {
     S_DTOTicketExtendedParsed,
     S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
+import { Actions } from "@shared/shared_types.ts";
 
 const S_Action = z.union([
     S_DTOAction,
@@ -52,6 +53,18 @@ const S_ServersideUser = z.union([
     // }),
 ]);
 
+const S_ActionsPerDepartment = S_UserAdmin.transform(({ roles }) => {
+    return roles.reduce<Record<number, Actions[]>>((res, { department, actions }) => {
+        const deptId = department.department_id;
+        if (res[deptId]) {
+            res[deptId].push(...actions);
+        } else {
+            res[deptId] = actions;
+        }
+        return res;
+    }, {});
+});
+
 const S_ServerStatus = z.union([
     S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
         return pk_status_id;
@@ -85,11 +98,12 @@ export {
     // ManagerActionPreset,
     // RequesterActionPreset,
     S_Action,
+    // SupporterActionPreset,
+    S_ActionsPerDepartment,
     S_ServerDepartment,
     S_ServerEventType,
     S_ServersideRole,
     S_ServersideUser,
     S_ServerStatus,
     S_ServerTicket,
-    // SupporterActionPreset,
 };

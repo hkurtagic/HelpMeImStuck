@@ -3,9 +3,14 @@ import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Next } from "hono/types";
 import { createMiddleware } from "hono/factory";
-import { JWTExtraPayload, JWTPayload } from "@backend/schemes_and_types/serverside_types.ts";
+import {
+    ActionsPerDepartment,
+    JWTExtraPayload,
+    JWTPayload,
+} from "@backend/schemes_and_types/serverside_types.ts";
 // import db from "@backend/service/database.ts";
 import * as dbController from "@backend/service/dbController.ts";
+import { S_ActionsPerDepartment } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
@@ -55,13 +60,9 @@ const JWTAuthController = createMiddleware<{
             }
         }
         const user = dbController.getUser({ user_id: user_id });
-        if ((user == undefined)) {
+        if (!user) {
             removeJWTTokens(c);
             return c.json({ message: "User does not exist" }, 401);
-        }
-        if ((user instanceof Error)) {
-            console.log(user);
-            return c.json({ message: "Serverside error" }, 500);
         }
         console.log("JWT user_id: " + user_id);
         c.set("user_id", user_id);
@@ -69,20 +70,22 @@ const JWTAuthController = createMiddleware<{
     },
 );
 
-// const ActionAuth = createMiddleware<{
-// 	Variables: {
-// 		allowed_actions: Actions[];
-// 	};
-// }>(
-// 	async (c: Context, next: Next) => {
-// 		// TODO: proper auth checking
-// 		// if (!c.var.user_id == undefined) {
-// 		// const user = db.getA(user_id);
-// 		// return c.json({ message: "Forbidden" }, 403);
-// 		await next();
-// 		// }
-// 	},
-// );
+export const AuthPrep = createMiddleware<{
+    Variables: {
+        allowed_actions_per_department: ActionsPerDepartment;
+    };
+}>(
+    async (c: Context, next: Next) => {
+        const user = await dbController.getUser({ user_id: c.var.user_id });
+        if (!user) {
+            console.error("User in AuthPrep not found: " + c.var.user_id);
+        }
+        const mapped_actions_to_department = S_ActionsPerDepartment.parse(user);
+        console.log(mapped_actions_to_department);
+        c.set("allowed_actions_per_department", mapped_actions_to_department);
+        await next();
+    },
+);
 
 async function createJWTAuthToken(c: Context, tokenPayload: JWTExtraPayload) {
     const iat = Math.floor(Date.now() / 1000);

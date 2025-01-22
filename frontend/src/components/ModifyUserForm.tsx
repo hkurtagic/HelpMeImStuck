@@ -109,7 +109,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         const selectedDept = departments.find((d) => d.department_name === e.target.value) || null;
         setSelectedDepartment(selectedDept);
         // setSelectedRoles([]); // Rollen zurücksetzen, wenn ein neues Department gewählt wird
-        setSelectedRoles(selectedUser!.roles.map((role: RoleAdmin) => role.role_id));
+        // setSelectedRoles(selectedUser!.roles.map((role: RoleAdmin) => role.role_id));
 
         if (selectedDept) {
             fetchRolesByDepartment(selectedDept.department_id);

@@ -70,15 +70,15 @@ export async function prefillDB() {
     };
 
     await dbController.addRole(new_r);
-    const admin_role = await dbController.getRole({
+    const admin_role = (await dbController.getRole({
         role_name: new_r.role_name,
         department_id: new_r.department.department_id,
-    });
-    const parsed_r = S_ServersideRole.parse(admin_role!.toJSON());
+    }))!;
+    // const parsed_r = S_ServersideRole.parse(admin_role!.toJSON());
     const new_u: UserCreate = {
         user_name: "Administrator",
         password: "admin",
-        roles: [parsed_r],
+        roles: [admin_role],
         // actions: SupporterActionPreset.actions,
     };
     await dbController.addUser(new_u);
@@ -191,17 +191,17 @@ async function testDB() {
         actions: SupporterActionPreset.actions,
     };
     await dbController.addRole(test_create_r);
-    const r_create = await dbController.getRole({
+    const r_create = (await dbController.getRole({
         role_name: test_create_r.role_name,
         department_id: test_create_r.department.department_id,
-    });
-    const r_create_parsed = S_ServersideRole.parse(r_create!.toJSON());
+    }))!;
+    // const r_create_parsed = S_ServersideRole.parse(r_create!.toJSON());
 
     // test user creation
     const test_create_u: UserCreate = {
         user_name: "ITsupporter",
         password: "test",
-        roles: [r_create_parsed],
+        roles: [r_create],
         // actions: SupporterActionPreset.actions,
     };
     await dbController.addUser(test_create_u);
@@ -221,29 +221,29 @@ async function testDB() {
     // test role update
     // const updated_r = parsed_r;
     const test_update_r: ServersideRole = {
-        role_id: r_create_parsed.role_id,
+        role_id: r_create.role_id,
         role_name: "IT requester",
         role_description: "IT requester role",
-        department: r_create_parsed.department,
+        department: r_create.department,
         actions: RequesterActionPreset.actions,
     };
-    console.log("> old role: " + JSON.stringify(r_create_parsed));
+    console.log("> old role: " + JSON.stringify(r_create));
     const r_update = await dbController.editRole(test_update_r);
     const r_update_parsed = S_ServersideRole.parse(r_update!.toJSON());
     console.log("updated role: " + JSON.stringify(r_update_parsed));
 
-    const d2 = await dbController.getDepartment({ department_name: "System Administration" });
-    const r2 = await dbController.getRole({
+    const d2 = (await dbController.getDepartment({ department_name: "System Administration" }))!;
+    const r2 = (await dbController.getRole({
         role_name: "Administrator",
-        department_id: d2?.toJSON().pk_department_id!,
-    });
-    const r2_parsed = S_ServersideRole.parse(r2!.toJSON());
+        department_id: d2.department_id,
+    }))!;
+    // const r2_parsed = S_ServersideRole.parse(r2!.toJSON());
     // test user update
     const test_update_u: UserAdmin = {
         user_id: u_create.user_id,
         user_name: "ITsupporter",
         password: u_create.password,
-        roles: [r_create_parsed, r2_parsed],
+        roles: [r_create, r2],
         actions: SupporterActionPreset.actions,
     };
     console.log("> old user: " + JSON.stringify(u_create));
@@ -272,7 +272,7 @@ async function testDB() {
     const test_create_tag: TagCreate = {
         tag_name: "Tier 1 Support",
         tag_abbreviation: "T1",
-        department: r_create_parsed.department,
+        department: r_create.department,
     };
     await dbController.addTag(test_create_tag);
 
