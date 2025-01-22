@@ -3,8 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.t
 import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { appendAuthHeader, EP_department, EP_roles_by_department } from "@/route_helper/routes_helper.tsx";
-import { Actions, Department, Role } from "@shared/shared_types.ts";
+import {
+    appendAuthHeader,
+    EP_department,
+    EP_roles_by_department,
+} from "@/route_helper/routes_helper.tsx";
+import { Department, RoleAdmin, User } from "@shared/shared_types.ts";
 
 interface ModifyUserProps {
     setView: (view: "overview") => void;
@@ -13,11 +17,12 @@ interface ModifyUserProps {
 
 export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
     const [username, setUsername] = useState<string>("");
+    const [selectedUser, setSelectedUser] = useState<User>();
     const [password, setPassword] = useState<string>("");
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-    const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+    const [availableRoles, setAvailableRoles] = useState<RoleAdmin[]>([]);
 
     useEffect(() => {
         fetchDepartments();
@@ -54,7 +59,8 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
 
             if (!response.ok) throw new Error("Failed to fetch user data");
 
-            const data = await response.json();
+            const data = await response.json() as User;
+            setSelectedUser(data);
             setUsername(data.user_name);
             setPassword(""); // Passwort muss neu gesetzt werden
 
@@ -62,7 +68,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             if (data.roles.length > 0) {
                 const department = data.roles[0].department;
                 setSelectedDepartment(department);
-                setSelectedRoles(data.roles.map((role: any) => role.role_id));
+                setSelectedRoles(data.roles.map((role: RoleAdmin) => role.role_id));
 
                 // Lade alle Rollen dieses Departments
                 fetchRolesByDepartment(department.department_id);
@@ -83,7 +89,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
 
             if (!response.ok) throw new Error("Failed to fetch roles");
 
-            const data = await response.json();
+            const data = await response.json() as RoleAdmin[];
             setAvailableRoles(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching roles:", error);
@@ -102,7 +108,8 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
     const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedDept = departments.find((d) => d.department_name === e.target.value) || null;
         setSelectedDepartment(selectedDept);
-        setSelectedRoles([]); // Rollen zurücksetzen, wenn ein neues Department gewählt wird
+        // setSelectedRoles([]); // Rollen zurücksetzen, wenn ein neues Department gewählt wird
+        setSelectedRoles(selectedUser!.roles.map((role: RoleAdmin) => role.role_id));
 
         if (selectedDept) {
             fetchRolesByDepartment(selectedDept.department_id);
@@ -121,13 +128,15 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             return;
         }
 
-        const selectedRoleObjects = availableRoles.filter((role) => selectedRoles.includes(role.role_id));
+        const selectedRoleObjects = availableRoles.filter((role) =>
+            selectedRoles.includes(role.role_id)
+        );
 
-        const modifiedUser = {
+        const modifiedUser: User = {
             user_id: userId.toString(),
             user_name: username,
             ...(password !== "" && { password }), // Falls leer, wird das Feld nicht gesendet
-            roles: selectedRoleObjects.map(role => ({
+            roles: selectedRoleObjects.map((role) => ({
                 role_id: role.role_id,
                 role_name: role.role_name,
                 role_description: role.role_description,
@@ -139,7 +148,6 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                 actions: role.actions,
             })),
         };
-
 
         console.log("Submitting modified user:", JSON.stringify(modifiedUser, null, 2));
 
@@ -169,7 +177,10 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             <Card className="w-full md:w-2/3 lg:w-1/2 shadow-lg">
                 <CardHeader>
                     <div className="flex flex-row justify-between">
-                        <Button className="bg-red-500 hover:bg-red-600 w-1/5" onClick={() => setView("overview")}>
+                        <Button
+                            className="bg-red-500 hover:bg-red-600 w-1/5"
+                            onClick={() => setView("overview")}
+                        >
                             Back
                         </Button>
                     </div>
@@ -179,9 +190,14 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <Label htmlFor="username">Username</Label>
-                            <Input id="username" type="text" value={username}
-                                   onChange={(e) => setUsername(e.target.value)} required
-                                   className="w-full p-2 border rounded-md"/>
+                            <Input
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                                className="w-full p-2 border rounded-md"
+                            />
                         </div>
 
                         <div className="mb-4">
@@ -197,8 +213,11 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
 
                         <div className="mb-4">
                             <Label>Department</Label>
-                            <select value={selectedDepartment?.department_name || ""} onChange={handleDepartmentChange}
-                                    className="border border-black p-2 rounded-md w-full">
+                            <select
+                                value={selectedDepartment?.department_name || ""}
+                                onChange={handleDepartmentChange}
+                                className="border border-black p-2 rounded-md w-full"
+                            >
                                 <option value="" disabled>Select a department</option>
                                 {departments.map((dept) => (
                                     <option key={dept.department_id} value={dept.department_name}>
@@ -212,18 +231,26 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                             <Label>Roles</Label>
                             <div className="flex flex-col">
                                 {availableRoles.map((role) => (
-                                    <label key={role.role_id} className="flex items-center space-x-2">
-                                        <input type="checkbox" value={role.role_id}
-                                               checked={selectedRoles.includes(role.role_id)}
-                                               onChange={() => handleRoleChange(role.role_id)}
-                                               className="form-checkbox"/>
+                                    <label
+                                        key={role.role_id}
+                                        className="flex items-center space-x-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            value={role.role_id}
+                                            checked={selectedRoles.includes(role.role_id)}
+                                            onChange={() => handleRoleChange(role.role_id)}
+                                            className="form-checkbox"
+                                        />
                                         <span>{role.role_name}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
 
-                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600 w-1/5">Save Changes</Button>
+                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600 w-1/5">
+                            Save Changes
+                        </Button>
                     </form>
                 </CardContent>
             </Card>
