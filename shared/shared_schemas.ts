@@ -31,7 +31,6 @@ const RequesterActionPreset = AllowedActions.parse({
     actions: [
         zAction.enum.ticket_create,
         zAction.enum.ticket_pullBack,
-        zAction.enum.ticket_closeOwn,
     ],
 });
 const SupporterActionPreset = AllowedActions.parse({
@@ -50,11 +49,8 @@ const ManagerActionPreset = AllowedActions.parse({
     actions: [
         ...SupporterActionPreset.actions,
         zAction.enum.tag_ownDeartment_manage,
-        zAction.enum.user_ownDeartment_create,
-        zAction.enum.user_ownDeartment_modify,
-        zAction.enum.role_ownDeartment_create,
-        zAction.enum.role_ownDeartment_modify,
-        zAction.enum.role_ownDeartment_delete,
+        zAction.enum.user_ownDeartment_manage,
+        zAction.enum.role_ownDeartment_manage,
         zAction.enum.department_ownDeartment_modify,
     ],
 });
