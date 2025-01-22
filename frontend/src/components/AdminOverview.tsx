@@ -3,7 +3,7 @@ import {
     appendAuthHeader,
     EP_department,
     EP_users_of_selected_department,
-    EP_roles_by_department, // ✅ Rollen-Endpunkt hinzugefügt
+    EP_roles_by_department,
 } from "@/route_helper/routes_helper.tsx";
 import { Department } from "@shared/shared_types.ts";
 import { Label } from "@/components/ui/label.tsx";
@@ -101,7 +101,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
             const data = await response.json();
             console.log("Fetched roles:", data);
 
-            // ✅ Nur die Role-Namen speichern
+
             setAvailableRoles(Array.isArray(data) ? data.map(role => role.role_name) : []);
         } catch (error) {
             console.error("Error fetching roles:", error);
@@ -138,11 +138,11 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
             const filteredUsers = processedUsers.filter((user) => {
                 const matchesDepartment = selectedDepartment
                     ? user.roles.some((role) => role.department === selectedDepartment?.department_name)
-                    : true; // ✅ Falls kein Department gewählt, alle akzeptieren
+                    : true;
 
                 const matchesRole = selectedRole
                     ? user.roles.some((role) => role.role === selectedRole)
-                    : true; // ✅ Falls keine Rolle gewählt, alle akzeptieren
+                    : true;
 
                 return matchesDepartment && matchesRole;
             });
@@ -179,7 +179,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                 value={selectedRole}
                 onChange={handleRoleChange}
                 className="border border-black p-2 rounded-md w-[500px]"
-                disabled={!selectedDepartment} // ✅ Dropdown deaktivieren, wenn kein Department gewählt ist
+                disabled={!selectedDepartment}
             >
                 <option value="">Select a role</option>
                 {availableRoles.map((role) => (
@@ -216,7 +216,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                             <tr key={`${user.id}-${role.role}-${index}`}>
                                 <td className="border border-gray-800 p-2 bg-white">{user.id}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
-                                <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
+                                <td className="border border-gray-800 p-2 bg-white hover:bg-slate-200 cursor-pointer" onClick={() => {alert("MODIFY OPTION")}}>{role.role}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
                             </tr>
                         ))

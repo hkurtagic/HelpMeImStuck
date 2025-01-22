@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import RequesterSidebarItem from "./RequesterSidebarItem.tsx";
-import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket } from "lucide-react";
+import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket,  UsersRound} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import AdminOverview from "@/components/AdminOverview.tsx";
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
             {isOpen && (
                 <div className="md:hidden fixed w-3/4 left-0 top-0 h-screen bg-white text-black z-40 overflow-auto rounded-r-3xl">
                     <div className="mt-16 p-4">
-                        <RequesterSidebarItem icon={Ticket} label="Home" isOpen={true} />
+                        <RequesterSidebarItem icon={UsersRound} label="Users" isOpen={true} />
                         <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={true} />
                         <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={true} onClick={handleLogout} />
                     </div>
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
 
                 {/* Sidebar Elements */}
                 <div className="m-4">
-                    <RequesterSidebarItem icon={Ticket} label="Tickets" isOpen={isOpen} onClick={() => setView("overview")} />
+                    <RequesterSidebarItem icon={UsersRound} label="Users" isOpen={isOpen} onClick={() => setView("overview")} />
                     <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={isOpen} onClick={() => setView("statistics")} />
                     <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={isOpen} onClick={handleLogout} />
                 </div>
