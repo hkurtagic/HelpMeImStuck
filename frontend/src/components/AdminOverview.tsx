@@ -1,10 +1,9 @@
-// AdminOverview.tsx
-
 import React, { useEffect, useState } from "react";
 import {
     appendAuthHeader,
     EP_department,
     EP_users_of_selected_department,
+    EP_roles_by_department, // ✅ Rollen-Endpunkt hinzugefügt
 } from "@/route_helper/routes_helper.tsx";
 import { Department } from "@shared/shared_types.ts";
 import { Label } from "@/components/ui/label.tsx";
@@ -21,37 +20,48 @@ interface ProcessedUser {
 
 interface CreateUserProps {
     setView: (view: string) => void;
-    setMaxUserId: (id: number) => void;  // Neue Prop zum Setzen der maximalen User ID
+    setMaxUserId: (id: number) => void;
     setSelectedUserId: (id: number) => void;
-
 }
 
 export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId }: CreateUserProps) {
     const [users, setUsers] = useState<ProcessedUser[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [availableRoles, setAvailableRoles] = useState<string[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+    const [selectedRole, setSelectedRole] = useState<string>("");
 
-    // Fetch users when the selected department changes
+    // Fetch departments on mount
+    useEffect(() => {
+        fetchDepartments();
+    }, []);
+
+    // Fetch users and roles when department changes
     useEffect(() => {
         if (selectedDepartment) {
             fetchDepartmentUser(selectedDepartment.department_id);
+            fetchRolesByDepartment(selectedDepartment.department_id);
         } else {
-            fetchDepartments(); // Fetch all departments on component mount
-            setUsers([]); // Clear users if no department is selected
+            setUsers([]);
+            setAvailableRoles([]); // Rollen zurücksetzen
         }
-    }, [selectedDepartment]);
+    }, [selectedDepartment, selectedRole]);
 
     useEffect(() => {
-        // maximale User ID calculaten und setzen
         if (users.length > 0) {
             const maxId = Math.max(...users.map((user) => user.id));
-            setMaxUserId(maxId); // Weitergabe der maximalen ID an die CreateUserForm
+            setMaxUserId(maxId);
         }
     }, [users]);
 
     const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedDept = departments.find((d) => d.department_name === e.target.value) || null;
         setSelectedDepartment(selectedDept);
+        setSelectedRole("");
+    };
+
+    const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedRole(e.target.value);
     };
 
     const handleModify = (userId: number) => {
@@ -59,7 +69,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
         setView("userModify");
     };
 
-    // Fetch ALL Departments
+    // Fetch all departments
     const fetchDepartments = async () => {
         try {
             const response = await fetch(EP_department, {
@@ -77,60 +87,69 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
         }
     };
 
-    // Fetch ALL Users of a department
-    const fetchDepartmentUser = async (departmentId: number) => {
+    // ✅ Fetch roles for the selected department
+    const fetchRolesByDepartment = async (departmentId: number) => {
         try {
-            const response = await fetch(`${EP_users_of_selected_department}/${departmentId}`, {
+            const response = await fetch(`${EP_roles_by_department}/${departmentId}`, {
                 method: "GET",
                 credentials: "include",
                 headers: appendAuthHeader(),
             });
 
-            if (!response.ok) throw new Error("Failed to fetch users for the selected department");
+            if (!response.ok) throw new Error("Failed to fetch roles");
 
             const data = await response.json();
+            console.log("Fetched roles:", data);
 
-            // Transform the API response into a flat structure
-            const processedUsers = Object.values(data).map((user: any) => ({
-                id: user.user_id,
-                name: user.user_name,
-                roles: user.roles.map((role: any) => ({
-                    role: role.role_name || "No Role",
-                    department: role.department?.department_name || "No Department",
-                })),
-            }));
-
-            // Filter users based on selected department
-            const filteredUsers = processedUsers.filter(user =>
-                user.roles.some(role => role.department === selectedDepartment?.department_name)
-            );
-
-            setUsers(filteredUsers);
+            // ✅ Nur die Role-Namen speichern
+            setAvailableRoles(Array.isArray(data) ? data.map(role => role.role_name) : []);
         } catch (error) {
-            console.error("Error fetching users for the selected department:", error);
+            console.error("Error fetching roles:", error);
+            setAvailableRoles([]);
         }
     };
 
-
-    // Delete User
-    const deleteUser = async (userId: number) => {
+    // Fetch users of the selected department
+    const fetchDepartmentUser = async (departmentId: number | null) => {
         try {
-            const response = await fetch(`/api/user/${userId}`, {
-                method: "DELETE",
+            const url = departmentId ? `${EP_users_of_selected_department}/${departmentId}` : EP_users_of_selected_department;
+
+            const response = await fetch(url, {
+                method: "GET",
                 credentials: "include",
                 headers: appendAuthHeader(),
             });
 
-            if (!response.ok) {
-                throw new Error(`Failed to delete user with ID ${userId}`);
-            }
+            if (!response.ok) throw new Error("Failed to fetch users");
 
-            // Entfernen des gelöschten Benutzers aus der lokalen Users-Liste
-            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-            alert(`User with ID ${userId} has been deleted successfully.`);
+            const data = await response.json();
+            console.log("Fetched users data:", data);
+
+            const processedUsers = Object.values(data).map((user: any) => ({
+                id: user.user_id,
+                name: user.user_name,
+                roles: user.roles?.map((role: any) => ({
+                    role: role.role_name || "No Role",
+                    department: role.department?.department_name || "No Department",
+                })) || [],
+            }));
+
+            // **Neue Filter-Logik:**
+            const filteredUsers = processedUsers.filter((user) => {
+                const matchesDepartment = selectedDepartment
+                    ? user.roles.some((role) => role.department === selectedDepartment?.department_name)
+                    : true; // ✅ Falls kein Department gewählt, alle akzeptieren
+
+                const matchesRole = selectedRole
+                    ? user.roles.some((role) => role.role === selectedRole)
+                    : true; // ✅ Falls keine Rolle gewählt, alle akzeptieren
+
+                return matchesDepartment && matchesRole;
+            });
+
+            setUsers(filteredUsers);
         } catch (error) {
-            console.error("Error deleting user:", error);
-            alert("Failed to delete user. Please try again.");
+            console.error("Error fetching users:", error);
         }
     };
 
@@ -154,7 +173,23 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                 ))}
             </select>
 
-            {/* Add User Button positioned above the table */}
+            {/* Role Dropdown (Nur Rollen des gewählten Departments) */}
+            <Label className="text-white mt-4 mb-4">Select a Role to filter by:</Label>
+            <select
+                value={selectedRole}
+                onChange={handleRoleChange}
+                className="border border-black p-2 rounded-md w-[500px]"
+                disabled={!selectedDepartment} // ✅ Dropdown deaktivieren, wenn kein Department gewählt ist
+            >
+                <option value="">Select a role</option>
+                {availableRoles.map((role) => (
+                    <option key={role} value={role}>
+                        {role}
+                    </option>
+                ))}
+            </select>
+
+            {/* Add User Button */}
             <div className="w-full flex justify-end mt-4">
                 <Button
                     className="bg-green-500 md:w-1/12 font-bold hover:bg-green-600"
@@ -164,53 +199,33 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                 </Button>
             </div>
 
-            {users.length > 0 && (
-                <>
-
-
-                    {/* Users Table */}
-                    <table className="w-full border border-gray-800 mt-5">
-                        <thead>
-                        <tr>
-                            <th className="border border-gray-800 p-2 bg-slate-300">User ID</th>
-                            <th className="border border-gray-800 p-2 bg-slate-300">Name</th>
-                            <th className="border border-gray-800 p-2 bg-slate-300">Role</th>
-                            <th className="border border-gray-800 p-2 bg-slate-300">Department</th>
-                            <th className="border border-gray-800 p-2 bg-slate-300">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {users.map((user) =>
-                            user.roles.map((role, index) => (
-                                role.department === selectedDepartment?.department_name && (
-                                    <tr key={`${user.id}-${role.role}-${index}`}>
-                                        <td className="border border-gray-800 p-2 bg-white">{user.id}</td>
-                                        <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
-                                        <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
-                                        <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
-                                        <td className="border border-gray-800 p-2 bg-white space-x-2">
-                                            <button
-                                                onClick={() => deleteUser(user.id)}
-                                                className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
-                                            >
-                                                Delete
-                                            </button>
-                                            <button
-                                                onClick={() => handleModify(user.id)}
-                                                className="p-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md"
-                                            >
-                                                Modify
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )
-                            ))
-                        )}
-                        </tbody>
-                    </table>
-                </>
+            {/* Users Table */}
+            {users.length > 0 ? (
+                <table className="w-full border border-gray-800 mt-5">
+                    <thead>
+                    <tr>
+                        <th className="border border-gray-800 p-2 bg-slate-300">User ID</th>
+                        <th className="border border-gray-800 p-2 bg-slate-300">Name</th>
+                        <th className="border border-gray-800 p-2 bg-slate-300">Role</th>
+                        <th className="border border-gray-800 p-2 bg-slate-300">Department</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {users.map((user) =>
+                        user.roles.map((role, index) => (
+                            <tr key={`${user.id}-${role.role}-${index}`}>
+                                <td className="border border-gray-800 p-2 bg-white">{user.id}</td>
+                                <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
+                                <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
+                                <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
+                            </tr>
+                        ))
+                    )}
+                    </tbody>
+                </table>
+            ) : (
+                <p className="text-white mt-5">No users found.</p>
             )}
-            {users.length === 0 && <p className="text-white mt-5">There are no users in this department.</p>}
         </div>
     );
 }

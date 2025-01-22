@@ -21,6 +21,8 @@ const EP_users_of_selected_department = "api/user/dept";	// GET REQUEST get all 
 const EP_login = EP_user + "/login";
 const EP_logout = EP_user + "/logout";
 
+const EP_roles_by_department = "api/role/dept"
+
 
 
 
@@ -32,6 +34,7 @@ export {
 	dashboardPath,
 	EP_department,
 	EP_department_tickets,
+	EP_roles_by_department,
 	EP_login,
 	EP_logout,
 	EP_own_department,
