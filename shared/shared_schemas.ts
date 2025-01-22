@@ -12,7 +12,7 @@ const zAction = z.nativeEnum(Actions);
 // 		),
 // 	"ID should be a valid UUID",
 // );
-const UUID = z.string(); //.uuid("ID is not a valid UUID");
+const UUID = z.string().uuid("ID is not a valid UUID");
 const ID = z.coerce.number().int("ID is not a valid Number").nonnegative(
     "ID should not be negative",
 );
@@ -124,12 +124,13 @@ const S_User = S_UserCreate.extend({
 
 const S_UserAdmin = S_User.extend({
     password: z.string().optional(),
-    actions: zAction.array(),
+    // actions: zAction.array(),
 });
 
 // intended for ticket history and non admin purposes
 const S_UserPreview = S_User.omit({
     roles: true,
+    actions: true,
 });
 
 const S_TicketCreate = z.object({

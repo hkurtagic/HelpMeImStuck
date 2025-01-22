@@ -11,7 +11,7 @@ import Event from "@backend/model/Event.ts";
 import Image from "@backend/model/Image.ts";
 import Role from "@backend/model/Role.ts";
 
-export default async (): Promise<void> => {
+export default async function dbModelSetup(wipe_db_on_restart = true): Promise<void> {
     new Action();
     new Department();
     new Event();
@@ -113,7 +113,11 @@ export default async (): Promise<void> => {
     // One Tickets can have multiple images / One Image blengs to one Event
     Image.belongsTo(Ticket, { foreignKey: "fk_ticket_id" });
     Ticket.hasMany(Image, { foreignKey: "fk_ticket_id", onDelete: "CASCADE" });
-
+    if (wipe_db_on_restart) {
+        await dropTablesAndSetConstraints();
+    }
+}
+export async function dropTablesAndSetConstraints() {
     try {
         await sequelize.sync({ force: true });
         const queryInterface = sequelize.getQueryInterface();
@@ -130,4 +134,4 @@ export default async (): Promise<void> => {
     } catch (error) {
         throw error;
     }
-};
+}

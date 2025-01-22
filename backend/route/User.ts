@@ -12,7 +12,13 @@ import {
     UserIDValidator,
 } from "@backend/controller/ValidationController.ts";
 import * as db2 from "@backend/service/dbController.ts";
-import { S_User, S_UserAdmin, S_UserCreate, S_UserLogin } from "@shared/shared_schemas.ts";
+import {
+    S_User,
+    S_UserAdmin,
+    S_UserCreate,
+    S_UserLogin,
+    S_UserPreview,
+} from "@shared/shared_schemas.ts";
 import { S_ServersideUser } from "@backend/schemes_and_types/serverside_schemas.ts";
 
 const user = new Hono();
@@ -22,27 +28,28 @@ user.post(
     validator("json", (value, c) => {
         const parsed = S_UserLogin.safeParse(value);
         if (!parsed.success) {
+            console.error(parsed.error);
             return c.json({ message: "Not a valid Object" }, 400);
         }
         return parsed.data;
     }),
     async (c) => {
         const login_user = c.req.valid("json");
-        const u = await db2.getUser({ user_name: login_user.user_name });
-        if (!u) {
+        const user = await db2.getUser({ user_name: login_user.user_name });
+        if (!user) {
             return c.json({ error: "Invalid Credentials" }, 401);
         }
-        const user = S_ServersideUser.safeParse(u.toJSON());
+        // const user = S_ServersideUser.safeParse(user.toJSON());
         if (
-            !user.success ||
-            !crypto_verify(AlgorithmName.Argon2, login_user.password, user.data.password!)
+            !crypto_verify(AlgorithmName.Argon2, login_user.password, user.password!)
         ) {
             return c.json({ error: "Invalid Credentials" }, 401);
         }
         // TODO create token uuid, by saving to DB -> create token only with token uuid
-        await createJWTAuthToken(c, { user_id: user.data.user_id });
-        await createJWTRefreshToken(c, { user_id: user.data.user_id });
-        return c.json({ user_id: user.data.user_id, user_name: user.data.user_name }, 200);
+        await removeJWTTokens(c);
+        await createJWTAuthToken(c, { user_id: user.user_id });
+        await createJWTRefreshToken(c, { user_id: user.user_id });
+        return c.json(S_UserPreview.parse(user), 200);
     },
 );
 
@@ -57,14 +64,14 @@ user.post("/logout", JWTAuthController, (c) => {
 
 // get data of user itself
 user.get("/", JWTAuthController, async (c) => {
-    const user_model = await db2.getUser({ user_id: c.var.user_id });
-    if (!user_model) {
+    const server_user = await db2.getUser({ user_id: c.var.user_id });
+    if (!server_user) {
         return c.json({ error: "Invalid Credentials" }, 401);
     }
-    const server_user = S_ServersideUser.safeParse(user_model.toJSON());
-    if (!server_user.success) {
-        return c.json({ message: "Serverside error" }, 500);
-    }
+    // const server_user = S_ServersideUser.safeParse(user.toJSON());
+    // if (!server_user.success) {
+    //     return c.json({ message: "Serverside error" }, 500);
+    // }
     const user = S_User.parse(server_user);
 
     return c.json(user, 200);
@@ -72,16 +79,15 @@ user.get("/", JWTAuthController, async (c) => {
 
 // get data of specified user
 user.get("/:user_id", JWTAuthController, UserIDValidator(), async (c) => {
-    const user_model = await db2.getUser({ user_id: c.req.valid("param") });
-    if (!user_model) {
+    const server_user = await db2.getUser({ user_id: c.req.valid("param") });
+    if (!server_user) {
         return c.json({ error: "User not found" }, 400);
     }
-    const server_user = S_ServersideUser.safeParse(user_model.toJSON());
-    if (!server_user.success) {
-        return c.json({ message: "Serverside error" }, 500);
-    }
-    const user = S_User.parse(server_user.data);
-
+    // const server_user = S_ServersideUser.safeParse(user_model.toJSON());
+    // if (!server_user.success) {
+    //     return c.json({ message: "Serverside error" }, 500);
+    // }
+    const user = S_User.parse(server_user);
     return c.json(user, 200);
 });
 
@@ -94,6 +100,7 @@ user.post(
     validator("json", (value, c) => {
         const parsed = S_UserCreate.safeParse(value);
         if (!parsed.success) {
+            console.error(parsed.error);
             return c.json({ message: "Not a valid Object" }, 400);
         }
         return parsed.data;
@@ -116,8 +123,11 @@ user.put(
     validator("json", (value, c) => {
         const parsed = S_UserAdmin.safeParse(value);
         if (!parsed.success) {
+            console.error(parsed.error);
             return c.json({ message: "Not a valid User Object" }, 400);
         }
+        console.info("i> update user; new user object: ");
+        console.info(parsed.data);
         return parsed.data;
     }),
     async (c) => {
@@ -128,17 +138,17 @@ user.put(
         if (!c.req.valid("json").roles) {
             return c.json({ message: "User must have at least one Role!" }, 400);
         }
-        const updated_user_model = await db2.editUser(c.req.valid("json"));
-        if (!updated_user_model) {
+        const updated_user = await db2.editUser(c.req.valid("json"));
+        if (!updated_user) {
             return c.json({ message: "User modification failed" }, 500);
         }
-        const updated_user = S_User.safeParse(updated_user_model.toJSON());
-        if (!updated_user.success) {
-            console.error(updated_user.error);
-            return c.json({ message: "Serverside error" }, 500);
-        }
+        // const updated_user = S_ServersideUser.safeParse(updated_user.toJSON());
+        // if (!updated_user.success) {
+        //     console.error(updated_user.error);
+        //     return c.json({ message: "Serverside error" }, 500);
+        // }
 
-        return c.json(updated_user.data, 200);
+        return c.json(updated_user, 200);
     },
 );
 // delete

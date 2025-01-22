@@ -154,7 +154,7 @@ export async function prefillDB() {
     await dbController.addUser(user2_create);
     await dbController.addUser(user3_create);
 
-    await testDB();
+    // await testDB();
 }
 async function testDB() {
     //test department creation
@@ -188,8 +188,8 @@ async function testDB() {
         // actions: SupporterActionPreset.actions,
     };
     await dbController.addUser(test_create_u);
-    const u_create = await dbController.getUser({ user_name: test_create_u.user_name });
-    const u_create_parsed = S_ServersideUser.parse(u_create?.toJSON());
+    const u_create = (await dbController.getUser({ user_name: test_create_u.user_name }))!;
+    // const u_create_parsed = S_ServersideUser.parse(u_create?.toJSON());
 
     // test department update
     const test_update_d: Department = {
@@ -223,16 +223,16 @@ async function testDB() {
     const r2_parsed = S_ServersideRole.parse(r2!.toJSON());
     // test user update
     const test_update_u: UserAdmin = {
-        user_id: u_create_parsed.user_id,
+        user_id: u_create.user_id,
         user_name: "ITsupporter",
-        password: u_create_parsed.password,
+        password: u_create.password,
         roles: [r_create_parsed, r2_parsed],
         actions: SupporterActionPreset.actions,
     };
-    console.log("> old user: " + JSON.stringify(u_create_parsed));
-    const u_update = await dbController.editUser(S_UserAdmin.parse(test_update_u));
-    const u_update_parsed = S_ServersideUser.parse(u_update!.toJSON());
-    console.log("updated user: " + JSON.stringify(u_update_parsed));
+    console.log("> old user: " + JSON.stringify(u_create));
+    const u_update = (await dbController.editUser(S_UserAdmin.parse(test_update_u)))!;
+    // const u_update_parsed = S_ServersideUser.parse(u_update!.toJSON());
+    console.log("updated user: " + JSON.stringify(u_update));
     /*
 	//test user delete
 	const test_delete_u = test_update_u;
@@ -270,7 +270,7 @@ async function testDB() {
 
     // test_ticket
     const test_create_t: TicketCreate = {
-        author: { user_id: u_update_parsed.user_id, user_name: u_update_parsed.user_name },
+        author: { user_id: u_update.user_id, user_name: u_update.user_name },
         departments: [d_update_parsed],
         ticket_title: "test_ticket",
         ticket_description: "ticket description",
@@ -279,7 +279,7 @@ async function testDB() {
     console.info("> new ticket: " + JSON.stringify(test_create_t));
     (await dbController.addTicket(test_create_t))!;
     const user_t_create = await dbController.getAllTicketsOf({
-        author_id: u_update_parsed.user_id,
+        author_id: u_update.user_id,
     });
     const t_create = user_t_create[user_t_create.length - 1];
     const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
@@ -309,9 +309,7 @@ async function testDB() {
         event_type: EventType.createTicket,
     };
     await dbController.addEvent(test_create_e);
-    const u_create_e2 = S_ServersideUser.parse(
-        (await dbController.getUser({ user_name: "Administrator" }))!.toJSON()!,
-    );
+    const u_create_e2 = (await dbController.getUser({ user_name: "Administrator" }))!;
     console.log("> second ticket event user:");
     console.log({ user_id: u_create_e2.user_id, user_name: u_create_e2.user_name });
     // test add event

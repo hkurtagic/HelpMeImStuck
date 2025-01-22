@@ -50,6 +50,7 @@ import {
 import { Tag, TagCreate } from "../../shared/shared_types.ts";
 import { S_DTOTagParsed } from "../schemes_and_types/dto_objects.ts";
 import { SQLNoTagFound } from "../model/Errors.ts";
+import { S_User } from "@shared/shared_schemas.ts";
 
 export const addUser = async (
     user: UserCreate,
@@ -93,7 +94,7 @@ export const addUser = async (
 
 export const getUser = async (
     search_param: { user_id: UUID } | { user_name: string },
-): Promise<ServersideUserModel | null> => {
+): Promise<UserAdmin | null> => {
     let user = null;
     if ("user_id" in search_param) {
         user = await UserModel.getUserById(search_param.user_id);
@@ -102,7 +103,9 @@ export const getUser = async (
         user = await UserModel.getUserByName(search_param.user_name);
         if (!user) throw SQLNoUserFound(undefined, search_param.user_name);
     }
-    return user;
+    const parsed_u = S_ServersideUser.safeParse(user);
+    if (!parsed_u.success) return null;
+    return parsed_u.data as UserAdmin;
 };
 
 export const getAllUsersInDepartment = async (
@@ -148,25 +151,26 @@ export const getAllUsersInDepartment = async (
 
 export const editUser = async (
     user: UserAdmin,
-): Promise<ServersideUserModel | null> => {
+): Promise<User | null> => {
     const t = await sequelize.transaction();
     try {
         const old_u = await getUser({ user_id: user.user_id });
         if (!old_u) throw SQLNoUserFound(user.user_id, user.user_name);
         const userDiff = ObjectUtils.diff(
-            S_ServersideUser.parse(old_u),
+            old_u,
             user,
             false,
         );
         const userRoleDiff = ObjectUtils.arrayDiff(
-            S_ServersideUser.parse(old_u).roles.map((o) => o.role_id),
+            old_u.roles.map((o) => o.role_id),
             user.roles.map((o) => o.role_id),
         );
         if (!userDiff) return null;
-        console.log("!> userDiff:");
-        console.log(userDiff);
-        console.log("!> userRoleDiff:");
-        console.log(userRoleDiff);
+        const old_u_model = await UserModel.findByPk(user.user_id);
+        // console.log("!> userDiff:");
+        // console.log(userDiff);
+        // console.log("!> userRoleDiff:");
+        // console.log(userRoleDiff);
         // check if something added
         if (userDiff.added) {
             // add actions if needed
@@ -175,7 +179,7 @@ export const editUser = async (
                     (userDiff.added as { [propName: string]: unknown[] }).actions,
                 ) as Actions[];
                 for (const action of added_actions) {
-                    await old_u.addAction(action, { transaction: t });
+                    await old_u_model!.addAction(action, { transaction: t });
                 }
             }
         }
@@ -187,34 +191,34 @@ export const editUser = async (
                     (userDiff.removed as { [propName: string]: unknown[] }).actions,
                 ) as Actions[];
                 for (const action of removed_actions) {
-                    await old_u.removeAction(action, { transaction: t });
+                    await old_u_model!.removeAction(action, { transaction: t });
                 }
             }
         }
         if (userRoleDiff) {
             if (userRoleDiff.added) {
                 for (const role_id of (userRoleDiff.added as number[])) {
-                    await old_u.addRole(role_id, { transaction: t });
+                    await old_u_model!.addRole(role_id, { transaction: t });
                 }
             }
             if (userRoleDiff.removed) {
                 for (const role_id of (userRoleDiff.removed as number[])) {
-                    await old_u.addRole(role_id, { transaction: t });
+                    await old_u_model!.addRole(role_id, { transaction: t });
                 }
             }
         }
 
-        await old_u.update(userDiff.updated as UserAdmin, { transaction: t });
+        await old_u_model!.update(userDiff.updated as UserAdmin, { transaction: t });
         await t.commit();
     } catch (error) {
         console.error(error);
         // If the execution reaches this line, an error was thrown.
         // We rollback the transaction.
         await t.rollback();
+        return null;
     }
-    const res = await UserModel.getUserByName(user.user_name);
-    if (!res) throw SQLNoUserFound;
-    return res;
+    const updated_u = S_User.parse(await getUser({ user_id: user.user_id }));
+    return updated_u;
 };
 
 export const deleteUser = async (user_id: UUID): Promise<boolean> => {

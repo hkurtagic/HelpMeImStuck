@@ -4,7 +4,7 @@ import { decode, sign } from "hono/jwt";
 import { setCookie } from "hono/cookie";
 import { JWTExtraPayload } from "@backend/schemes_and_types/serverside_types.ts";
 import { getCookie } from "hono/cookie";
-import db from "@backend/service/database.ts";
+// import db from "@backend/service/database.ts";
 import { getTestData } from "../../tests/backend/sync.ts";
 // import { base64toBlob, BlobToBase64 } from "@backend/handler/ImageHandler.ts";
 // import { Base64, ImageType } from "@shared/shared_types.ts";
