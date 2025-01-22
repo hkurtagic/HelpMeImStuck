@@ -126,7 +126,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         const modifiedUser = {
             user_id: userId.toString(),
             user_name: username,
-            password: password || undefined,
+            ...(password !== "" && { password }), // Falls leer, wird das Feld nicht gesendet
             roles: selectedRoleObjects.map(role => ({
                 role_id: role.role_id,
                 role_name: role.role_name,
@@ -136,9 +136,10 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                     department_name: selectedDepartment.department_name,
                     department_description: selectedDepartment.department_description,
                 },
-                actions: role.actions, // Actions für die Rolle beibehalten
+                actions: role.actions,
             })),
         };
+
 
         console.log("Submitting modified user:", JSON.stringify(modifiedUser, null, 2));
 
@@ -178,12 +179,26 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
                             <Label htmlFor="username">Username</Label>
-                            <Input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="w-full p-2 border rounded-md" />
+                            <Input id="username" type="text" value={username}
+                                   onChange={(e) => setUsername(e.target.value)} required
+                                   className="w-full p-2 border rounded-md"/>
+                        </div>
+
+                        <div className="mb-4">
+                            <Label htmlFor="password">New Password (or leave empty)</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full p-2 border rounded-md"
+                            />
                         </div>
 
                         <div className="mb-4">
                             <Label>Department</Label>
-                            <select value={selectedDepartment?.department_name || ""} onChange={handleDepartmentChange} className="border border-black p-2 rounded-md w-full">
+                            <select value={selectedDepartment?.department_name || ""} onChange={handleDepartmentChange}
+                                    className="border border-black p-2 rounded-md w-full">
                                 <option value="" disabled>Select a department</option>
                                 {departments.map((dept) => (
                                     <option key={dept.department_id} value={dept.department_name}>
@@ -198,7 +213,10 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                             <div className="flex flex-col">
                                 {availableRoles.map((role) => (
                                     <label key={role.role_id} className="flex items-center space-x-2">
-                                        <input type="checkbox" value={role.role_id} checked={selectedRoles.includes(role.role_id)} onChange={() => handleRoleChange(role.role_id)} className="form-checkbox" />
+                                        <input type="checkbox" value={role.role_id}
+                                               checked={selectedRoles.includes(role.role_id)}
+                                               onChange={() => handleRoleChange(role.role_id)}
+                                               className="form-checkbox"/>
                                         <span>{role.role_name}</span>
                                     </label>
                                 ))}
