@@ -87,7 +87,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
         }
     };
 
-    // ✅ Fetch roles for the selected department
+
     const fetchRolesByDepartment = async (departmentId: number) => {
         try {
             const response = await fetch(`${EP_roles_by_department}/${departmentId}`, {
@@ -154,6 +154,29 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
     };
 
 
+    const deleteUser = async (userId: number) => {
+        try {
+            const response = await fetch(`/api/user/${userId}`, {
+                method: "DELETE",
+                credentials: "include",
+                headers: appendAuthHeader(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to delete user with ID ${userId}`);
+            }
+
+            // Entferne den User aus dem State
+            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+            alert(`User with ID ${userId} has been deleted successfully.`);
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            alert("Failed to delete user. Please try again.");
+        }
+    };
+
+
+
     return (
         <div className="p-5 flex flex-col items-center">
             <h1 className="text-center text-white mb-7 font-mono">Admin Dashboard</h1>
@@ -208,6 +231,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                         <th className="border border-gray-800 p-2 bg-slate-300">Name</th>
                         <th className="border border-gray-800 p-2 bg-slate-300">Role</th>
                         <th className="border border-gray-800 p-2 bg-slate-300">Department</th>
+                        <th className="border border-gray-800 p-2 bg-slate-300"></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -223,6 +247,14 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                                 <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
+                                <td className="border border-gray-800 p-2 bg-white">
+                                    <button
+                                        onClick={() => deleteUser(user.id)}
+                                        className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         ));
                     })}
