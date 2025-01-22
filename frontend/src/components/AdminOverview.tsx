@@ -211,16 +211,21 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                     </tr>
                     </thead>
                     <tbody>
-                    {users.map((user) =>
-                        user.roles.map((role, index) => (
+                    {users.map((user) => {
+                        const filteredRoles = user.roles.filter((role) =>
+                            role.department === selectedDepartment?.department_name &&
+                            (selectedRole ? role.role === selectedRole : true) // Falls keine Rolle gewählt, alle akzeptieren
+                        );
+
+                        return filteredRoles.map((role, index) => (
                             <tr key={`${user.id}-${role.role}-${index}`}>
                                 <td className="border border-gray-800 p-2 bg-white">{user.id}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
-                                <td className="border border-gray-800 p-2 bg-white hover:bg-slate-200 cursor-pointer" onClick={() => {alert("MODIFY OPTION")}}>{role.role}</td>
+                                <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
                             </tr>
-                        ))
-                    )}
+                        ));
+                    })}
                     </tbody>
                 </table>
             ) : (
