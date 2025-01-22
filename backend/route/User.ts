@@ -76,9 +76,6 @@ user.get("/:user_id", JWTAuthController, UserIDValidator(), async (c) => {
     if (!user_model) {
         return c.json({ error: "User not found" }, 400);
     }
-    console.log("> user details");
-    console.log(user_model.toJSON());
-
     const server_user = S_ServersideUser.safeParse(user_model.toJSON());
     if (!server_user.success) {
         return c.json({ message: "Serverside error" }, 500);
