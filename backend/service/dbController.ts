@@ -776,3 +776,50 @@ export const addEventType = async (eventType: string) => {
 // const removeUserFromDepartment = async () => {};
 // const addRoleToUser = async () => {};
 // const removeRoleFromUser = async () => {};
+
+export const addTagToTicket = async (ticket_id: UUID, tag_id: ID): Promise<boolean> => {
+    const t = await sequelize.transaction();
+    try {
+        const ticket = await TicketModel.findByPk(ticket_id, { transaction: t });
+        if (!ticket) throw SQLNoTicketFound(ticket_id);
+        const tag = await TagModel.findByPk(tag_id, { transaction: t });
+        if (!tag) throw SQLNoTagFound(tag_id);
+        await ticket.addTag(tag_id, { transaction: t });
+        await t.commit();
+    } catch (error) {
+        console.error(error);
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
+        return false;
+    }
+
+    return true;
+};
+export const removeTagToTicket = async (ticket_id: UUID, tag_id: ID): Promise<boolean> => {
+    const t = await sequelize.transaction();
+    try {
+        const ticket = await TicketModel.findByPk(ticket_id, {
+            transaction: t,
+            include: [{
+                model: TagModel,
+                // as: "tags",
+                // required: false,
+                through: {
+                    attributes: [],
+                },
+            }],
+        });
+        if (!ticket) throw SQLNoTicketFound(ticket_id);
+        await ticket.removeTag(tag_id, { transaction: t });
+        await t.commit();
+    } catch (error) {
+        console.error(error);
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
+        return false;
+    }
+
+    return true;
+};

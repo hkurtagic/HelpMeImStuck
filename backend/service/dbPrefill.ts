@@ -285,6 +285,12 @@ async function testDB() {
     const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
     console.info("> created ticket: " + JSON.stringify(t_create_parsed));
 
+    const tag_on_ticket = await dbController.addTagToTicket(
+        t_create_parsed.ticket_id,
+        test_update_tag.tag_id,
+    );
+    console.log("> tag added to ticket? " + tag_on_ticket);
+
     const t_all_of_user = await dbController.getAllTicketsOf({
         author_id: test_create_t.author.user_id,
     });

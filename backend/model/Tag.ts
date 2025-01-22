@@ -23,7 +23,7 @@ import { DTOTag, S_DTOTagParsed } from "../schemes_and_types/dto_objects.ts";
 import ModelDepartment from "./Department.ts";
 import ModelTicket from "./Ticket.ts";
 import { SQLNoTagFound } from "./Errors.ts";
-import { Tag } from "../../shared/shared_types.ts";
+import { Tag as T_Tag } from "@shared/shared_types.ts";
 
 /**
  * ```js
@@ -79,7 +79,7 @@ export default class Tag extends Model<InferAttributes<Tag>, InferCreationAttrib
     declare hasTicket: BelongsToManyHasAssociationMixin<ModelTicket, number>;
     declare hasTickets: BelongsToManyHasAssociationsMixin<ModelTicket, number>;
     declare countTickets: BelongsToManyCountAssociationsMixin;
-    static async getTagById(tag_id: number): Promise<Tag | null> {
+    static async getTagById(tag_id: number): Promise<T_Tag | null> {
         const tag = await Tag.findOne({
             where: { pk_tag_id: tag_id },
             include: [{
@@ -94,8 +94,7 @@ export default class Tag extends Model<InferAttributes<Tag>, InferCreationAttrib
         }
         return res.data;
     }
-    static async getTagByName(tag_name: string, department_id: number): Promise<Tag | null> {
-        const t = await sequelize.transaction();
+    static async getTagByName(tag_name: string, department_id: number): Promise<T_Tag | null> {
         const tag = await Tag.findOne({
             where: { tag_name: tag_name },
             include: [{
