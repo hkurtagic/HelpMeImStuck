@@ -78,6 +78,18 @@ const S_Department = S_DepartmentCreate.extend({
     department_id: ID,
 });
 
+const S_TagCreate = z.object({
+    tag_name: z.string(),
+    tag_abbreviation: z.string(),
+    tag_description: z.string().optional().nullable(),
+    tag_style: z.string().optional().nullable(),
+    department: S_Department,
+});
+
+const S_Tag = S_TagCreate.extend({
+    tag_id: ID,
+});
+
 const S_RoleCreate = z.object({
     role_name: z.string(),
     role_description: z.string().optional().nullable(),
@@ -118,14 +130,6 @@ const S_UserAdmin = S_User.extend({
 // intended for ticket history and non admin purposes
 const S_UserPreview = S_User.omit({
     roles: true,
-});
-
-const S_Tag = z.object({
-    tag_name: z.string(),
-    abbreviation: z.string(),
-    description: z.string().optional().nullable(),
-    department: S_Department,
-    style: z.string().optional(),
 });
 
 const S_TicketCreate = z.object({
@@ -200,6 +204,7 @@ export {
     S_RoleAdmin,
     S_RoleCreate,
     S_Tag,
+    S_TagCreate,
     S_Ticket,
     S_TicketCreate,
     S_TicketEvent,

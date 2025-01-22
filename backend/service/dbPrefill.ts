@@ -26,6 +26,8 @@ import {
     S_UserAdmin,
     SupporterActionPreset,
 } from "@shared/shared_schemas.ts";
+import { Tag, TagCreate } from "@shared/shared_types.ts";
+import { default as TagModel } from "../model/Tag.ts";
 
 export async function prefillDB() {
     // prefill possible actions
@@ -152,7 +154,7 @@ export async function prefillDB() {
     await dbController.addUser(user2_create);
     await dbController.addUser(user3_create);
 
-    // await testDB();
+    await testDB();
 }
 async function testDB() {
     //test department creation
@@ -250,6 +252,21 @@ async function testDB() {
 	// const d_delete_parsed = S_ServerDepartment.parse(d_delete!.toJSON());
 	console.info("> department deleted?: " + JSON.stringify(d_delete));
 	*/
+    const test_create_tag: TagCreate = {
+        tag_name: "Tier 1 Support",
+        tag_abbreviation: "T1",
+        department: r_create_parsed.department,
+    };
+    await dbController.addTag(test_create_tag);
+
+    let test_update_tag = await TagModel.getTagByName(
+        test_create_tag.tag_name,
+        test_create_tag.department.department_id,
+    );
+
+    test_update_tag = { ...test_update_tag!, tag_name: "Tier 2 Support", tag_abbreviation: "T2" };
+    await dbController.editTag(test_update_tag);
+    // await dbController.deleteTag(test_update_tag.tag_id);
 
     // test_ticket
     const test_create_t: TicketCreate = {
@@ -291,6 +308,19 @@ async function testDB() {
     );
     console.log("> second ticket event user:");
     console.log({ user_id: u_create_e2.user_id, user_name: u_create_e2.user_name });
+    // test add event
+    /*const test_create_e: TicketEvent = {
+		author: t_create_parsed.author,
+		ticket_id: t_create_parsed.ticket_id,
+		// created_at: t_create.toJSON().created_at,
+		event_type: EventType.createTicket,
+	};
+	await dbController.addEvent(test_create_e);
+	const u_create_e2 = S_ServersideUser.parse(
+		(await dbController.getUser({ user_name: "Administrator" }))!.toJSON()!,
+	);
+	console.log("> second ticket event user:");
+	console.log({ user_id: u_create_e2.user_id, user_name: u_create_e2.user_name });
 
     const test_create_e2: TicketEvent = {
         author: { user_id: u_create_e2.user_id, user_name: u_create_e2.user_name },
@@ -300,9 +330,9 @@ async function testDB() {
     };
     await dbController.addEvent(test_create_e2);
 
-    const ticketHist = await dbController.getTicketHistory(t_create_parsed.ticket_id);
-    console.log("> getTicketHistory");
-    console.log(ticketHist);
+	const ticketHist = await dbController.getTicketHistory(t_create_parsed.ticket_id);
+	console.log("> getTicketHistory");
+	console.log(ticketHist);*/
 }
 
 /*

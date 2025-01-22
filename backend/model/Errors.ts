@@ -14,3 +14,5 @@ export const SQLNoTicketFound = (ticket_id?: string, author_id?: string, author_
 	);
 export const SQLNoEventType = (event_type: number) =>
 	new Error(`!> EventType id=${event_type}not found.`);
+export const SQLNoTagFound = (tag_id?: number, tag_name?: string) =>
+	new Error(`!> Tag with id=${tag_id} and tagname=${tag_name} not found.`);
