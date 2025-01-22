@@ -1,8 +1,6 @@
-import { User } from "@shared/shared_types";
+import {User} from "@shared/shared_types.ts";
 
-interface UserState {
-    user?: User;
+export interface UserState {
+    user: User;
     updateUser: (newState: Partial<User>) => void;
 }
-
-export type { UserState };

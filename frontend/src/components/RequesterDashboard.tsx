@@ -1,29 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useContext } from "react";
 import RequesterSidebarItem from "./RequesterSidebarItem.tsx";
-import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelRightClose, Ticket } from "lucide-react";
 import RequesterTicketOverview from "@/components/RequesterTicketOverview.tsx";
 import { useNavigate } from "react-router-dom";
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
-import { appendAuthHeader, EP_logout, EP_own_department } from "@/route_helper/routes_helper.tsx";
+import { EP_logout } from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
-import { Department } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
-import HistoryPage from "@/pages/HistoryPage.tsx";
-import HistoryFeed from "@/components/HistoryFeed.tsx";
+import { UserContext } from "@/components/UserContext";
 
 export default function RequesterDashboard() {
 	const [view, setView] = useState<"overview" | "create">("overview");
 	const [isOpen, setIsOpen] = useState(true);
-	const [departments, setDepartments] = useState<Department[]>([]);
-	const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 	const navigate = useNavigate();
 	const [history, setHistory] = useState<HistoryEntry[]>([]);
 
+	// UserContext verwenden
+	const { user } = useContext(UserContext);
+	const userDepartment = user.department; // Department aus dem UserContext holen
 
 	const updateHistory = (newEntry: HistoryEntry) => {
 		setHistory((prev) => [newEntry, ...prev]); // Neues Ticket oben einfügen
 	};
-
 
 	// Sidebar-Toggle
 	const toggleSidebar = () => {
@@ -49,26 +47,6 @@ export default function RequesterDashboard() {
 		}
 	};
 
-	// get departments from backend
-	useEffect(() => {
-		fetch(EP_own_department, {
-			method: "GET",
-			headers: appendAuthHeader(),
-		})
-			.then((res) => {
-				if (!res.ok) {
-					throw new Error("Failed to fetch departments");
-				}
-				console.log(res)
-				return res.json();
-			}).then((data) => {
-				setDepartments(data);
-			})
-			.catch((error) => {
-				console.error("Error fetching departments:", error);
-			});
-	}, []);
-
 	return (
 		<div className="flex w-screen h-screen overflow-hidden">
 			{/* Mobile Sidebar Toggle Button */}
@@ -87,41 +65,17 @@ export default function RequesterDashboard() {
 			{isOpen && (
 				<div className="md:hidden fixed w-3/4 left-0 top-0 h-screen bg-white text-black z-40 overflow-auto rounded-r-3xl">
 					<div className="mt-16 p-4">
-
-						{/* Dropdown für Departments */}
-						{isOpen && (
-							<div className="p-4">
-								<label
-									htmlFor="department-select"
-									className="block text-black font-medium mb-2"
-								>
-									Select your Department
-								</label>
-								<select
-									id="department-select"
-									value={selectedDepartment?.department_name || ""}
-									onChange={(e) =>
-										setSelectedDepartment(
-											departments.find((d) => d.department_name == e.target.value) ||
-											null,
-										)
-									}
-									className="w-full p-2 border rounded-md text-black"
-								>
-									<option value="" disabled>
-										Choose a department
-									</option>
-									{departments.map((dept) => (
-										<option key={dept.department_id} value={dept.department_name}>
-											{dept.department_name}
-										</option>
-									))}
-								</select>
-							</div>
-						)}
+						{/* Department anzeigen */}
+						<div className="p-4">
+							<label className="block text-black font-medium mb-2">
+								Your Department
+							</label>
+							<p className="w-full p-2 border rounded-md text-black bg-gray-100">
+								{userDepartment ? userDepartment.department_name : "No department assigned"}
+							</p>
+						</div>
 
 						<RequesterSidebarItem icon={Ticket} label="Home" isOpen={true} />
-						{/*<RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={true} /> */}
 						<RequesterSidebarItem
 							icon={LogOut}
 							label="Log Out"
@@ -162,35 +116,15 @@ export default function RequesterDashboard() {
 						)}
 				</button>
 
-				{/* Dropdown für Departments */}
+				{/* Department anzeigen */}
 				{isOpen && (
 					<div className="p-4">
-						<label
-							htmlFor="department-select"
-							className="block text-black font-medium mb-2"
-						>
-							Select your Department
+						<label className="block text-black font-medium mb-2">
+							Your Department
 						</label>
-						<select
-							id="department-select"
-							value={selectedDepartment?.department_name || ""}
-							onChange={(e) =>
-								setSelectedDepartment(
-									departments.find((d) => d.department_name == e.target.value) ||
-										null,
-								)
-							}
-							className="w-full p-2 border rounded-md text-black"
-						>
-							<option value="" disabled>
-								Choose a department
-							</option>
-							{departments.map((dept) => (
-								<option key={dept.department_id} value={dept.department_name}>
-									{dept.department_name}
-								</option>
-							))}
-						</select>
+						<p className="w-full p-2 border rounded-md text-black bg-gray-100">
+							{userDepartment ? userDepartment.department_name : "No department assigned"}
+						</p>
 					</div>
 				)}
 
@@ -202,12 +136,6 @@ export default function RequesterDashboard() {
 						isOpen={isOpen}
 						onClick={() => setView("tickets")}
 					/>
-					{/*<RequesterSidebarItem
-						icon={ChartArea}
-						label="Statistics"
-						isOpen={isOpen}
-						onClick={() => setView("statistics")}
-					/> */}
 					<RequesterSidebarItem
 						icon={LogOut}
 						label="Log Out"
@@ -224,19 +152,18 @@ export default function RequesterDashboard() {
 				}`}
 			>
 				{view === "overview" && (
-/*					<RequesterTicketOverview
+					<RequesterTicketOverview
 						setView={setView}
-						selectedDepartment={selectedDepartment}
-					/>*/
+						selectedDepartment={userDepartment}
+					/>
 
-					<HistoryPage/>
 				)}
 				{view === "create" && <CreateTicketForm setView={setView} updateHistory={updateHistory}/>}
 				{view === "statistics" && <StatisticsPage />}
 				{view === "tickets" && (
 					<RequesterTicketOverview
 						setView={setView}
-						selectedDepartment={selectedDepartment}
+						selectedDepartment={userDepartment}
 					/>
 				)}
 				{view === "history" && <TicketHistory setView={setView} history={history}/>}

@@ -2,7 +2,7 @@ import { createContext } from "react";
 import { UserState } from "@/components/UserContextTypes";
 import { User } from "@shared/shared_types";
 
-const defaultState: UserState = {
+export const defaultState: UserState = {
     user: {
         user_id: "",
         user_name: "",

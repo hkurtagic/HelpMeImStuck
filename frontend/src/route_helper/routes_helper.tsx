@@ -10,7 +10,6 @@ const statisticsPath = "/statistics";
 
 // endpoints
 const EP_department = "/api/department";
-const EP_own_department = EP_department + "/own";
 const EP_ticket = "/api/ticket";
 const EP_department_tickets = (department_id: number) => `${EP_ticket}/${department_id}`;
 const EP_ticket_create = EP_ticket; // + "/";
@@ -37,7 +36,6 @@ export {
 	EP_roles_by_department,
 	EP_login,
 	EP_logout,
-	EP_own_department,
 	EP_ticket,
 	EP_ticket_create,
 	hostPath,
