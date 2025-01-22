@@ -23,6 +23,52 @@ const zUUIDparam = z.record(z.string(), UUID).transform(({ ...k }) => {
     return Object.values(k)[0];
 });
 
+const AllowedActions = z.object({
+    actions: zAction.array(),
+});
+// predefined zAction sets
+const RequesterActionPreset = AllowedActions.parse({
+    actions: [
+        zAction.enum.ticket_create,
+        zAction.enum.ticket_pullBack,
+        zAction.enum.ticket_closeOwn,
+    ],
+});
+const SupporterActionPreset = AllowedActions.parse({
+    actions: [
+        ...RequesterActionPreset.actions,
+        zAction.enum.ticket_seeDepartmentTickets,
+        zAction.enum.ticket_accept,
+        zAction.enum.ticket_close,
+        zAction.enum.ticket_forward,
+        zAction.enum.ticket_addDepartment,
+        zAction.enum.ticket_addTag,
+        zAction.enum.ticket_removeTag,
+    ],
+});
+const ManagerActionPreset = AllowedActions.parse({
+    actions: [
+        ...SupporterActionPreset.actions,
+        zAction.enum.tag_ownDeartment_manage,
+        zAction.enum.user_ownDeartment_create,
+        zAction.enum.user_ownDeartment_modify,
+        zAction.enum.role_ownDeartment_create,
+        zAction.enum.role_ownDeartment_modify,
+        zAction.enum.role_ownDeartment_delete,
+        zAction.enum.department_ownDeartment_modify,
+    ],
+});
+
+const AdminActionPreset = AllowedActions.parse({
+    actions: [
+        ...ManagerActionPreset.actions,
+        ...Object.values(zAction.enum).filter((a) => {
+            if (typeof a === "number" && !(ManagerActionPreset.actions.includes(a))) return a;
+            return;
+        }),
+    ],
+});
+
 const S_DepartmentCreate = z.object({
     department_name: z.string(),
     department_description: z.string().optional().nullable(),
@@ -145,7 +191,9 @@ const S_TicketHistory = z.object({
 });
 
 export {
+    AdminActionPreset,
     ID,
+    RequesterActionPreset,
     S_Department,
     S_DepartmentCreate,
     S_Role,
@@ -167,6 +215,8 @@ export {
     S_UserCreate,
     S_UserLogin,
     S_UserPreview,
+    // ManagerActionPreset,
+    SupporterActionPreset,
     UUID,
     zAction,
     zEventType,

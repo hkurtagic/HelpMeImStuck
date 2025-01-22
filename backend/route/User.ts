@@ -35,7 +35,7 @@ user.post(
         const user = S_ServersideUser.safeParse(u.toJSON());
         if (
             !user.success ||
-            !crypto_verify(AlgorithmName.Argon2, login_user.password, user.data.password)
+            !crypto_verify(AlgorithmName.Argon2, login_user.password, user.data.password!)
         ) {
             return c.json({ error: "Invalid Credentials" }, 401);
         }
@@ -60,6 +60,21 @@ user.get("/", JWTAuthController, async (c) => {
     const user_model = await db2.getUser({ user_id: c.var.user_id });
     if (!user_model) {
         return c.json({ error: "Invalid Credentials" }, 401);
+    }
+    const server_user = S_ServersideUser.safeParse(user_model.toJSON());
+    if (!server_user.success) {
+        return c.json({ message: "Serverside error" }, 500);
+    }
+    const user = S_User.parse(server_user);
+
+    return c.json(user, 200);
+});
+
+// get data of specified user
+user.get("/:user_id", JWTAuthController, UserIDValidator(), async (c) => {
+    const user_model = await db2.getUser({ user_id: c.req.valid("param") });
+    if (!user_model) {
+        return c.json({ error: "User not found" }, 400);
     }
     const server_user = S_ServersideUser.safeParse(user_model.toJSON());
     if (!server_user.success) {

@@ -1,83 +1,37 @@
 import { z } from "zod";
 import {
-	S_Department,
-	S_RoleAdmin,
-	S_Ticket,
-	S_UserAdmin,
-	UUID,
-	zAction,
-	zEventType,
-	zTicketStatus,
+    S_Department,
+    S_RoleAdmin,
+    S_Ticket,
+    S_UserAdmin,
+    UUID,
+    zAction,
+    zEventType,
+    zTicketStatus,
 } from "@shared/shared_schemas.ts";
 import {
-	S_DTOAction,
-	S_DTODepartment,
-	S_DTOEventType,
-	S_DTORoleParsed,
-	S_DTOStatus,
-	S_DTOTicketExtendedParsed,
-	S_DTOUserExtendedParsed,
+    S_DTOAction,
+    S_DTODepartment,
+    S_DTOEventType,
+    S_DTORoleParsed,
+    S_DTOStatus,
+    S_DTOTicketExtendedParsed,
+    S_DTOUserExtendedParsed,
 } from "./dto_objects.ts";
 
 const S_Action = z.union([
-	S_DTOAction,
-	zAction.array(),
+    S_DTOAction,
+    zAction.array(),
 ]);
 
-const AllowedActions = z.object({
-	actions: zAction.array(),
-});
-// predefined zAction sets
-const RequesterActionPreset = AllowedActions.parse({
-	actions: [
-		zAction.enum.ticket_create,
-		zAction.enum.ticket_pullBack,
-		zAction.enum.ticket_closeOwn,
-	],
-});
-const SupporterActionPreset = AllowedActions.parse({
-	actions: [
-		...RequesterActionPreset.actions,
-		zAction.enum.ticket_seeDepartmentTickets,
-		zAction.enum.ticket_accept,
-		zAction.enum.ticket_close,
-		zAction.enum.ticket_forward,
-		zAction.enum.ticket_addDepartment,
-		zAction.enum.ticket_addTag,
-		zAction.enum.ticket_removeTag,
-	],
-});
-const ManagerActionPreset = AllowedActions.parse({
-	actions: [
-		...SupporterActionPreset.actions,
-		zAction.enum.tag_ownDeartment_manage,
-		zAction.enum.user_ownDeartment_create,
-		zAction.enum.user_ownDeartment_modify,
-		zAction.enum.role_ownDeartment_create,
-		zAction.enum.role_ownDeartment_modify,
-		zAction.enum.role_ownDeartment_delete,
-		zAction.enum.department_ownDeartment_modify,
-	],
-});
-
-const AdminActionPreset = AllowedActions.parse({
-	actions: [
-		...ManagerActionPreset.actions,
-		...Object.values(zAction.enum).filter((a) => {
-			if (typeof a === "number" && !(ManagerActionPreset.actions.includes(a))) return a;
-			return;
-		}),
-	],
-});
-
 const S_ServerDepartment = z.union([
-	S_DTODepartment.transform(({ pk_department_id, ...rest }) => {
-		return {
-			department_id: pk_department_id,
-			...rest,
-		};
-	}).readonly(),
-	S_Department,
+    S_DTODepartment.transform(({ pk_department_id, ...rest }) => {
+        return {
+            department_id: pk_department_id,
+            ...rest,
+        };
+    }).readonly(),
+    S_Department,
 ]);
 
 // const S_RoleExtended = S_Role.extend({
@@ -87,56 +41,56 @@ const S_ServerDepartment = z.union([
 const S_ServersideRole = z.union([S_RoleAdmin, S_DTORoleParsed]);
 
 const S_ServersideUser = z.union([
-	S_DTOUserExtendedParsed,
-	S_UserAdmin,
-	// S_User.omit({
-	// 	roles: true,
-	// }).extend({
-	// 	password: z.string(),
-	// 	roles: S_ServersideRole.array(),
-	// 	actions: zAction.array().optional().nullable(),
-	// }),
+    S_DTOUserExtendedParsed,
+    S_UserAdmin,
+    // S_User.omit({
+    // 	roles: true,
+    // }).extend({
+    // 	password: z.string(),
+    // 	roles: S_ServersideRole.array(),
+    // 	actions: zAction.array().optional().nullable(),
+    // }),
 ]);
 
 const S_ServerStatus = z.union([
-	S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
-		return pk_status_id;
-	}),
-	zTicketStatus.array(),
+    S_DTOStatus.transform(({ pk_status_id, ..._ }) => {
+        return pk_status_id;
+    }),
+    zTicketStatus.array(),
 ]);
 
 const S_ServerEventType = z.union([
-	S_DTOEventType.transform(({ pk_event_type_id, ..._ }) => {
-		return pk_event_type_id;
-	}),
-	zEventType.array(),
+    S_DTOEventType.transform(({ pk_event_type_id, ..._ }) => {
+        return pk_event_type_id;
+    }),
+    zEventType.array(),
 ]);
 
 const S_ServerTicket = z.union([
-	S_DTOTicketExtendedParsed,
-	S_Ticket,
+    S_DTOTicketExtendedParsed,
+    S_Ticket,
 ]);
 
 const JWTExtraPayload = z.object({
-	user_id: UUID,
+    user_id: UUID,
 });
 const JWTPayload = JWTExtraPayload.extend({
-	iat: z.number(),
-	exp: z.number(),
+    iat: z.number(),
+    exp: z.number(),
 });
 
 export {
-	AdminActionPreset,
-	JWTExtraPayload,
-	JWTPayload,
-	ManagerActionPreset,
-	RequesterActionPreset,
-	S_Action,
-	S_ServerDepartment,
-	S_ServerEventType,
-	S_ServersideRole,
-	S_ServersideUser,
-	S_ServerStatus,
-	S_ServerTicket,
-	SupporterActionPreset,
+    // AdminActionPreset,
+    JWTExtraPayload,
+    JWTPayload,
+    // ManagerActionPreset,
+    // RequesterActionPreset,
+    S_Action,
+    S_ServerDepartment,
+    S_ServerEventType,
+    S_ServersideRole,
+    S_ServersideUser,
+    S_ServerStatus,
+    S_ServerTicket,
+    // SupporterActionPreset,
 };
