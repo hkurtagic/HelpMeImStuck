@@ -247,12 +247,18 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
                                 <td className="border border-gray-800 p-2 bg-white">{user.name}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.role}</td>
                                 <td className="border border-gray-800 p-2 bg-white">{role.department}</td>
-                                <td className="border border-gray-800 p-2 bg-white">
+                                <td className="border border-gray-800 p-2 bg-white space-x-3">
                                     <button
                                         onClick={() => deleteUser(user.id)}
                                         className="p-1 bg-red-500 hover:bg-red-600 text-white rounded-md"
                                     >
                                         Delete
+                                    </button>
+                                    <button
+                                        onClick={() => handleModify(user.id)}
+                                        className="p-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md"
+                                    >
+                                        Modify
                                     </button>
                                 </td>
                             </tr>
