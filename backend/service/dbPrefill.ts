@@ -60,21 +60,21 @@ export async function prefillDB() {
         department_name: "System Administration",
         department_description: "Admin users",
     };
-    const d = await dbController.addDepartment(new_d);
+    const admin_department = await dbController.addDepartment(new_d);
 
     const new_r: RoleCreate = {
         role_name: "Administrator",
         role_description: "Administrator role",
-        department: S_ServerDepartment.parse(d.toJSON()),
+        department: S_ServerDepartment.parse(admin_department.toJSON()),
         actions: AdminActionPreset.actions,
     };
 
     await dbController.addRole(new_r);
-    const r = await dbController.getRole({
+    const admin_role = await dbController.getRole({
         role_name: new_r.role_name,
         department_id: new_r.department.department_id,
     });
-    const parsed_r = S_ServersideRole.parse(r!.toJSON());
+    const parsed_r = S_ServersideRole.parse(admin_role!.toJSON());
     const new_u: UserCreate = {
         user_name: "Administrator",
         password: "admin",
@@ -82,6 +82,7 @@ export async function prefillDB() {
         // actions: SupporterActionPreset.actions,
     };
     await dbController.addUser(new_u);
+
     // #endregion Admin
 
     const ITDepartment: DepartmentCreate = {
@@ -153,9 +154,25 @@ export async function prefillDB() {
     await dbController.addUser(user1_create);
     await dbController.addUser(user2_create);
     await dbController.addUser(user3_create);
-
+    await setAdminEnv();
     // await testDB();
 }
+export async function setAdminEnv() {
+    const admin_department =
+        (await dbController.getDepartment({ department_name: "System Administration" }))!;
+    const admin_role = (await dbController.getRole({
+        role_name: "Administrator",
+        department_id: admin_department.department_id,
+    }))!;
+    const admin_user = (await dbController.getUser({ user_name: "Administrator" }))!;
+    Deno.env.set(
+        "ADMIN_DEPARTMENT_ID",
+        admin_department.department_id.toString(),
+    );
+    Deno.env.set("ADMIN_ROLE_ID", admin_role.role_id.toString());
+    Deno.env.set("ADMIN_USER_ID", admin_user.user_id);
+}
+
 async function testDB() {
     //test department creation
     const test_create_d: DepartmentCreate = {

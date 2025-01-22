@@ -33,6 +33,7 @@ import {
     EventType,
     ID,
     Role,
+    RoleAdmin,
     RoleCreate,
     TicketCreate,
     TicketEvent,
@@ -165,7 +166,7 @@ export const editUser = async (
             old_u.roles.map((o) => o.role_id),
             user.roles.map((o) => o.role_id),
         );
-        if (!userDiff) return null;
+        if (!(userDiff && userRoleDiff)) return null;
         const old_u_model = await UserModel.findByPk(user.user_id);
         // console.log("!> userDiff:");
         // console.log(userDiff);
@@ -203,7 +204,7 @@ export const editUser = async (
             }
             if (userRoleDiff.removed) {
                 for (const role_id of (userRoleDiff.removed as number[])) {
-                    await old_u_model!.addRole(role_id, { transaction: t });
+                    await old_u_model!.removeRole(role_id, { transaction: t });
                 }
             }
         }
@@ -282,7 +283,7 @@ export const addRole = async (
 
 export const getRole = async (
     search_param: { role_id: ID } | { role_name: string; department_id: ID },
-): Promise<ServersideRoleModel | null> => {
+): Promise<RoleAdmin | null> => {
     let role = null;
     if ("role_id" in search_param) {
         role = await RoleModel.getRoleById(search_param.role_id);
@@ -291,7 +292,9 @@ export const getRole = async (
         role = await RoleModel.getRoleByName(search_param.role_name, search_param.department_id);
         if (!role) throw SQLNoRoleFound(undefined, search_param.role_name);
     }
-    return role;
+    const parsed_r = S_DTORoleParsed.safeParse(role);
+    if (!parsed_r.success) return null;
+    return parsed_r.data;
 };
 export const getAllRolesInDepartment = async (
     department_id: ID,
@@ -407,7 +410,7 @@ export const addDepartment = async (
 };
 export const getDepartment = async (
     search_param: { department_id: ID } | { department_name: string },
-): Promise<DepartmentModel | null> => {
+): Promise<Department | null> => {
     let department = null;
     if ("department_id" in search_param) {
         department = await DepartmentModel.getDepartmentById(search_param.department_id);
@@ -416,7 +419,9 @@ export const getDepartment = async (
         department = await DepartmentModel.getDepartmentByName(search_param.department_name);
         if (!department) throw SQLNoRoleFound(undefined, search_param.department_name);
     }
-    return department;
+    const parsed_d = S_ServerDepartment.safeParse(department);
+    if (!parsed_d.success) return null;
+    return parsed_d.data;
 };
 export const getAllDepartments = async (): Promise<Department[]> => {
     const departments = await DepartmentModel.findAll();
