@@ -71,17 +71,6 @@ const S_DTOStatus = z.object({
 	status_name: z.string(),
 });
 
-const S_DTOTag = z.object({
-	pk_tag_id: ID,
-	tag_name: z.string(),
-	tag_abbreviation: z.string(),
-	tag_description: z.string(),
-	tag_style: z.string(),
-});
-const S_DTOTagExtended = S_DTOTag.extend({
-	department: S_DTODepartment,
-});
-
 const S_DTOEventType = z.object({
 	pk_event_type_id: ID,
 	event_type_name: z.string(),
@@ -98,6 +87,21 @@ const S_DTOImage = z.object({
 	image_content: z.string(),
 	image_type: z.string().nullable().optional(),
 });
+
+const S_DTOTagCreate = z.object({
+	tag_name: z.string(),
+	tag_abbreviation: z.string(),
+	tag_description: z.string().optional().nullable(),
+	tag_style: z.string().optional().nullable(),
+});
+const S_DTOTag = S_DTOTagCreate.extend({
+	pk_tag_id: ID,
+});
+const S_DTOTagParsed = S_DTOTag.extend({ Department: S_DTODepartmentParsed }).transform(
+	({ pk_tag_id, Department, ...rest }) => {
+		return { tag_id: pk_tag_id, department: Department, ...rest };
+	},
+).readonly();
 
 const S_DTOTicketCreate = z.object({
 	ticket_title: z.string(),
@@ -229,6 +233,9 @@ const S_DTOTicketHistory = z.object({
 // 	S_TicketEvent_Comment,
 // ]);
 
+export type DTOTag = z.infer<typeof S_DTOTag>;
+export type DTOTagCreate = z.infer<typeof S_DTOTagCreate>;
+
 export type DTOAction = z.infer<typeof S_DTOAction>;
 
 export type DTODepartmentCreate = z.infer<typeof S_DTODepartmentCreate>;
@@ -263,6 +270,9 @@ export {
 	S_DTORoleCreate,
 	S_DTORoleParsed,
 	S_DTOStatus,
+	S_DTOTag,
+	S_DTOTagCreate,
+	S_DTOTagParsed,
 	S_DTOTicket,
 	S_DTOTicketExtendedParsed,
 	S_DTOTicketHistory,

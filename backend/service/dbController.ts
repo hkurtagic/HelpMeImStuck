@@ -2,6 +2,7 @@ import { sequelize } from "@backend/service/dbconnector.ts";
 import { Model } from "sequelize";
 import { ObjectUtils } from "./objectDiff.ts";
 import { default as DepartmentModel } from "@backend/model/Department.ts";
+import { default as TagModel } from "@backend/model/Tag.ts";
 import { default as ActionModel } from "@backend/model/Action.ts";
 import { default as RoleModel, ServersideRoleModel } from "@backend/model/Role.ts";
 import { default as UserModel, ServersideUserModel } from "@backend/model/User.ts";
@@ -46,6 +47,9 @@ import {
 	S_DTORoleParsed,
 	S_DTOUserExtendedParsed,
 } from "@backend/schemes_and_types/dto_objects.ts";
+import { S_Tag, TagCreate } from "../../shared/shared_types.ts";
+import { S_DTOTagParsed } from "../schemes_and_types/dto_objects.ts";
+import { SQLNoTagFound } from "../model/Errors.ts";
 
 export const addUser = async (
 	user: UserCreate,
@@ -602,9 +606,83 @@ export const addStatus = async (status: string) => {
 // const editStatus = async () => {};
 // const deleteStatus = async () => {};
 
-const addTag = async () => {};
-const editTag = async () => {};
-const deleteTag = async () => {};
+export const addTag = async (new_tag: TagCreate): Promise<boolean> => {
+	const t = await sequelize.transaction();
+	try {
+		const dept = new_tag.department;
+		const department_id = await DepartmentModel.getDepartmentById(
+			dept.department_id,
+		);
+		if (!department_id) throw SQLNoDepartmentFound(dept.department_id, dept.department_name);
+		const tag = await TagModel.create({
+			tag_name: new_tag.tag_name,
+			tag_abbreviation: new_tag.tag_abbreviation,
+		}, { transaction: t });
+		if (new_tag.tag_description) tag.set("tag_description", new_tag.tag_description);
+		if (new_tag.tag_style) tag.set("tag_style", new_tag.tag_style);
+		await tag.setDepartment(department_id, { transaction: t });
+		t.commit();
+		return true;
+	} catch (error) {
+		console.error(error);
+		// If the execution reaches this line, an error was thrown.
+		// We rollback the transaction.
+		await t.rollback();
+		return false;
+	}
+};
+export const editTag = async (
+	tag: S_Tag,
+): Promise<S_Tag | null> => {
+	const t = await sequelize.transaction();
+	try {
+		const old_tag = await TagModel.findByPk(tag.tag_id, {
+			transaction: t,
+			include: [{ model: DepartmentModel }],
+		});
+		if (!old_tag) {
+			throw SQLNoDepartmentFound(tag.tag_id, tag.tag_name);
+		}
+
+		const tagDiff = ObjectUtils.diff(
+			S_DTOTagParsed.parse(old_tag),
+			tag,
+			false,
+		);
+		if (!tagDiff) return null;
+		// update Department table if needed
+		if (tagDiff.updated) {
+			await old_tag.update(tagDiff?.updated, { transaction: t });
+		}
+		await t.commit();
+	} catch (error) {
+		console.error(error);
+		// If the execution reaches this line, an error was thrown.
+		// We rollback the transaction.
+		await t.rollback();
+		return null;
+	}
+
+	const res = await TagModel.getTagById(tag.tag_id);
+	if (!res) throw SQLNoDepartmentFound(tag.tag_id, tag.tag_name);
+	return res;
+};
+export const deleteTag = async (tag_id: number): Promise<boolean> => {
+	const t = await sequelize.transaction();
+	try {
+		await TagModel.destroy({
+			where: { pk_tag_id: tag_id },
+			transaction: t,
+		});
+
+		await t.commit();
+	} catch (error) {
+		console.error(error);
+		await t.rollback();
+		return false;
+	}
+	return true;
+};
 
 export const addEvent = async (
 	new_event: TicketEvent,

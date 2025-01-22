@@ -3,7 +3,7 @@ import {
 	EventType,
 	NewTicket,
 	Role,
-	Tag,
+	S_Tag,
 	Ticket,
 	TicketEvent,
 	TicketHistory,
@@ -179,7 +179,7 @@ export const testTicket2History: TicketHistory = {
 export const tickets: Ticket[] = [testTicket1, testTicket2];
 export const ticketHistories: TicketHistory[] = [testTicket1History, testTicket2History];
 
-export const testITTag1: Tag = {
+export const testITTag1: S_Tag = {
 	tag_name: "Level2",
 	abbreviation: "L2",
 	department: testITDepartment,

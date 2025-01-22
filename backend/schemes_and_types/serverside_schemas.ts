@@ -111,7 +111,6 @@ const JWTPayload = JWTExtraPayload.extend({
 	iat: z.number(),
 	exp: z.number(),
 });
-
 export {
 	AdminActionPreset,
 	JWTExtraPayload,

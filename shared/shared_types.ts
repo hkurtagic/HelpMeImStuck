@@ -7,6 +7,7 @@ import {
 	S_RoleAdmin,
 	S_RoleCreate,
 	S_Tag,
+	S_TagCreate,
 	S_Ticket,
 	S_TicketCreate,
 	S_TicketEvent,
@@ -69,6 +70,8 @@ enum TicketStatus {
 	CLOSED,
 }
 
+export type TagCreate = z.infer<typeof S_TagCreate>;
+export type S_Tag = z.infer<typeof S_Tag>;
 export type DepartmentCreate = z.infer<typeof S_DepartmentCreate>;
 export type Department = z.infer<typeof S_Department>;
 export type RoleCreate = z.infer<typeof S_RoleCreate>;
@@ -89,7 +92,6 @@ export type TicketEvent_Comment = z.infer<typeof S_TicketEvent_Comment>;
 export type TicketEvent = z.infer<typeof S_TicketEvent>;
 export type TicketHistoryEvent = z.infer<typeof S_TicketHistoryEvent>;
 export type TicketHistory = z.infer<typeof S_TicketHistory>;
-export type Tag = z.infer<typeof S_Tag>;
 export type UUID = z.infer<typeof UUID>;
 export type ID = z.infer<typeof ID>;
 

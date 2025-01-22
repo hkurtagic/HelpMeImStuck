@@ -22,6 +22,9 @@ import {
 import * as dbController from "./dbController.ts";
 import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
 import { S_User, S_UserAdmin } from "@shared/shared_schemas.ts";
+import { S_Tag, TagCreate } from "../../shared/shared_types.ts";
+import { getTagByName } from "./dbController.ts";
+import Tag from "../model/Tag.ts";
 
 export async function prefillDB() {
 	// prefill possible actions
@@ -176,6 +179,21 @@ async function testDB() {
 	// const d_delete_parsed = S_ServerDepartment.parse(d_delete!.toJSON());
 	console.info("> department deleted?: " + JSON.stringify(d_delete));
 	*/
+	const test_create_tag: TagCreate = {
+		tag_name: "Tier 1 Support",
+		tag_abbreviation: "T1",
+		department: r_create_parsed.department,
+	};
+	await dbController.addTag(test_create_tag);
+
+	let test_update_tag = await Tag.getTagByName(
+		test_create_tag.tag_name,
+		test_create_tag.department.department_id,
+	);
+
+	test_update_tag = { ...test_update_tag!, tag_name: "Tier 2 Support", tag_abbreviation: "T2" };
+	await dbController.editTag(test_update_tag);
+	await dbController.deleteTag(test_update_tag.tag_id);
 
 	// test_ticket
 	const test_create_t: TicketCreate = {
@@ -185,10 +203,9 @@ async function testDB() {
 		ticket_description: "ticket description",
 	};
 
-	console.info("> new ticket: " + JSON.stringify(test_create_t));
+	/*console.info("> new ticket: " + JSON.stringify(test_create_t));
 	const t_create = (await dbController.addTicket(test_create_t))!;
-	const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
-	console.info("> created ticket: " + JSON.stringify(t_create_parsed));
+	console.info("> created ticket: " + JSON.stringify(t_create_parsed));*/
 
 	const t_all_of_user = await dbController.getAllTicketsOf({
 		author_id: test_create_t.author.user_id,
@@ -201,7 +218,7 @@ async function testDB() {
 			JSON.stringify(t_all_of_user_parsed),
 	);
 	// test add event
-	const test_create_e: TicketEvent = {
+	/*const test_create_e: TicketEvent = {
 		author: t_create_parsed.author,
 		ticket_id: t_create_parsed.ticket_id,
 		// created_at: t_create.toJSON().created_at,
@@ -224,7 +241,7 @@ async function testDB() {
 
 	const ticketHist = await dbController.getTicketHistory(t_create_parsed.ticket_id);
 	console.log("> getTicketHistory");
-	console.log(ticketHist);
+	console.log(ticketHist);*/
 }
 
 /*
