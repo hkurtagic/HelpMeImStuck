@@ -22,12 +22,18 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+    const [allRoles, setAllRoles] = useState<Record<number, RoleAdmin[]>>([]);
     const [availableRoles, setAvailableRoles] = useState<RoleAdmin[]>([]);
 
     useEffect(() => {
         fetchDepartments();
         fetchUserData();
     }, []);
+    useEffect(() => {
+        if (selectedDepartment && Object.keys(allRoles).length) {
+            setAvailableRoles(allRoles[selectedDepartment.department_id]);
+        }
+    }, [selectedDepartment, availableRoles]);
 
     // Lade Abteilungen
     const fetchDepartments = async () => {
@@ -40,8 +46,11 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
 
             if (!response.ok) throw new Error("Failed to fetch departments");
 
-            const data = await response.json();
+            const data = await response.json() as Department[];
             setDepartments(Array.isArray(data) ? data : []);
+            for (const d of data) {
+                fetchRolesByDepartment(d.department_id);
+            }
         } catch (error) {
             console.error("Error fetching departments:", error);
             setDepartments([]);
@@ -69,9 +78,9 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                 const department = data.roles[0].department;
                 setSelectedDepartment(department);
                 setSelectedRoles(data.roles.map((role: RoleAdmin) => role.role_id));
-
+                setAvailableRoles(data.roles);
                 // Lade alle Rollen dieses Departments
-                fetchRolesByDepartment(department.department_id);
+                // fetchRolesByDepartment(department.department_id);
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
@@ -90,7 +99,11 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             if (!response.ok) throw new Error("Failed to fetch roles");
 
             const data = await response.json() as RoleAdmin[];
-            setAvailableRoles(Array.isArray(data) ? data : []);
+            setAllRoles((prevRoles) => {
+                prevRoles[departmentId] = data;
+                console.log(prevRoles);
+                return prevRoles;
+            });
         } catch (error) {
             console.error("Error fetching roles:", error);
             setAvailableRoles([]);
@@ -111,9 +124,9 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         // setSelectedRoles([]); // Rollen zurücksetzen, wenn ein neues Department gewählt wird
         // setSelectedRoles(selectedUser!.roles.map((role: RoleAdmin) => role.role_id));
 
-        if (selectedDept) {
-            fetchRolesByDepartment(selectedDept.department_id);
-        }
+        // if (selectedDept) {
+        //     fetchRolesByDepartment(selectedDept.department_id);
+        // }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -128,10 +141,14 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             return;
         }
 
-        const selectedRoleObjects = availableRoles.filter((role) =>
-            selectedRoles.includes(role.role_id)
-        );
-
+        Object.values(allRoles);
+        const selectedRoleObjects = Object.values(allRoles).flatMap((o) => {
+            return o.filter((r) => {
+                if (selectedRoles.some((selected_rid) => selected_rid === r.role_id)) {
+                    return r;
+                }
+            });
+        });
         const modifiedUser: User = {
             user_id: userId.toString(),
             user_name: username,
@@ -149,9 +166,10 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             })),
         };
 
-        console.log("Submitting modified user:", JSON.stringify(modifiedUser, null, 2));
+        // console.log("Submitting modified user:", JSON.stringify(modifiedUser, null, 2));
 
         try {
+            if (!selectedRoleObjects.length) throw new Error("User must have at least one Role!");
             const response = await fetch(`/api/user/${userId}`, {
                 method: "PUT",
                 credentials: "include",
@@ -230,21 +248,23 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                         <div className="mb-4">
                             <Label>Roles</Label>
                             <div className="flex flex-col">
-                                {availableRoles.map((role) => (
-                                    <label
-                                        key={role.role_id}
-                                        className="flex items-center space-x-2"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            value={role.role_id}
-                                            checked={selectedRoles.includes(role.role_id)}
-                                            onChange={() => handleRoleChange(role.role_id)}
-                                            className="form-checkbox"
-                                        />
-                                        <span>{role.role_name}</span>
-                                    </label>
-                                ))}
+                                {availableRoles
+                                    ? availableRoles.map((role) => (
+                                        <label
+                                            key={role.role_id}
+                                            className="flex items-center space-x-2"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                value={role.role_id}
+                                                checked={selectedRoles.includes(role.role_id)}
+                                                onChange={() => handleRoleChange(role.role_id)}
+                                                className="form-checkbox"
+                                            />
+                                            <span>{role.role_name}</span>
+                                        </label>
+                                    ))
+                                    : <></>}
                             </div>
                         </div>
 
