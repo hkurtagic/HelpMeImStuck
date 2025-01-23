@@ -690,24 +690,26 @@ export const deleteTag = async (tag_id: number): Promise<boolean> => {
 
 export const addEvent = async (
     new_event: TicketEvent,
+    close_ticket: boolean = true,
 ): Promise<boolean> => {
     const t = await sequelize.transaction();
     try {
         let e = null;
         switch (new_event.event_type) {
-            case EventType.createTicket:
-                e = await EventModel.create({ event_content: "" }, { transaction: t });
-                await e.setEventType(EventType.createTicket, { transaction: t });
-                await e.setAuthor(new_event.author.user_id, { transaction: t });
-                await e.setTicket(new_event.ticket_id, { transaction: t });
-                break;
             case EventType.statusChange:
                 e = await EventModel.create({ event_content: new_event.new_status.toString() }, {
                     transaction: t,
                 });
                 await e.setEventType(EventType.statusChange, { transaction: t });
-                await TicketModel.findByPk(new_event.ticket_id, { transaction: t })
-                    .then((ticket) => ticket?.setStatus(new_event.new_status, { transaction: t }));
+                if (
+                    new_event.new_status !== TicketStatus.CLOSED ||
+                    (close_ticket && new_event.new_status === TicketStatus.CLOSED)
+                ) {
+                    await TicketModel.findByPk(new_event.ticket_id, { transaction: t })
+                        .then((ticket) =>
+                            ticket?.setStatus(new_event.new_status, { transaction: t })
+                        );
+                }
                 break;
             case EventType.departmentAdded:
                 e = await EventModel.create({ event_content: new_event.department_id.toString() }, {

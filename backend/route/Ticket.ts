@@ -9,7 +9,14 @@ import {
 import { ID, S_Ticket, S_TicketCreate } from "@shared/shared_schemas.ts";
 import * as dbController from "@backend/service/dbController.ts";
 
-import { Actions, Department, Ticket, TicketCreate, TicketStatus } from "@shared/shared_types.ts";
+import {
+    Actions,
+    Department,
+    EventType,
+    Ticket,
+    TicketCreate,
+    TicketStatus,
+} from "@shared/shared_types.ts";
 import {
     S_ActionsPerDepartment,
     S_ServerTicket,
@@ -53,6 +60,7 @@ ticket.get(
 ticket.post(
     "/",
     JWTAuthController,
+    AuthPrep,
     validator("json", (value, c) => {
         const parsed = S_TicketCreate.safeParse(value);
         if (!parsed.success) {
@@ -62,6 +70,17 @@ ticket.post(
         return parsed.data;
     }),
     async (c) => {
+        const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some(([dept_id, a]) =>
+                (a as Actions[]).some((
+                    x,
+                ) => (x === Actions.ticket_create &&
+                    (c.req.valid("json").author.user_id === c.var.user_id))
+                )
+            );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const ticket_create_success = await dbController.addTicket(c.req.valid("json"));
         if (!ticket_create_success) {
             return c.json({ message: "Ticket creation failed" }, 500);
@@ -74,15 +93,30 @@ ticket.post(
 ticket.get(
     "/:ticket_id",
     JWTAuthController,
+    AuthPrep,
     TicketIDValidator(),
     async (c) => {
         // TODO check if user is in department of ticket AND is allowed to see it
         // TODO check if user is owner of ticket
+        const ticket = await dbController.getTicket(c.req.valid("param"));
+
+        const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some(([dept_id, a]) =>
+                (a as Actions[]).some((x) =>
+                    (x === Actions.ticket_seeDepartmentTickets &&
+                        (ticket?.departments.some((d) => d.department_id === parseInt(dept_id)))) ||
+                    (ticket?.author.user_id === c.var.user_id)
+                )
+            );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const ticketHistory = await dbController.getTicketHistory(c.req.valid("param"));
         if (!ticketHistory) {
             console.error(c.req.valid("param"));
             return c.json({ error: "No TicketHistory found" }, 500);
         }
+
         return c.json(ticketHistory, 200);
     },
 );
@@ -91,14 +125,54 @@ ticket.get(
 ticket.put(
     "/:ticket_id",
     JWTAuthController,
+    AuthPrep,
     TicketIDValidator(),
     TicketEventValidator(),
     async (c) => {
         if (c.req.valid("param") != c.req.valid("json").ticket_id) {
             return c.json({ message: "Ticket ID of path and Event does not match!" }, 400);
         }
-        // const ticket_id = new_ticketEvent.ticket_id
-        const event_added_success = await dbController.addEvent(c.req.valid("json"));
+        const new_event = c.req.valid("json");
+        const ticket = await dbController.getTicket(c.req.valid("param"));
+        if (!ticket) {
+            return c.json({ error: "Ticket does not exist!" }, 400);
+        }
+        const event_user = await dbController.getUser({ user_id: new_event.author.user_id });
+        if (ticket?.author.user_id === event_user?.user_id) {
+            if (
+                !((new_event.event_type === EventType.statusChange &&
+                    new_event.new_status === TicketStatus.CLOSED) ||
+                    new_event.event_type === EventType.comment)
+            ) {
+                return c.json({ error: "Forbidden!" }, 403);
+            }
+        }
+        // cant add anything to ticket if it was closed
+        if (ticket?.ticket_status === TicketStatus.CLOSED) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
+        // check if ticket is in multiple departments
+        // let close_ticket = true;
+        // if (ticket.departments.length > 1 && ) {
+        //     const ticketHistory = await dbController.getTicketHistory(ticket.ticket_id);
+        //     if (ticketHistory) {
+        //         // find all added departments
+        //         const all_other_closed_departments = ticket.departments.filter((d) =>
+        //             ticketHistory.events.filter((e) =>
+        //                 e.event_type === EventType.statusChange &&
+        //                 e.new_status === TicketStatus.CLOSED
+        //             ).map((e) => parseInt(e.description!)).includes(d.department_id)
+        //         ).map(d => d.department_id);
+        //         if(ticket.departments.every(d =>(all_other_closed_departments.some(cD => cD=== d.department_id)||(
+        //             new_event.event_type === EventType.statusChange &&
+        //             e.new_status === TicketStatus.CLOSED)))
+        //         console.log("multi department close")
+        //         console.log(all_other_closed_departments)
+        //         // const close_ticket = new_event.event_type === EventType.statusChange  &&
+        //     }
+        // }
+
+        const event_added_success = await dbController.addEvent(new_event);
         if (!event_added_success) {
             return c.json({ message: "TicketEvent could not be added!" }, 500);
         }
@@ -109,6 +183,7 @@ ticket.put(
 ticket.delete(
     "/:ticket_id",
     JWTAuthController,
+    AuthPrep,
     TicketIDValidator(),
     async (c) => {
         //check if ticket exists
@@ -116,6 +191,15 @@ ticket.delete(
 
         if (!ticket) {
             return c.json({ message: "Ticket does not exist" }, 400);
+        }
+        const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some(([dept_id, a]) =>
+                (a as Actions[]).some((x) => (x === Actions.ticket_pullBack &&
+                    (ticket.author.user_id === c.var.user_id))
+                )
+            );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
         }
         // check if ticket has not been accepted
         const ticket_history = await dbController.getTicketHistory(c.req.valid("param"));
