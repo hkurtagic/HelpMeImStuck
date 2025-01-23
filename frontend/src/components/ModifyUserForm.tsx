@@ -19,7 +19,6 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
     const [username, setUsername] = useState<string>("");
     const [selectedUser, setSelectedUser] = useState<User>();
     const [password, setPassword] = useState<string>("");
-    const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [allRoles, setAllRoles] = useState<Record<number, RoleAdmin[]>>([]);
@@ -85,6 +84,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
+            setAvailableRoles([]);
         }
     };
 
@@ -108,31 +108,6 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         } catch (error) {
             console.error("Error fetching roles:", error);
         }
-    };
-
-    // Department-Checkbox ändern
-    const handleDepartmentChange = (departmentId: number) => {
-        setSelectedDepartments((prev) => {
-            const newSelection = prev.includes(departmentId)
-                ? prev.filter((id) => id !== departmentId)
-                : [...prev, departmentId];
-
-            // Lade Rollen für neues Department
-            if (!prev.includes(departmentId)) {
-                fetchRolesByDepartment(departmentId);
-            } else {
-                // Entferne Rollen, die nur zu diesem Department gehören
-                setSelectedRoles((prevRoles) =>
-                    prevRoles.filter((roleId) =>
-                        availableRoles.some(
-                            (r) =>
-                                r.role_id === roleId && r.department.department_id !== departmentId,
-                        )
-                    )
-                );
-            }
-            return newSelection;
-        });
     };
 
     // Role-Checkbox ändern
@@ -160,8 +135,8 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             alert("Username is required!");
             return;
         }
-        if (selectedDepartments.length === 0) {
-            alert("Please select at least one department.");
+        if (!selectedDepartment) {
+            alert("Please select a department.");
             return;
         }
 
@@ -181,7 +156,11 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                 role_id: role.role_id,
                 role_name: role.role_name,
                 role_description: role.role_description,
-                department: role.department,
+                department: {
+                    department_id: selectedDepartment.department_id,
+                    department_name: selectedDepartment.department_name,
+                    department_description: selectedDepartment.department_description,
+                },
                 actions: role.actions,
             })),
         };
@@ -215,7 +194,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             <Card className="w-full md:w-2/3 lg:w-1/2 shadow-lg">
                 <CardHeader>
                     <Button
-                        className="bg-red-500 hover:bg-red-600"
+                        className="bg-red-500 hover:bg-red-600 w-1/5"
                         onClick={() => setView("overview")}
                     >
                         Back
@@ -244,18 +223,19 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                         </div>
 
                         <div className="mb-4">
-                            <Label>Departments</Label>
-                            {departments.map((dept) => (
-                                <label key={dept.department_id} className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedDepartments.includes(dept.department_id)}
-                                        onChange={() =>
-                                            handleDepartmentChange(dept.department_id)}
-                                    />
-                                    <span className="ml-2">{dept.department_name}</span>
-                                </label>
-                            ))}
+                            <Label>Department</Label>
+                            <select
+                                value={selectedDepartment?.department_name || ""}
+                                onChange={handleDepartmentChange}
+                                className="border bg-white border-black p-2 rounded-md w-full"
+                            >
+                                <option value="" disabled>Select a department</option>
+                                {departments.map((dept) => (
+                                    <option key={dept.department_id} value={dept.department_name}>
+                                        {dept.department_name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="mb-4">
