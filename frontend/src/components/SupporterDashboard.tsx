@@ -9,14 +9,16 @@ import { Department } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
 import SupporterTicketOverview from "@/components/SupporterTicketOverview.tsx";
 import { UserContext } from "./UserContext.tsx";
+import { DashboardProps } from "@/pages/DashboardPage.tsx";
 
-export default function RequesterDashboard() {
+export default function RequesterDashboard(
+    { setSelectedDepartment, selectedDepartment }: DashboardProps,
+) {
     const [view, setView] = useState<"overview" | "create" | "statistics" | "tickets" | "history">(
         "overview",
     );
     const [isOpen, setIsOpen] = useState(true);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const navigate = useNavigate();
 
     const { user } = useContext(UserContext);
@@ -63,7 +65,7 @@ export default function RequesterDashboard() {
         //         console.error("Error fetching departments:", error);
         //     });
         setDepartments(user.roles.map((r) => r.department));
-        setSelectedDepartment(user.roles[0].department);
+        // setSelectedDepartment(user.roles[0].department);
     }, [user.roles]);
 
     return (

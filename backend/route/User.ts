@@ -7,6 +7,7 @@ import {
     createJWTRefreshToken,
     JWTAuthController,
     removeJWTTokens,
+    userEndpoindAuth,
 } from "@backend/controller/AuthenticationController.ts";
 import {
     DepartmentIDValidator,
@@ -20,9 +21,9 @@ import {
     S_UserLogin,
     S_UserPreview,
 } from "@shared/shared_schemas.ts";
+import { Actions } from "@shared/shared_types.ts";
 
 const user = new Hono();
-const ADMIN_USER_ID = Deno.env.get("ADMIN_USER_ID")!;
 
 user.post(
     "/login",
@@ -79,25 +80,39 @@ user.get("/", JWTAuthController, async (c) => {
 });
 
 // get data of specified user
-user.get("/:user_id", JWTAuthController, UserIDValidator(), AuthPrep, async (c) => {
-    const server_user = await dbConroller.getUser({ user_id: c.req.valid("param") });
-    if (!server_user) {
-        return c.json({ error: "User not found" }, 400);
-    }
-    // const server_user = S_ServersideUser.safeParse(user_model.toJSON());
-    // if (!server_user.success) {
-    //     return c.json({ message: "Serverside error" }, 500);
-    // }
-    const user = S_User.parse(server_user);
-    return c.json(user, 200);
-});
+user.get(
+    "/:user_id",
+    JWTAuthController,
+    AuthPrep,
+    userEndpoindAuth,
+    UserIDValidator(),
+    async (c) => {
+        const auth = Object.values(c.var.allowed_actions_per_department).some((a) =>
+            a.some((x) => x === Actions.user_manage)
+        );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
+        // if(Object.values().flatMap().includes(Actions.user_manage))
+        const server_user = await dbConroller.getUser({ user_id: c.req.valid("param") });
+        if (!server_user) {
+            return c.json({ error: "User not found" }, 400);
+        }
+        // const server_user = S_ServersideUser.safeParse(user_model.toJSON());
+        // if (!server_user.success) {
+        //     return c.json({ message: "Serverside error" }, 500);
+        // }
+        const user = S_User.parse(server_user);
+        return c.json(user, 200);
+    },
+);
 
 // create
 user.post(
     "/",
     JWTAuthController,
-    // failure potential as it checks for parameter
-    // UserValidator([Actions.user_create], [Actions.user_ownDeartment_create]),
+    AuthPrep,
+    userEndpoindAuth,
     validator("json", (value, c) => {
         const parsed = S_UserCreate.safeParse(value);
         if (!parsed.success) {
@@ -107,6 +122,12 @@ user.post(
         return parsed.data;
     }),
     async (c) => {
+        const auth = Object.values(c.var.allowed_actions_per_department).some((a) =>
+            a.some((x) => x === Actions.user_manage)
+        );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const user_create_success = await dbConroller.addUser(c.req.valid("json"));
 
         if (!user_create_success) {
@@ -122,6 +143,7 @@ user.put(
     // UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
     UserIDValidator(),
     AuthPrep,
+    userEndpoindAuth,
     validator("json", (value, c) => {
         const parsed = S_UserAdmin.safeParse(value);
         if (!parsed.success) {
@@ -131,6 +153,12 @@ user.put(
         return parsed.data;
     }),
     async (c) => {
+        const auth = Object.values(c.var.allowed_actions_per_department).some((a) =>
+            a.some((x) => x === Actions.user_manage)
+        );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         if (c.req.valid("param") != c.req.valid("json").user_id) {
             return c.json({ message: "User ID of path and body does not match!" }, 400);
         }
@@ -161,9 +189,16 @@ user.put(
 user.delete(
     "/:user_id",
     JWTAuthController,
-    // UserValidator([Actions.user_delete], [Actions.user_ownDeartment_delete]),
+    AuthPrep,
+    userEndpoindAuth,
     UserIDValidator(),
     async (c) => {
+        const auth = Object.values(c.var.allowed_actions_per_department).some((a) =>
+            a.some((x) => x === Actions.user_manage)
+        );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const user_id = c.req.valid("param");
         const user_delete_success = await dbConroller.deleteUser(user_id);
         if (!user_delete_success) {
@@ -177,8 +212,16 @@ user.delete(
 user.get(
     "/dept/:department_id",
     JWTAuthController,
+    AuthPrep,
+    userEndpoindAuth,
     DepartmentIDValidator(),
     async (c) => {
+        const auth = Object.values(c.var.allowed_actions_per_department).some((a) =>
+            a.some((x) => x === Actions.user_manage)
+        );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const users = await dbConroller.getAllUsersInDepartment(c.req.valid("param"));
         return c.json(users, 200);
     },

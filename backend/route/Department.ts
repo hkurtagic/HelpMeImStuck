@@ -1,6 +1,10 @@
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
+import {
+    AuthPrep,
+    departmentEndpoindAuth,
+    JWTAuthController,
+} from "@backend/controller/AuthenticationController.ts";
 import * as db2 from "@backend/service/dbController.ts";
 import {
     DepartmentIDValidator,
@@ -37,6 +41,8 @@ department.get("/", JWTAuthController, async (c) => {
 department.post(
     "/",
     JWTAuthController,
+    AuthPrep,
+    departmentEndpoindAuth,
     validator("json", (value, c) => {
         const parsed = S_DepartmentCreate.safeParse(value);
         if (!parsed.success) {
@@ -54,6 +60,8 @@ department.post(
 department.put(
     "/:department_id",
     JWTAuthController,
+    AuthPrep,
+    departmentEndpoindAuth,
     DepartmentIDValidator(),
     DepartmentObjectValidator(),
     async (c) => {
@@ -77,6 +85,8 @@ department.put(
 department.delete(
     "/:department_id",
     JWTAuthController,
+    AuthPrep,
+    departmentEndpoindAuth,
     DepartmentIDValidator(),
     async (c) => {
         const dept_delete_success = await db2.deleteDepartment(c.req.valid("param"));
