@@ -41,7 +41,7 @@ export default function TicketCard({
 
                     {ticket.ticket_status === TicketStatus.OPEN && role === "supporter" && (
                         <Button
-                            className="bg-green-500 hover:bg-green-600"
+                            className="bg-amber-500 hover:bg-amber-600"
                             onClick={() =>
                                 updateTicketStatus(ticket.ticket_id, TicketStatus.IN_PROGRESS)}
                         >
@@ -51,21 +51,11 @@ export default function TicketCard({
 
                     {ticket.ticket_status === TicketStatus.OPEN && role === "supporter" && (
                         <Button
-                            className="bg-red-500 hover:bg-red-600"
+                            className="bg-amber-500 hover:bg-amber-600"
                             onClick={() =>
                                 updateTicketStatus(ticket.ticket_id, TicketStatus.CLOSED)}
                         >
-                            Decline
-                        </Button>
-                    )}
-
-                    {ticket.ticket_status === TicketStatus.IN_PROGRESS && role === "supporter" && (
-                        <Button
-                            className="bg-amber-500 hover:bg-amber-600"
-                            onClick={() =>
-                                updateTicketStatus(ticket.ticket_id, TicketStatus.OPEN)}
-                        >
-                            Back to Queue
+                            Close
                         </Button>
                     )}
 
@@ -78,10 +68,6 @@ export default function TicketCard({
                             Close
                         </Button>
                     )}
-
-
-
-
 
                     {/* Icon immer anzeigen */}
                     {showHistoryIcon && (
