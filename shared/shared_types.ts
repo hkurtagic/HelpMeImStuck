@@ -12,7 +12,7 @@ import {
     S_TicketCreate,
     S_TicketEvent,
     S_TicketEvent_Comment,
-    S_TicketEvent_Create,
+    // S_TicketEvent_Create,
     S_TicketEvent_DepartmentAdded,
     S_TicketEvent_DepartmentForwarded,
     S_TicketEvent_StatusChange,
@@ -75,7 +75,7 @@ export type UserPreview = z.output<typeof S_UserPreview>;
 export type UserAdmin = z.infer<typeof S_UserAdmin>;
 export type TicketCreate = z.infer<typeof S_TicketCreate>;
 export type Ticket = z.infer<typeof S_Ticket>;
-export type TicketEvent_Create = z.infer<typeof S_TicketEvent_Create>;
+// export type TicketEvent_Create = z.infer<typeof S_TicketEvent_Create>;
 export type TicketEvent_StatusChange = z.infer<typeof S_TicketEvent_StatusChange>;
 export type TicketEvent_DepartmentAdded = z.infer<typeof S_TicketEvent_DepartmentAdded>;
 export type TicketEvent_DepartmentForwarded = z.infer<typeof S_TicketEvent_DepartmentForwarded>;
