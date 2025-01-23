@@ -27,51 +27,52 @@ interface TicketOverviewProps {
 export default function SupporterTicketOverview(
     { setView, selectedDepartment }: TicketOverviewProps,
 ) {
+    const [reloadTickets, setReloadTickets] = useState<boolean>(true);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [openTickets, setOpenTickets] = useState<Ticket[]>([]);
     const [inProgressTickets, setInProgressTickets] = useState<Ticket[]>([]);
     const [closedTickets, setClosedTickets] = useState<Ticket[]>([]);
     const { user } = useContext(UserContext);
 
-    useEffect(() => {
-        const fetchTickets = async (department_id: number) => {
-            try {
-                const response = await fetch(
-                    EP_department_tickets(department_id),
-                    {
-                        method: "GET",
-                        headers: appendAuthHeader({
-                            "Content-Type": "application/json",
-                        }),
-                    },
+    const fetchTickets = async (department_id: number) => {
+        try {
+            const response = await fetch(
+                EP_department_tickets(department_id),
+                {
+                    method: "GET",
+                    headers: appendAuthHeader({
+                        "Content-Type": "application/json",
+                    }),
+                },
+            );
+
+            if (!response.ok) throw new Error("Failed to fetch tickets");
+
+            const data = await response.json() as Ticket[]; // Erwartet eine Liste von Tickets
+            if (data.length) {
+                setTickets(data);
+                setOpenTickets(
+                    data.filter((ticket) => ticket.ticket_status === TicketStatus.OPEN),
                 );
-
-                if (!response.ok) throw new Error("Failed to fetch tickets");
-
-                const data = await response.json() as Ticket[]; // Erwartet eine Liste von Tickets
-                if (data.length) {
-                    setTickets(data);
-                    setOpenTickets(
-                        data.filter((ticket) => ticket.ticket_status === TicketStatus.OPEN),
-                    );
-                    setInProgressTickets(
-                        data.filter((ticket) => ticket.ticket_status === TicketStatus.IN_PROGRESS),
-                    );
-                    setClosedTickets(
-                        data.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
-                    );
-                }
-            } catch (error) {
-                console.error("Error fetching tickets:", error);
+                setInProgressTickets(
+                    data.filter((ticket) => ticket.ticket_status === TicketStatus.IN_PROGRESS),
+                );
+                setClosedTickets(
+                    data.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
+                );
             }
-        };
-        console.log("TicketHook: " + JSON.stringify(selectedDepartment));
+        } catch (error) {
+            console.error("Error fetching tickets:", error);
+        }
+    };
 
-        if (selectedDepartment) {
+    useEffect(() => {
+        if (selectedDepartment && reloadTickets) {
             console.log(selectedDepartment);
             fetchTickets(selectedDepartment.department_id);
+            setReloadTickets(false);
         }
-    }, [selectedDepartment]);
+    }, [selectedDepartment, reloadTickets]);
 
     const addTicketEvent = async (ticket_id: UUID, new_status: TicketStatus): Promise<boolean> => {
         const new_event: TicketEvent_StatusChange = {
@@ -113,6 +114,7 @@ export default function SupporterTicketOverview(
                 tickets.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
             );
         }
+        setReloadTickets(true);
     };
 
     return (

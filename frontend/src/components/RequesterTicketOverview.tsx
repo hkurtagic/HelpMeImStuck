@@ -2,8 +2,15 @@ import React, { useContext, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import TicketCard from "@/components/Ticket.tsx";
-import { appendAuthHeader, EP_ticket } from "@/route_helper/routes_helper.tsx";
-import { Department, Ticket, TicketStatus } from "@shared/shared_types";
+import { appendAuthHeader, EP_ticket, EP_ticket_event } from "@/route_helper/routes_helper.tsx";
+import {
+    Department,
+    EventType,
+    Ticket,
+    TicketEvent_StatusChange,
+    TicketStatus,
+    UUID,
+} from "@shared/shared_types";
 import { UserContext } from "./UserContext";
 
 interface TicketOverviewProps {
@@ -15,6 +22,7 @@ interface TicketOverviewProps {
 export default function RequesterTicketOverview(
     { setView, selectedDepartment }: TicketOverviewProps,
 ) {
+    const [reloadTickets, setReloadTickets] = useState<boolean>(true);
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [openTickets, setOpenTickets] = useState<Ticket[]>([]);
     const [inProgressTickets, setInProgressTickets] = useState<Ticket[]>([]);
@@ -52,19 +60,53 @@ export default function RequesterTicketOverview(
         };
         console.log("TicketHook: " + JSON.stringify(selectedDepartment));
 
-        if (selectedDepartment) {
+        if (selectedDepartment && reloadTickets) {
             console.log(selectedDepartment);
             fetchTickets();
+            setReloadTickets(false);
         }
-    }, [selectedDepartment]); // Lädt Tickets neu, wenn sich die Abteilung ändert
+    }, [selectedDepartment, reloadTickets]); // Lädt Tickets neu, wenn sich die Abteilung ändert
+
+    const addTicketEvent = async (ticket_id: UUID, new_status: TicketStatus): Promise<boolean> => {
+        const new_event: TicketEvent_StatusChange = {
+            new_status: new_status,
+            author: { user_id: user.user_id, user_name: user.user_name },
+            ticket_id: ticket_id,
+            event_type: EventType.statusChange,
+        };
+        return await fetch(EP_ticket_event(ticket_id), {
+            method: "PUT",
+            headers: appendAuthHeader({
+                "Content-Type": "application/json",
+            }),
+            body: JSON.stringify(new_event),
+        }).then((res) => {
+            if (!res.ok) return false;
+            return true;
+        }).catch((error) => {
+            console.error("Error fetching tickets:", error);
+            return false;
+        });
+    };
 
     // Funktion zum Aktualisieren des Ticket-Status
-    const updateTicketStatus = (ticketId: string, newStatus: number) => {
-        setTickets((prevTickets) =>
-            prevTickets.map((ticket) =>
-                ticket.ticket_id === ticketId ? { ...ticket, status: newStatus } : ticket
-            )
-        );
+    const updateTicketStatus = async (ticketId: string, newStatus: number) => {
+        const is_ticket_updated = await addTicketEvent(ticketId, newStatus);
+        if (is_ticket_updated) {
+            setTickets((prevTickets) =>
+                prevTickets.map((ticket) =>
+                    ticket.ticket_id === ticketId ? { ...ticket, status: newStatus } : ticket
+                )
+            );
+            setOpenTickets(tickets.filter((ticket) => ticket.ticket_status === TicketStatus.OPEN));
+            setInProgressTickets(
+                tickets.filter((ticket) => ticket.ticket_status === TicketStatus.IN_PROGRESS),
+            );
+            setClosedTickets(
+                tickets.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
+            );
+        }
+        setReloadTickets(true);
     };
 
     return (

@@ -165,10 +165,8 @@ export default function RequesterDashboard() {
                 {/* Dropdown für Departments */}
                 {isOpen && (
                     <div className="p-4">
-                        <label
-                            htmlFor="department-select"
-                            className="block text-black font-medium mb-2"
-                        >
+                        <label // htmlFor="department-select"
+                         className="block text-black font-medium bg-white mb-2">
                             Select a Department
                         </label>
                         <select
@@ -179,7 +177,7 @@ export default function RequesterDashboard() {
                                     departments.find((d) => d.department_name == e.target.value) ||
                                         null,
                                 )}
-                            className="w-full p-2 border rounded-md text-black"
+                            className="w-full p-2 border rounded-md bg-white text-black"
                         >
                             <option value="" disabled>
                                 Select a department
