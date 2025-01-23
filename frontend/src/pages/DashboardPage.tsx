@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import RequesterDashboard from "@/components/RequesterDashboard.tsx";
 import SupporterDashboard from "@/components/SupporterDashboard.tsx";
 import AdminDashboard from "@/components/AdminDashboard.tsx";
+import { UserContext } from "@/components/UserContext";
+import { useNavigate } from "react-router-dom";
+import { rootPath } from "@/route_helper/routes_helper";
 
 export default function DashboardPage() {
     const [userRole, setUserRole] = useState<string | null>(null);
+    const { updateUser } = useContext(UserContext);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch("/api/user")
@@ -13,11 +18,15 @@ export default function DashboardPage() {
                 if (data.roles && data.roles.length > 0) {
                     const roleName = data.roles[0].role_name; // Erste Rolle extrahieren
                     setUserRole(roleName);
+                    updateUser(data);
                 } else {
-                    setUserRole("unknown"); // Falls keine Rolle existiert
+                    navigate(rootPath);
+                    // setUserRole("unknown"); // Falls keine Rolle existiert
                 }
             })
-            .catch((err) => console.error("Fehler beim Laden der Benutzerdaten:", err));
+            .catch((err) => {
+                console.error("Fehler beim Laden der Benutzerdaten:", err);
+            });
     }, []);
 
     if (!userRole) {
@@ -29,7 +38,7 @@ export default function DashboardPage() {
             {userRole === "Administrator" && <AdminDashboard />}
             {userRole === "Supporter" && <SupporterDashboard />}
             {userRole === "Requester" && <RequesterDashboard />}
-            {userRole === "unknown" && <p>No role found.</p>}
+            {/* {userRole === "unknown" && <p>No role found.</p>} */}
         </div>
     );
 }

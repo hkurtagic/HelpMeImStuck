@@ -35,6 +35,7 @@ import {
     Role,
     RoleAdmin,
     RoleCreate,
+    Ticket,
     TicketCreate,
     TicketEvent,
     TicketHistory,
@@ -543,18 +544,12 @@ export const addTicket = async (
 };
 export const getTicket = async (
     ticket_id: UUID,
-): Promise<ServerTicketModel> => {
-    const res = await TicketModel.getTicketById(ticket_id);
-    if (!res) {
-        throw SQLNoTicketFound(
-            ticket_id,
-        );
-    }
-    return res;
+): Promise<Ticket | null> => {
+    return await TicketModel.getTicketById(ticket_id);
 };
 export const getAllTicketsOf = async (
     search_for: { author_id: UUID } | { department_id: ID },
-): Promise<ServerTicketModel[]> => {
+): Promise<Ticket[]> => {
     let ticket_ids = [];
     if ("author_id" in search_for) {
         ticket_ids = (await TicketModel.findAll({

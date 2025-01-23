@@ -11,21 +11,22 @@ import { UserContext } from "@/components/UserContext";
 import { Department, TicketHistoryEvent } from "@shared/shared_types.ts";
 
 export default function RequesterDashboard() {
+    // UserContext verwenden
+    const { user } = useContext(UserContext); // ?? { roles: [] };
     const [view, setView] = useState<"overview" | "create">("overview");
     const [isOpen, setIsOpen] = useState(true);
     const navigate = useNavigate();
     const [history, setHistory] = useState<TicketHistoryEvent[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-
-    // UserContext verwenden
-    const { user } = useContext(UserContext);
+    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null//user?.roles[0]?.department || null,
+    );
 
     useEffect(() => {
-        if (!departments) {
+        if (user && user.roles && user.roles.length > 0) {
             setDepartments(user.roles.map((r) => r.department));
+            setSelectedDepartment(user.roles[0].department);
         }
-    }, []);
+    }, [user]);
 
     const updateHistory = (newEntry: TicketHistoryEvent) => {
         setHistory((prev) => [newEntry, ...prev]); // Neues Ticket oben einfügen
@@ -156,14 +157,16 @@ export default function RequesterDashboard() {
                             <option value="" disabled>
                                 Choose a department
                             </option>
-                            {departments.map((dept) => (
-                                <option
-                                    key={dept.department_id}
-                                    value={dept.department_name}
-                                >
-                                    {dept.department_name}
-                                </option>
-                            ))}
+                            {departments
+                                ? departments.map((dept) => (
+                                    <option
+                                        key={dept.department_id}
+                                        value={dept.department_name}
+                                    >
+                                        {dept.department_name}
+                                    </option>
+                                ))
+                                : <></>}
                         </select>
                     </div>
                 )}

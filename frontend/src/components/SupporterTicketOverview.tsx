@@ -71,7 +71,7 @@ export default function SupporterTicketOverview(
             console.log(selectedDepartment);
             fetchTickets(selectedDepartment.department_id);
         }
-    }, [selectedDepartment]); // Lädt Tickets neu, wenn sich die Abteilung ändert    //TODO selectedDepartments entfernen !!
+    }, [selectedDepartment]);
 
     const addTicketEvent = async (ticket_id: UUID, new_status: TicketStatus): Promise<boolean> => {
         const new_event: TicketEvent_StatusChange = {

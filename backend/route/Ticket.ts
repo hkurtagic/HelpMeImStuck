@@ -7,15 +7,15 @@ import {
     TicketIDValidator,
 } from "@backend/controller/ValidationController.ts";
 import { ID, S_Ticket, S_TicketCreate } from "@shared/shared_schemas.ts";
-import * as db2 from "@backend/service/dbController.ts";
+import * as dbController from "@backend/service/dbController.ts";
 
 import { Department, Ticket, TicketCreate, TicketStatus } from "@shared/shared_types.ts";
 import { S_ServerTicket } from "@backend/schemes_and_types/serverside_schemas.ts";
 const ticket = new Hono();
 
 // get all tickets of acting user
-ticket.get("/", JWTAuthController, (c) => {
-    const tickets = db2;
+ticket.get("/", JWTAuthController, async (c) => {
+    const tickets = await dbController.getAllTicketsOf({ author_id: c.var.user_id });
     if (!tickets) {
         return c.json({ message: "No Tickets found" }, 400);
     }
@@ -27,8 +27,8 @@ ticket.get(
     "/dept/:department_id",
     JWTAuthController,
     DepartmentIDValidator(),
-    (c) => {
-        const tickets = db2.getAllTicketsOf({ department_id: c.req.valid("param") });
+    async (c) => {
+        const tickets = await dbController.getAllTicketsOf({ department_id: c.req.valid("param") });
         return c.json(tickets, 200);
     },
 );
@@ -46,7 +46,7 @@ ticket.post(
         return parsed.data;
     }),
     async (c) => {
-        const ticket_create_success = await db2.addTicket(c.req.valid("json"));
+        const ticket_create_success = await dbController.addTicket(c.req.valid("json"));
         if (!ticket_create_success) {
             return c.json({ message: "Ticket creation failed" }, 500);
         }
@@ -62,7 +62,7 @@ ticket.get(
     async (c) => {
         // TODO check if user is in department of ticket AND is allowed to see it
         // TODO check if user is owner of ticket
-        const ticketHistory = await db2.getTicketHistory(c.req.valid("param"));
+        const ticketHistory = await dbController.getTicketHistory(c.req.valid("param"));
         if (!ticketHistory) {
             console.error(c.req.valid("param"));
             return c.json({ error: "No TicketHistory found" }, 500);
@@ -82,7 +82,7 @@ ticket.put(
             return c.json({ message: "Ticket ID of path and Event does not match!" }, 400);
         }
         // const ticket_id = new_ticketEvent.ticket_id
-        const event_added_success = await db2.addEvent(c.req.valid("json"));
+        const event_added_success = await dbController.addEvent(c.req.valid("json"));
         if (!event_added_success) {
             return c.json({ message: "TicketEvent could not be added!" }, 500);
         }
@@ -96,26 +96,25 @@ ticket.delete(
     TicketIDValidator(),
     async (c) => {
         //check if ticket exists
-        const ticket = S_ServerTicket.safeParse(
-            (await db2.getTicket(c.req.valid("param"))).toJSON(),
-        );
-        if (!ticket.success) {
+        const ticket = await dbController.getTicket(c.req.valid("param"));
+
+        if (!ticket) {
             return c.json({ message: "Ticket does not exist" }, 400);
         }
         // check if ticket has not been accepted
-        const ticket_history = await db2.getTicketHistory(c.req.valid("param"));
+        const ticket_history = await dbController.getTicketHistory(c.req.valid("param"));
         if (!ticket_history) {
             return c.json({ message: "Serverside error" }, 500);
         }
         // cant delete if status not open or if another user has added a TicketEvent
         if (
-            ticket.data.ticket_status !== TicketStatus.OPEN &&
-            ticket_history.events.findIndex((e) => e.author !== ticket.data.author) > -1
+            ticket.ticket_status !== TicketStatus.OPEN &&
+            ticket_history.events.findIndex((e) => e.author !== ticket.author) > -1
         ) {
             return c.json({ message: "Ticket deletion not possible anymore" }, 403);
         }
 
-        const ticket_delete_success = await db2.deleteTicket(c.req.valid("param"));
+        const ticket_delete_success = await dbController.deleteTicket(c.req.valid("param"));
         if (!ticket_delete_success) {
             return c.json({ message: "Ticket deletion failed" }, 500);
         }
