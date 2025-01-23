@@ -148,16 +148,18 @@ const S_TicketEventBase = z.object({
     // event_id: UUID,
     ticket_id: UUID,
     author: S_UserPreview,
+    description: z.string().optional(),
     created_at: z.date().optional(),
 });
 
-const S_TicketEvent_Create = S_TicketEventBase.extend({
-    event_type: z.literal(zEventType.enum.createTicket),
-});
+// const S_TicketEvent_Create = S_TicketEventBase.extend({
+//     event_type: z.literal(zEventType.enum.createTicket),
+// });
 
-const S_TicketEvent_StatusChange = S_TicketEventBase.extend({
+const S_TicketEvent_StatusChange = S_TicketEventBase.omit({ description: true }).extend({
     event_type: z.literal(zEventType.enum.statusChange),
     new_status: zTicketStatus,
+    description: z.string(),
 });
 const S_TicketEvent_DepartmentAdded = S_TicketEventBase.extend({
     event_type: z.literal(zEventType.enum.departmentAdded),
@@ -173,14 +175,14 @@ const S_TicketEvent_Comment = S_TicketEventBase.extend({
     images: z.string().array().optional().nullable(),
 });
 const S_TicketEvent = z.discriminatedUnion("event_type", [
-    S_TicketEvent_Create,
+    // S_TicketEvent_Create,
     S_TicketEvent_StatusChange,
     S_TicketEvent_DepartmentAdded,
     S_TicketEvent_DepartmentForwarded,
     S_TicketEvent_Comment,
 ]);
 const S_TicketHistoryEvent = z.discriminatedUnion("event_type", [
-    S_TicketEvent_Create.omit({ ticket_id: true }),
+    // S_TicketEvent_Create.omit({ ticket_id: true }),
     S_TicketEvent_StatusChange.omit({ ticket_id: true }),
     S_TicketEvent_DepartmentAdded.omit({ ticket_id: true }),
     S_TicketEvent_DepartmentForwarded.omit({ ticket_id: true }),
@@ -206,7 +208,7 @@ export {
     S_TicketCreate,
     S_TicketEvent,
     S_TicketEvent_Comment,
-    S_TicketEvent_Create,
+    // S_TicketEvent_Create,
     S_TicketEvent_DepartmentAdded,
     S_TicketEvent_DepartmentForwarded,
     S_TicketEvent_StatusChange,

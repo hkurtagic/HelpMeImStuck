@@ -9,8 +9,11 @@ import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import TicketHistory from "@/components/TicketHistory.tsx";
 import { UserContext } from "@/components/UserContext";
 import { Department, TicketHistoryEvent } from "@shared/shared_types.ts";
+import { DashboardProps } from "@/pages/DashboardPage.tsx";
 
-export default function RequesterDashboard() {
+export default function RequesterDashboard(
+    { setSelectedDepartment, selectedDepartment }: DashboardProps,
+) {
     // UserContext verwenden
     const { user } = useContext(UserContext); // ?? { roles: [] };
     const [view, setView] = useState<"overview" | "create">("overview");
@@ -18,13 +21,13 @@ export default function RequesterDashboard() {
     const navigate = useNavigate();
     const [history, setHistory] = useState<TicketHistoryEvent[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null//user?.roles[0]?.department || null,
-    );
+    // const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null//user?.roles[0]?.department || null,
+    // );
 
     useEffect(() => {
         if (user && user.roles && user.roles.length > 0) {
             setDepartments(user.roles.map((r) => r.department));
-            setSelectedDepartment(user.roles[0].department);
+            // setSelectedDepartment(user.roles[0].department);
         }
     }, [user]);
 

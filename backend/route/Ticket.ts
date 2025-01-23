@@ -1,6 +1,6 @@
 import { Context, Hono } from "hono";
 import { ValidationFunction, validator } from "hono/validator";
-import { JWTAuthController } from "@backend/controller/AuthenticationController.ts";
+import { AuthPrep, JWTAuthController } from "@backend/controller/AuthenticationController.ts";
 import {
     DepartmentIDValidator,
     TicketEventValidator,
@@ -9,8 +9,12 @@ import {
 import { ID, S_Ticket, S_TicketCreate } from "@shared/shared_schemas.ts";
 import * as dbController from "@backend/service/dbController.ts";
 
-import { Department, Ticket, TicketCreate, TicketStatus } from "@shared/shared_types.ts";
-import { S_ServerTicket } from "@backend/schemes_and_types/serverside_schemas.ts";
+import { Actions, Department, Ticket, TicketCreate, TicketStatus } from "@shared/shared_types.ts";
+import {
+    S_ActionsPerDepartment,
+    S_ServerTicket,
+} from "@backend/schemes_and_types/serverside_schemas.ts";
+import { ActionsPerDepartment } from "@backend/schemes_and_types/serverside_types.ts";
 const ticket = new Hono();
 
 // get all tickets of acting user
@@ -26,8 +30,20 @@ ticket.get("/", JWTAuthController, async (c) => {
 ticket.get(
     "/dept/:department_id",
     JWTAuthController,
+    AuthPrep,
     DepartmentIDValidator(),
     async (c) => {
+        const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some(([dept_id, a]) =>
+                (a as Actions[]).some((
+                    x,
+                ) => (x === Actions.ticket_seeDepartmentTickets &&
+                    (c.req.valid("param") === parseInt(dept_id)))
+                )
+            );
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         const tickets = await dbController.getAllTicketsOf({ department_id: c.req.valid("param") });
         return c.json(tickets, 200);
     },

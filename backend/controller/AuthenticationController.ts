@@ -11,6 +11,7 @@ import {
 // import db from "@backend/service/database.ts";
 import * as dbController from "@backend/service/dbController.ts";
 import { S_ActionsPerDepartment } from "@backend/schemes_and_types/serverside_schemas.ts";
+import { Actions } from "@shared/shared_types.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET")!;
 const JWT_ACCESS_EXPIRY = parseInt(Deno.env.get("JWT_ACCESS_EXPIRY")!);
@@ -83,6 +84,50 @@ export const AuthPrep = createMiddleware<{
         const mapped_actions_to_department = S_ActionsPerDepartment.parse(user);
         console.log(mapped_actions_to_department);
         c.set("allowed_actions_per_department", mapped_actions_to_department);
+        await next();
+    },
+);
+/*
+function checkIfAuth(
+    c: Context,
+    permissions_needed: Actions[],
+    departments_needed: number[],
+    own_user = false,
+) {
+    const auth = Object.values(c.var.allowed_actions_per_department).some((a: Actions[]) =>
+        a.some((x) => permissions_needed.includes(x))
+    );
+    if (!auth) {
+        return c.json({ error: "Forbidden!" }, 403);
+    }
+}*/
+export const userEndpoindAuth = createMiddleware(
+    async (c: Context, next: Next) => {
+        const auth = Object.values(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some((a) => a.some((x) => x === Actions.user_manage));
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
+        await next();
+    },
+);
+export const departmentEndpoindAuth = createMiddleware(
+    async (c: Context, next: Next) => {
+        const auth = Object.values(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some((a) => a.some((x) => x === Actions.department_manage));
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
+        await next();
+    },
+);
+export const roleEndpoindAuth = createMiddleware(
+    async (c: Context, next: Next) => {
+        const auth = Object.values(c.var.allowed_actions_per_department as ActionsPerDepartment)
+            .some((a) => a.some((x) => x === Actions.role_manage));
+        if (!auth) {
+            return c.json({ error: "Forbidden!" }, 403);
+        }
         await next();
     },
 );
