@@ -22,10 +22,11 @@ interface TicketOverviewProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setView: React.Dispatch<React.SetStateAction<any>>;
     selectedDepartment: Department | null;
+    setTicketID: React.Dispatch<React.SetStateAction<UUID>>;
 }
 
 export default function SupporterTicketOverview(
-    { setView, selectedDepartment }: TicketOverviewProps,
+    { setView, selectedDepartment, setTicketID }: TicketOverviewProps,
 ) {
     const [reloadTickets, setReloadTickets] = useState<boolean>(true);
     const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -80,6 +81,7 @@ export default function SupporterTicketOverview(
             author: { user_id: user.user_id, user_name: user.user_name },
             ticket_id: ticket_id,
             event_type: EventType.statusChange,
+            description: selectedDepartment?.department_id.toString(),
         };
         return await fetch(EP_ticket_event(ticket_id), {
             method: "PUT",
@@ -150,6 +152,7 @@ export default function SupporterTicketOverview(
                                     role={"supporter"}
                                     setView={setView}
                                     updateTicketStatus={updateTicketStatus}
+                                    setTicketID={setTicketID}
                                 />
                             ))
                         )
@@ -174,6 +177,7 @@ export default function SupporterTicketOverview(
                                     role={"supporter"}
                                     setView={setView}
                                     updateTicketStatus={updateTicketStatus}
+                                    setTicketID={setTicketID}
                                 />
                             ))
                         )
@@ -198,6 +202,7 @@ export default function SupporterTicketOverview(
                                     role={"supporter"}
                                     setView={setView}
                                     updateTicketStatus={updateTicketStatus}
+                                    setTicketID={setTicketID}
                                 />
                             ))
                         )

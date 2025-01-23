@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Ticket, TicketStatus } from "@shared/shared_types";
+import { Ticket, TicketStatus, UUID } from "@shared/shared_types";
 import { Button } from "@/components/ui/button.tsx";
 import { GitCommitVertical } from "lucide-react";
 
@@ -10,6 +10,8 @@ interface TicketCardProps {
     setView: React.Dispatch<React.SetStateAction<any>>;
     updateTicketStatus: (ticketId: string, newStatus: number) => void;
     role: string;
+
+    setTicketID: React.Dispatch<React.SetStateAction<UUID>>;
 }
 
 export default function TicketCard({
@@ -18,6 +20,7 @@ export default function TicketCard({
     setView,
     updateTicketStatus,
     role,
+    setTicketID,
 }: TicketCardProps) {
     return (
         <Card className="bg-blue-100">
@@ -83,7 +86,8 @@ export default function TicketCard({
                         <GitCommitVertical
                             className="text-gray-700 h-8 w-8 hover:text-fuchsia-600 cursor-pointer"
                             onClick={() => {
-                                console.log("Icon clicked for ticket:", ticket.ticket_id);
+                                // console.log("Icon clicked for ticket:", ticket.ticket_id);
+                                setTicketID(ticket.ticket_id);
                                 setView("history");
                             }}
                         />

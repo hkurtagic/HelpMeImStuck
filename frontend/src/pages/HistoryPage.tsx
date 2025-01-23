@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import HistoryFeed from "@/components/HistoryFeed.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { TicketHistory, UUID } from "@shared/shared_types";
+import { appendAuthHeader, EP_ticket_event } from "@/route_helper/routes_helper";
 
-export default function HistoryPage() {
+interface HistoryProps {
+    ticket_id: UUID;
+}
+
+export default function HistoryPage({ ticket_id }: HistoryProps) {
     const [inputText, setInputText] = useState("");
 
     return (
         <div className="p-4">
-            <HistoryFeed/>
+            {history ? <HistoryFeed tickethistory={history} /> : <></>}
 
             {/* Textfeld für Benutzereingaben */}
             <div className="mt-10 flex flex-row">

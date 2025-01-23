@@ -7,7 +7,7 @@ interface Props {
     comment: string;
 }
 
-export default function HistoryEventAddComment({ user_name, on, comment }): Props {
+export default function HistoryEventAddComment({ user_name, on, comment }: Props) {
     return (
         <Card className={"ml-3 w-fit mt-10 mb-0"}>
             <CardHeader

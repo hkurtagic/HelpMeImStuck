@@ -8,7 +8,7 @@ interface Props {
     on: string;
 }
 
-export default function HistoryEventStatusChange({ user_name, status, on }): Props {
+export default function HistoryEventStatusChange({ user_name, status, on }: Props) {
     return (
         <Card className={"border-0 shadow-none mt-10 mb-0 w-fit"}>
             <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700">
@@ -19,14 +19,14 @@ export default function HistoryEventStatusChange({ user_name, status, on }): Pro
                 <span>{user_name}</span>
                 <span className={"text-gray-400"}>changed status to</span>
                 <span className={"border-s rounded-full bg-gray-400 px-2"}>
-                    {TicketStatus[status--]}
+                    {TicketStatus[status]}
                 </span>
                 <span className={"text-gray-400"}>
                     on {Intl.DateTimeFormat("en-US", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
-                    }).format(Date.parse(on))}
+                    }).format(Date.parse(on ?? "2025-01-23 02:21:36.257"))}
                 </span>
             </CardContent>
         </Card>

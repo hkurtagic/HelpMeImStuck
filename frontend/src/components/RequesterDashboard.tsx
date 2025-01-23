@@ -8,7 +8,7 @@ import { EP_logout } from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import TicketHistory from "@/components/TicketHistory.tsx";
 import { UserContext } from "@/components/UserContext";
-import { Department, TicketHistoryEvent } from "@shared/shared_types.ts";
+import { Department, TicketHistoryEvent, UUID } from "@shared/shared_types.ts";
 import { DashboardProps } from "@/pages/DashboardPage.tsx";
 
 export default function RequesterDashboard(
@@ -21,6 +21,7 @@ export default function RequesterDashboard(
     const navigate = useNavigate();
     const [history, setHistory] = useState<TicketHistoryEvent[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [ticketid, setTicketID] = useState<UUID>();
     // const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null//user?.roles[0]?.department || null,
     // );
 
@@ -201,6 +202,7 @@ export default function RequesterDashboard(
                     <RequesterTicketOverview
                         setView={setView}
                         selectedDepartment={selectedDepartment}
+                        setTicketID={setTicketID}
                     />
                 )}
                 {view === "create" && (
@@ -211,9 +213,10 @@ export default function RequesterDashboard(
                     <RequesterTicketOverview
                         setView={setView}
                         selectedDepartment={selectedDepartment}
+                        setTicketID={setTicketID}
                     />
                 )}
-                {view === "history" && <TicketHistory setView={setView} history={history} />}
+                {view === "history" && <TicketHistory ticket_id={ticketid!} setView={setView} />}
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Department, TicketStatus } from "@shared/shared_types";
 import React from "react";
 
 interface HistoryEventCreateProps {
@@ -6,6 +7,8 @@ interface HistoryEventCreateProps {
     opened: string;
     ticket_title: string;
     ticket_description: string;
+    departments: Department[];
+    status: TicketStatus;
 }
 
 export default function HistoryEventCreate({
@@ -13,7 +16,9 @@ export default function HistoryEventCreate({
     opened,
     ticket_title,
     ticket_description,
-}): HistoryEventCreateProps {
+    departments,
+    status,
+}: HistoryEventCreateProps) {
     return (
         <Card className={"ml-3 w-fit mb-0"}>
             <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-[5em] -start-1.5 border border-white dark:border-gray-900 dark:bg-gray-700">
@@ -28,6 +33,12 @@ export default function HistoryEventCreate({
                         day: "numeric",
                         year: "numeric",
                     }).format(Date.parse(opened))}
+                </span>
+                <span className={"border-s rounded-full bg-gray-400 px-2"}>
+                    {TicketStatus[status]}
+                </span>
+                <span className={"text-gray-400"}>
+                    assigned department {departments[0].department_name}
                 </span>
             </CardHeader>
             <CardTitle className={"pt-3 pl-3"}>

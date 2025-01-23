@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FlagTriangleRight } from "lucide-react";
 import {
     Card,
@@ -12,7 +12,12 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import HistoryEventCreate from "@/components/HistoryEventCreate.tsx";
 import HistoryEventStatusChange from "@/components/HistoryEventStatusChange.tsx";
-import { TicketStatus } from "@shared/shared_types.ts";
+import {
+    EventType,
+    TicketHistory,
+    TicketHistoryEvent,
+    TicketStatus,
+} from "@shared/shared_types.ts";
 import HistoryEventAddComment from "@/components/HistoryEventAddComment.tsx";
 
 interface HistoryEntry {
@@ -25,30 +30,55 @@ interface HistoryEntry {
 }
 
 interface HistoryFeedProps {
-    history: HistoryEntry[];
+    tickethistory: TicketHistory;
 }
 
-export default function HistoryFeed({ history = [] }: HistoryFeedProps) {
+export default function HistoryFeed({ tickethistory }: HistoryFeedProps) {
     const [inputText, setInputText] = useState("");
+    useEffect(() => {
+    }, []);
+
     return (
         <>
             <div className={"relative border-s border-gray-200 dark:border-gray-700 w-full"}>
-                <HistoryEventCreate
-                    user_name={"testUser"}
-                    opened={"2025-01-23 04:06:55.030 +00:00"}
-                    ticket_title={"Ticket Title"}
-                    ticket_description={"Some asdkjfhalisudzfiluasdhfliuasdliufhalskduflkausdhf"}
-                />
-                <HistoryEventStatusChange
-                    user_name={"testSupporter"}
-                    status={TicketStatus.IN_PROGRESS}
-                    on={"2025-01-23 04:06:55.030 +00:00"}
-                />
-                <HistoryEventAddComment
-                    user_name={"testSupporter"}
-                    comment={"asdffdasdfasdfasdef"}
-                    on={"2025-01-23 04:06:55.030 +00:00"}
-                />
+                {tickethistory.ticket
+                    ? (
+                        <HistoryEventCreate
+                            user_name={tickethistory.ticket.author.user_name}
+                            opened={tickethistory.ticket.created_at.toString()}
+                            ticket_title={tickethistory.ticket.ticket_title}
+                            ticket_description={tickethistory.ticket.ticket_description}
+                            departments={tickethistory.ticket.departments}
+                            status={tickethistory.ticket.ticket_status}
+                            // tags={tickethistory.ticket.tags}
+                        />
+                    )
+                    : <></>}
+                {tickethistory.events
+                    ? (tickethistory.events.map((e) => {
+                        switch (e.event_type) {
+                            case EventType.statusChange:
+                                return (
+                                    <HistoryEventStatusChange
+                                        user_name={e.author.user_name}
+                                        status={e.new_status}
+                                        on={e.created_at?.toString() ?? ""}
+                                    />
+                                );
+
+                                break;
+                            case EventType.comment:
+                                return (
+                                    <HistoryEventAddComment
+                                        user_name={e.author.user_name}
+                                        comment={e.comment}
+                                        on={e.created_at?.toString() ?? ""}
+                                    />
+                                );
+                                break;
+                        }
+                    }))
+                    : <></>}
             </div>
             {/* Textfeld für Benutzereingaben */}
             <div className="mt-10 flex flex-wrap flex-row">

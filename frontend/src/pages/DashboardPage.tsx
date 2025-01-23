@@ -47,7 +47,7 @@ export default function DashboardPage() {
                 )!,
             );
         }
-    }, [selectedDepartment]);
+    }, []);
 
     function dashboardSelection() {
         if (
@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
     return (
         <div className="w-screen min-h-screen overflow-auto bg-gradient-to-bl from-fuchsia-800 to-blue-700 bg-fixed">
-            {dashboardSelection()}
+            {(user.user_id) ? dashboardSelection() : <></>}
             {/* {userRole === "unknown" && <p>No role found.</p>} */}
         </div>
     );

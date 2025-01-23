@@ -189,7 +189,7 @@ const S_TicketHistoryEvent = z.discriminatedUnion("event_type", [
     S_TicketEvent_Comment.omit({ ticket_id: true }),
 ]);
 const S_TicketHistory = z.object({
-    ticket_id: UUID,
+    ticket: S_Ticket,
     events: S_TicketHistoryEvent.array(),
 });
 

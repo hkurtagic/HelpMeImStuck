@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CreateTicketForm from "@/components/CreateTicketForm.tsx";
 import { EP_logout } from "@/route_helper/routes_helper.tsx";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
-import { Department } from "@shared/shared_types.ts";
+import { Department, UUID } from "@shared/shared_types.ts";
 import TicketHistory from "@/components/TicketHistory.tsx";
 import SupporterTicketOverview from "@/components/SupporterTicketOverview.tsx";
 import { UserContext } from "./UserContext.tsx";
@@ -19,6 +19,7 @@ export default function RequesterDashboard(
     );
     const [isOpen, setIsOpen] = useState(true);
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [ticketid, setTicketID] = useState<UUID>();
     const navigate = useNavigate();
 
     const { user } = useContext(UserContext);
@@ -226,6 +227,7 @@ export default function RequesterDashboard(
                     <SupporterTicketOverview
                         setView={setView}
                         selectedDepartment={selectedDepartment}
+                        setTicketID={setTicketID}
                     />
                 )}
                 {view === "create" && <CreateTicketForm setView={setView} />}
@@ -234,9 +236,10 @@ export default function RequesterDashboard(
                     <SupporterTicketOverview
                         setView={setView}
                         selectedDepartment={selectedDepartment}
+                        setTicketID={setTicketID}
                     />
                 )}
-                {view === "history" && <TicketHistory setView={setView} />}
+                {view === "history" && <TicketHistory ticket_id={ticketid!} setView={setView} />}
             </div>
         </div>
     );
