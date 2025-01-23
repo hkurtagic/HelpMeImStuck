@@ -50,7 +50,7 @@ user.post(
         await removeJWTTokens(c);
         await createJWTAuthToken(c, { user_id: user.user_id });
         await createJWTRefreshToken(c, { user_id: user.user_id });
-        return c.json(S_UserPreview.parse(user), 200);
+        return c.json(S_User.parse(user), 200);
     },
 );
 

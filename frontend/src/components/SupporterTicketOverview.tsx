@@ -1,11 +1,22 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import TicketCard from "@/components/Ticket.tsx";
-import {appendAuthHeader, EP_ticket} from "@/route_helper/routes_helper.tsx";
-import { Department, Ticket, TicketStatus } from "@shared/shared_types";
-import user from "../../../backend/route/User.ts";
+import {
+    appendAuthHeader,
+    EP_department_tickets,
+    EP_ticket_event,
+} from "@/route_helper/routes_helper.tsx";
+import {
+    Department,
+    EventType,
+    Ticket,
+    TicketEvent_StatusChange,
+    TicketStatus,
+    UUID,
+} from "@shared/shared_types";
+import { UserContext } from "./UserContext";
+// import user from "../../../backend/route/User.ts";
 
 interface TicketOverviewProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,21 +28,39 @@ export default function SupporterTicketOverview(
     { setView, selectedDepartment }: TicketOverviewProps,
 ) {
     const [tickets, setTickets] = useState<Ticket[]>([]);
+    const [openTickets, setOpenTickets] = useState<Ticket[]>([]);
+    const [inProgressTickets, setInProgressTickets] = useState<Ticket[]>([]);
+    const [closedTickets, setClosedTickets] = useState<Ticket[]>([]);
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
-        const fetchTickets = async () => {
+        const fetchTickets = async (department_id: number) => {
             try {
-                const response = await fetch(EP_ticket, {
-                    method: "GET",
-                    headers: appendAuthHeader({
-                        "Content-Type": "application/json",
-                    }),
-                });
+                const response = await fetch(
+                    EP_department_tickets(department_id),
+                    {
+                        method: "GET",
+                        headers: appendAuthHeader({
+                            "Content-Type": "application/json",
+                        }),
+                    },
+                );
 
                 if (!response.ok) throw new Error("Failed to fetch tickets");
 
-                const data = await response.json(); // Erwartet eine Liste von Tickets
-                setTickets(data);
+                const data = await response.json() as Ticket[]; // Erwartet eine Liste von Tickets
+                if (data.length) {
+                    setTickets(data);
+                    setOpenTickets(
+                        data.filter((ticket) => ticket.ticket_status === TicketStatus.OPEN),
+                    );
+                    setInProgressTickets(
+                        data.filter((ticket) => ticket.ticket_status === TicketStatus.IN_PROGRESS),
+                    );
+                    setClosedTickets(
+                        data.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
+                    );
+                }
             } catch (error) {
                 console.error("Error fetching tickets:", error);
             }
@@ -40,26 +69,51 @@ export default function SupporterTicketOverview(
 
         if (selectedDepartment) {
             console.log(selectedDepartment);
-            fetchTickets();
+            fetchTickets(selectedDepartment.department_id);
         }
     }, [selectedDepartment]); // Lädt Tickets neu, wenn sich die Abteilung ändert    //TODO selectedDepartments entfernen !!
 
-    // Funktion zum Aktualisieren des Ticket-Status
-    const updateTicketStatus = (ticketId: string, newStatus: number) => {
-        setTickets((prevTickets) =>
-            prevTickets.map((ticket) =>
-                ticket.ticket_id === ticketId ? { ...ticket, status: newStatus } : ticket
-            )
-        );
+    const addTicketEvent = async (ticket_id: UUID, new_status: TicketStatus): Promise<boolean> => {
+        const new_event: TicketEvent_StatusChange = {
+            new_status: new_status,
+            author: { user_id: user.user_id, user_name: user.user_name },
+            ticket_id: ticket_id,
+            event_type: EventType.statusChange,
+        };
+        return await fetch(EP_ticket_event(ticket_id), {
+            method: "PUT",
+            headers: appendAuthHeader({
+                "Content-Type": "application/json",
+            }),
+            body: JSON.stringify(new_event),
+        }).then((res) => {
+            if (!res.ok) return false;
+            return true;
+        }).catch((error) => {
+            console.error("Error fetching tickets:", error);
+            return false;
+        });
     };
+    console.log("TicketHook: " + JSON.stringify(selectedDepartment));
 
-
-    // Tickets nach Status filtern
-    const openTickets = tickets.filter((ticket) => ticket.status === TicketStatus.OPEN);
-    const inProgressTickets = tickets.filter((ticket) =>
-        ticket.status === TicketStatus.IN_PROGRESS
-    );
-    const closedTickets = tickets.filter((ticket) => ticket.status === TicketStatus.CLOSED);
+    // Funktion zum Aktualisieren des Ticket-Status
+    const updateTicketStatus = async (ticketId: string, newStatus: TicketStatus) => {
+        const is_ticket_updated = await addTicketEvent(ticketId, newStatus);
+        if (is_ticket_updated) {
+            setTickets((prevTickets) =>
+                prevTickets.map((ticket) =>
+                    ticket.ticket_id === ticketId ? { ...ticket, status: newStatus } : ticket
+                )
+            );
+            setOpenTickets(tickets.filter((ticket) => ticket.ticket_status === TicketStatus.OPEN));
+            setInProgressTickets(
+                tickets.filter((ticket) => ticket.ticket_status === TicketStatus.IN_PROGRESS),
+            );
+            setClosedTickets(
+                tickets.filter((ticket) => ticket.ticket_status === TicketStatus.CLOSED),
+            );
+        }
+    };
 
     return (
         <div className="space-y-10">
@@ -73,7 +127,9 @@ export default function SupporterTicketOverview(
             </div>
 
             <h1 className="text-center text-white mb-7 font-mono">Supporter Tickets</h1>
-            <h2 className="text-center text-white mb-4 font font-mono">Select a department to view incoming tickets!</h2>
+            <h2 className="text-center text-white mb-4 font font-mono">
+                Select a department to view incoming tickets!
+            </h2>
 
             {/* Open Tickets */}
             <Card>
@@ -91,7 +147,8 @@ export default function SupporterTicketOverview(
                                     showHistoryIcon={true}
                                     role={"supporter"}
                                     setView={setView}
-                                    updateTicketStatus={updateTicketStatus}/>
+                                    updateTicketStatus={updateTicketStatus}
+                                />
                             ))
                         )
                         : <p>At the moment you have no open tickets.</p>}
