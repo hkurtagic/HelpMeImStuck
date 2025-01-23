@@ -19,10 +19,10 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
     const [username, setUsername] = useState<string>("");
     const [selectedUser, setSelectedUser] = useState<User>();
     const [password, setPassword] = useState<string>("");
-    const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+    const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [availableRoles, setAvailableRoles] = useState<RoleAdmin[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
 
     useEffect(() => {
         fetchDepartments();
@@ -62,23 +62,21 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             const data = await response.json() as User;
             setSelectedUser(data);
             setUsername(data.user_name);
-            setPassword(""); // Passwort muss neu gesetzt werden
+            setPassword("");
 
-            // **Extract department and roles from user data**
-            if (data.roles.length > 0) {
-                const department = data.roles[0].department;
-                setSelectedDepartment(department);
-                setSelectedRoles(data.roles.map((role: RoleAdmin) => role.role_id));
+            // Departments & Roles extrahieren
+            const userDepartments = data.roles.map((role) => role.department.department_id);
+            setSelectedDepartments(userDepartments);
+            setSelectedRoles(data.roles.map((role) => role.role_id));
 
-                // Lade alle Rollen dieses Departments
-                fetchRolesByDepartment(department.department_id);
-            }
+            // Lade alle Rollen der zugehörigen Departments
+            userDepartments.forEach(fetchRolesByDepartment);
         } catch (error) {
             console.error("Error fetching user data:", error);
         }
     };
 
-    // Lade alle Rollen des ausgewählten Departments
+    // Lade alle Rollen eines Departments
     const fetchRolesByDepartment = async (departmentId: number) => {
         try {
             const response = await fetch(`${EP_roles_by_department}/${departmentId}`, {
@@ -90,32 +88,47 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             if (!response.ok) throw new Error("Failed to fetch roles");
 
             const data = await response.json() as RoleAdmin[];
-            setAvailableRoles(Array.isArray(data) ? data : []);
+            setAvailableRoles((prevRoles) => [
+                ...prevRoles.filter((r) => r.department.department_id !== departmentId),
+                ...data,
+            ]);
         } catch (error) {
             console.error("Error fetching roles:", error);
-            setAvailableRoles([]);
         }
     };
 
+    // Department-Checkbox ändern
+    const handleDepartmentChange = (departmentId: number) => {
+        setSelectedDepartments((prev) => {
+            const newSelection = prev.includes(departmentId)
+                ? prev.filter((id) => id !== departmentId)
+                : [...prev, departmentId];
+
+            // Lade Rollen für neues Department
+            if (!prev.includes(departmentId)) {
+                fetchRolesByDepartment(departmentId);
+            } else {
+                // Entferne Rollen, die nur zu diesem Department gehören
+                setSelectedRoles((prevRoles) =>
+                    prevRoles.filter((roleId) =>
+                        availableRoles.some(
+                            (r) => r.role_id === roleId && r.department.department_id !== departmentId
+                        )
+                    )
+                );
+            }
+            return newSelection;
+        });
+    };
+
+    // Role-Checkbox ändern
     const handleRoleChange = (roleId: number) => {
-        setSelectedRoles((prevSelected) =>
-            prevSelected.includes(roleId)
-                ? prevSelected.filter((role) => role !== roleId)
-                : [...prevSelected, roleId]
+        setSelectedRoles((prev) =>
+            prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]
         );
     };
 
-    const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedDept = departments.find((d) => d.department_name === e.target.value) || null;
-        setSelectedDepartment(selectedDept);
-        // setSelectedRoles([]); // Rollen zurücksetzen, wenn ein neues Department gewählt wird
-        // setSelectedRoles(selectedUser!.roles.map((role: RoleAdmin) => role.role_id));
-
-        if (selectedDept) {
-            fetchRolesByDepartment(selectedDept.department_id);
-        }
-    };
-
+    // User speichern
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -123,8 +136,8 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
             alert("Username is required!");
             return;
         }
-        if (!selectedDepartment) {
-            alert("Please select a department.");
+        if (selectedDepartments.length === 0) {
+            alert("Please select at least one department.");
             return;
         }
 
@@ -135,16 +148,12 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         const modifiedUser: User = {
             user_id: userId.toString(),
             user_name: username,
-            ...(password !== "" && { password }), // Falls leer, wird das Feld nicht gesendet
+            ...(password !== "" && { password }),
             roles: selectedRoleObjects.map((role) => ({
                 role_id: role.role_id,
                 role_name: role.role_name,
                 role_description: role.role_description,
-                department: {
-                    department_id: selectedDepartment.department_id,
-                    department_name: selectedDepartment.department_name,
-                    department_description: selectedDepartment.department_description,
-                },
+                department: role.department,
                 actions: role.actions,
             })),
         };
@@ -176,79 +185,52 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
         <div className="flex items-center justify-center min-h-screen">
             <Card className="w-full md:w-2/3 lg:w-1/2 shadow-lg">
                 <CardHeader>
-                    <div className="flex flex-row justify-between">
-                        <Button
-                            className="bg-red-500 hover:bg-red-600 w-1/5"
-                            onClick={() => setView("overview")}
-                        >
-                            Back
-                        </Button>
-                    </div>
+                    <Button className="bg-red-500 hover:bg-red-600" onClick={() => setView("overview")}>
+                        Back
+                    </Button>
                     <CardTitle className="text-2xl text-center">Modify User: {username}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit}>
                         <div className="mb-4">
-                            <Label htmlFor="username">Username</Label>
-                            <Input
-                                id="username"
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                required
-                                className="w-full p-2 border rounded-md"
-                            />
+                            <Label>Username</Label>
+                            <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
                         </div>
 
                         <div className="mb-4">
-                            <Label htmlFor="password">New Password (or leave empty)</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full p-2 border rounded-md"
-                            />
+                            <Label>Password (leave empty to keep current)</Label>
+                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                         </div>
 
                         <div className="mb-4">
-                            <Label>Department</Label>
-                            <select
-                                value={selectedDepartment?.department_name || ""}
-                                onChange={handleDepartmentChange}
-                                className="border bg-white border-black p-2 rounded-md w-full"
-                            >
-                                <option value="" disabled>Select a department</option>
-                                {departments.map((dept) => (
-                                    <option key={dept.department_id} value={dept.department_name}>
-                                        {dept.department_name}
-                                    </option>
-                                ))}
-                            </select>
+                            <Label>Departments</Label>
+                            {departments.map((dept) => (
+                                <label key={dept.department_id} className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedDepartments.includes(dept.department_id)}
+                                        onChange={() => handleDepartmentChange(dept.department_id)}
+                                    />
+                                    <span className="ml-2">{dept.department_name}</span>
+                                </label>
+                            ))}
                         </div>
 
                         <div className="mb-4">
                             <Label>Roles</Label>
-                            <div className="flex flex-col">
-                                {availableRoles.map((role) => (
-                                    <label
-                                        key={role.role_id}
-                                        className="flex items-center space-x-2"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            value={role.role_id}
-                                            checked={selectedRoles.includes(role.role_id)}
-                                            onChange={() => handleRoleChange(role.role_id)}
-                                            className="form-checkbox"
-                                        />
-                                        <span>{role.role_name}</span>
-                                    </label>
-                                ))}
-                            </div>
+                            {availableRoles.map((role) => (
+                                <label key={role.role_id} className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRoles.includes(role.role_id)}
+                                        onChange={() => handleRoleChange(role.role_id)}
+                                    />
+                                    <span className="ml-2">{role.role_name}</span>
+                                </label>
+                            ))}
                         </div>
 
-                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600 w-1/5">
+                        <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
                             Save Changes
                         </Button>
                     </form>
