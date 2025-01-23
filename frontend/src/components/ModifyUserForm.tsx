@@ -216,7 +216,7 @@ export default function ModifyUserForm({ setView, userId }: ModifyUserProps) {
                             <select
                                 value={selectedDepartment?.department_name || ""}
                                 onChange={handleDepartmentChange}
-                                className="border border-black p-2 rounded-md w-full"
+                                className="border bg-white border-black p-2 rounded-md w-full"
                             >
                                 <option value="" disabled>Select a department</option>
                                 {departments.map((dept) => (

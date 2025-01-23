@@ -186,7 +186,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
             <select
                 value={selectedDepartment?.department_name || ""}
                 onChange={handleDepartmentChange}
-                className="border border-black p-2 rounded-md w-[500px]"
+                className="border border-black bg-white p-2 rounded-md w-[500px]"
             >
                 <option value="" disabled>Select a department</option>
                 {departments.map((dept) => (
@@ -201,7 +201,7 @@ export default function AdminOverview({ setView, setMaxUserId, setSelectedUserId
             <select
                 value={selectedRole}
                 onChange={handleRoleChange}
-                className="border border-black p-2 rounded-md w-[500px]"
+                className="border border-black p-2 rounded-md bg-white w-[500px]"
                 disabled={!selectedDepartment}
             >
                 <option value="">Select a role</option>

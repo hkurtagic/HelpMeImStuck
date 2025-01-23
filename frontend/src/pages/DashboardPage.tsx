@@ -21,7 +21,7 @@ export default function DashboardPage() {
     }, []);
 
     if (!userRole) {
-        return <p>Lade Dashboard...</p>;
+        return <p>Loading...</p>;
     }
 
     return (

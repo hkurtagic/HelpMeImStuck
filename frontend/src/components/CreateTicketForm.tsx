@@ -171,7 +171,7 @@ export default function CreateTicketForm({ setView }: CreateTicketFormProps) {
 						<select
 							value={selectedDepartment?.department_name || ""}
 							onChange={(e) => handleDepartmentChange(e)}
-							className="border border-black w-full p-2 rounded-md"
+							className="border border-black bg-white w-full p-2 rounded-md"
 						>
 							<option value="" disabled>Select a department</option>
 							{departments.map((dept) => (

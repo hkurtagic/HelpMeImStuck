@@ -95,7 +95,7 @@ export default function RequesterDashboard() {
                                             null,
                                         )
                                     }
-                                    className="w-full p-2 border rounded-md text-black"
+                                    className="w-full p-2 border rounded-md bg-white text-black"
                                 >
                                     <option value="" disabled>
                                         Choose a department
