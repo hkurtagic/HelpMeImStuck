@@ -13,6 +13,9 @@
 
 5. Run `deno task backend start`
 6. In a second terminal also navigate to the project's root folder and run `deno task frontend dev`
+   - If this does not work instead:
+     1. use `cd ./frontend`
+     2. then run `npm run dev`
 7. In a webbrowser navigate to [http://localhost:5173/](http://localhost:5173/ "HelpMeImStuck").
 
 Info: The backend runs on [http://localhost:5173/](http://localhost:5173/ "HelpMeImStuck")
