@@ -1,26 +1,15 @@
-import { Context, Hono } from "hono";
-import { ValidationFunction, validator } from "hono/validator";
+import { Hono } from "hono";
+import { validator } from "hono/validator";
 import { AuthPrep, JWTAuthController } from "@backend/controller/AuthenticationController.ts";
 import {
     DepartmentIDValidator,
     TicketEventValidator,
     TicketIDValidator,
 } from "@backend/controller/ValidationController.ts";
-import { ID, S_Ticket, S_TicketCreate } from "@shared/shared_schemas.ts";
+import { S_TicketCreate } from "@shared/shared_schemas.ts";
 import * as dbController from "@backend/service/dbController.ts";
 
-import {
-    Actions,
-    Department,
-    EventType,
-    Ticket,
-    TicketCreate,
-    TicketStatus,
-} from "@shared/shared_types.ts";
-import {
-    S_ActionsPerDepartment,
-    S_ServerTicket,
-} from "@backend/schemes_and_types/serverside_schemas.ts";
+import { Actions, EventType, TicketStatus } from "@shared/shared_types.ts";
 import { ActionsPerDepartment } from "@backend/schemes_and_types/serverside_types.ts";
 const ticket = new Hono();
 
@@ -71,7 +60,7 @@ ticket.post(
     }),
     async (c) => {
         const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
-            .some(([dept_id, a]) =>
+            .some(([_, a]) =>
                 (a as Actions[]).some((
                     x,
                 ) => (x === Actions.ticket_create &&
@@ -96,8 +85,6 @@ ticket.get(
     AuthPrep,
     TicketIDValidator(),
     async (c) => {
-        // TODO check if user is in department of ticket AND is allowed to see it
-        // TODO check if user is owner of ticket
         const ticket = await dbController.getTicket(c.req.valid("param"));
 
         const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
@@ -147,30 +134,10 @@ ticket.put(
                 return c.json({ error: "Forbidden!" }, 403);
             }
         }
-        // cant add anything to ticket if it was closed
+        // should not be able to add anything to ticket if it was closed
         if (ticket?.ticket_status === TicketStatus.CLOSED) {
             return c.json({ error: "Forbidden!" }, 403);
         }
-        // check if ticket is in multiple departments
-        // let close_ticket = true;
-        // if (ticket.departments.length > 1 && ) {
-        //     const ticketHistory = await dbController.getTicketHistory(ticket.ticket_id);
-        //     if (ticketHistory) {
-        //         // find all added departments
-        //         const all_other_closed_departments = ticket.departments.filter((d) =>
-        //             ticketHistory.events.filter((e) =>
-        //                 e.event_type === EventType.statusChange &&
-        //                 e.new_status === TicketStatus.CLOSED
-        //             ).map((e) => parseInt(e.description!)).includes(d.department_id)
-        //         ).map(d => d.department_id);
-        //         if(ticket.departments.every(d =>(all_other_closed_departments.some(cD => cD=== d.department_id)||(
-        //             new_event.event_type === EventType.statusChange &&
-        //             e.new_status === TicketStatus.CLOSED)))
-        //         console.log("multi department close")
-        //         console.log(all_other_closed_departments)
-        //         // const close_ticket = new_event.event_type === EventType.statusChange  &&
-        //     }
-        // }
 
         const event_added_success = await dbController.addEvent(new_event);
         if (!event_added_success) {
@@ -193,7 +160,7 @@ ticket.delete(
             return c.json({ message: "Ticket does not exist" }, 400);
         }
         const auth = Object.entries(c.var.allowed_actions_per_department as ActionsPerDepartment)
-            .some(([dept_id, a]) =>
+            .some(([_, a]) =>
                 (a as Actions[]).some((x) => (x === Actions.ticket_pullBack &&
                     (ticket.author.user_id === c.var.user_id))
                 )

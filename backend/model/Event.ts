@@ -87,12 +87,8 @@ export default class Event extends Model<DTOEvent, InferCreationAttributes<Event
         const e = await Event.findAll({
             include: [{
                 model: EventTypeModel,
-                // as: "departments",
                 attributes: ["pk_event_type_id"],
                 required: true,
-                // through: {
-                //     attributes: [],
-                // },
             }, {
                 model: TicketModel,
                 attributes: ["pk_ticket_id"],
@@ -107,11 +103,7 @@ export default class Event extends Model<DTOEvent, InferCreationAttributes<Event
                 attributes: ["pk_user_id", "user_name"],
             }, {
                 model: ImageModel,
-                // as: "images",
                 required: false,
-                // through: {
-                // 	attributes: [],
-                // },
             }],
         });
         if (!e) return null;

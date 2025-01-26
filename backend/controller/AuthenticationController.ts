@@ -8,7 +8,6 @@ import {
     JWTExtraPayload,
     JWTPayload,
 } from "@backend/schemes_and_types/serverside_types.ts";
-// import db from "@backend/service/database.ts";
 import * as dbController from "@backend/service/dbController.ts";
 import { S_ActionsPerDepartment } from "@backend/schemes_and_types/serverside_schemas.ts";
 import { Actions } from "@shared/shared_types.ts";
@@ -87,20 +86,6 @@ export const AuthPrep = createMiddleware<{
         await next();
     },
 );
-/*
-function checkIfAuth(
-    c: Context,
-    permissions_needed: Actions[],
-    departments_needed: number[],
-    own_user = false,
-) {
-    const auth = Object.values(c.var.allowed_actions_per_department).some((a: Actions[]) =>
-        a.some((x) => permissions_needed.includes(x))
-    );
-    if (!auth) {
-        return c.json({ error: "Forbidden!" }, 403);
-    }
-}*/
 export const userEndpoindAuth = createMiddleware(
     async (c: Context, next: Next) => {
         const auth = Object.values(c.var.allowed_actions_per_department as ActionsPerDepartment)
@@ -177,10 +162,4 @@ function verifyJWTToken(token: string | undefined, secret: string): Promise<JWTP
     });
 }
 
-export {
-    // ActionAuth,
-    createJWTAuthToken,
-    createJWTRefreshToken,
-    JWTAuthController,
-    removeJWTTokens,
-};
+export { createJWTAuthToken, createJWTRefreshToken, JWTAuthController, removeJWTTokens };

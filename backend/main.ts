@@ -18,7 +18,8 @@ try {
         );
     }
 
-    let drop_db_tables = false;
+    // this value controls if the database should be wiped on every restart
+    let drop_db_tables = true;
     await dbSetup(drop_db_tables);
     // reset db if no user exists
     if (!(await User.findAndCountAll()).count) {

@@ -7,10 +7,6 @@ import role from "@backend/route/Role.ts";
 import department from "@backend/route/Department.ts";
 import ticket from "@backend/route/Ticket.ts";
 
-import test from "@backend/route/Test.ts";
-// import { StatusSchema } from "@backend/model/serverside_schemas.ts";
-// import { TicketStatus } from "@shared/shared_types.ts";
-
 const app: Hono = new Hono().basePath("/api");
 
 /* Custom logger https://hono.dev/docs/middleware/builtin/logger */
@@ -34,7 +30,5 @@ app.route("/user", user);
 app.route("/department", department);
 app.route("/role", role);
 app.route("/ticket", ticket);
-
-app.route("/test", test);
 
 export default app;

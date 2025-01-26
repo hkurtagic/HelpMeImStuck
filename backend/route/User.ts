@@ -14,13 +14,7 @@ import {
     UserIDValidator,
 } from "@backend/controller/ValidationController.ts";
 import * as dbConroller from "@backend/service/dbController.ts";
-import {
-    S_User,
-    S_UserAdmin,
-    S_UserCreate,
-    S_UserLogin,
-    S_UserPreview,
-} from "@shared/shared_schemas.ts";
+import { S_User, S_UserAdmin, S_UserCreate, S_UserLogin } from "@shared/shared_schemas.ts";
 import { Actions } from "@shared/shared_types.ts";
 
 const user = new Hono();
@@ -41,7 +35,6 @@ user.post(
         if (!user) {
             return c.json({ error: "Invalid Credentials" }, 401);
         }
-        // const user = S_ServersideUser.safeParse(user.toJSON());
         if (
             !crypto_verify(AlgorithmName.Argon2, login_user.password, user.password!)
         ) {
@@ -56,9 +49,6 @@ user.post(
 );
 
 user.post("/logout", JWTAuthController, (c) => {
-    // console.log(
-    // 	"logout initiated with access token: \n" + c.req.header("Authorization"),
-    // );
     removeJWTTokens(c);
     // TODO delete token from DB
     return c.json({ message: "User logged out successfully" }, 200);
@@ -70,10 +60,6 @@ user.get("/", JWTAuthController, async (c) => {
     if (!server_user) {
         return c.json({ error: "Invalid Credentials" }, 401);
     }
-    // const server_user = S_ServersideUser.safeParse(user.toJSON());
-    // if (!server_user.success) {
-    //     return c.json({ message: "Serverside error" }, 500);
-    // }
     const user = S_User.parse(server_user);
 
     return c.json(user, 200);
@@ -93,15 +79,10 @@ user.get(
         if (!auth) {
             return c.json({ error: "Forbidden!" }, 403);
         }
-        // if(Object.values().flatMap().includes(Actions.user_manage))
         const server_user = await dbConroller.getUser({ user_id: c.req.valid("param") });
         if (!server_user) {
             return c.json({ error: "User not found" }, 400);
         }
-        // const server_user = S_ServersideUser.safeParse(user_model.toJSON());
-        // if (!server_user.success) {
-        //     return c.json({ message: "Serverside error" }, 500);
-        // }
         const user = S_User.parse(server_user);
         return c.json(user, 200);
     },
@@ -140,7 +121,6 @@ user.post(
 user.put(
     "/:user_id",
     JWTAuthController,
-    // UserValidator([Actions.user_modify], [Actions.user_ownDeartment_modify]),
     UserIDValidator(),
     AuthPrep,
     userEndpoindAuth,
@@ -166,21 +146,11 @@ user.put(
         if (!c.req.valid("json").roles) {
             return c.json({ message: "User must have at least one Role!" }, 400);
         }
-        // prevent admin role removal from admin user
-        // if(c.req.valid("json").user_id === ADMIN_USER_ID){
-        //     if(!c.req.valid("json").roles.some())
-        // }
-        // const user = await dbConroller.getUser({user_id:});
 
         const updated_user = await dbConroller.editUser(c.req.valid("json"));
         if (!updated_user) {
             return c.json({ message: "User modification failed" }, 500);
         }
-        // const updated_user = S_ServersideUser.safeParse(updated_user.toJSON());
-        // if (!updated_user.success) {
-        //     console.error(updated_user.error);
-        //     return c.json({ message: "Serverside error" }, 500);
-        // }
 
         return c.json(updated_user, 200);
     },

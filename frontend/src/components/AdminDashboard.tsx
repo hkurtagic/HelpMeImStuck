@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import RequesterSidebarItem from "./RequesterSidebarItem.tsx";
-import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, Ticket,  UsersRound} from "lucide-react";
+import { ChartArea, LogOut, PanelLeftClose, PanelRightClose, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StatisticsPage from "@/pages/StatisticsPage.tsx";
 import AdminOverview from "@/components/AdminOverview.tsx";
@@ -38,8 +38,6 @@ export default function AdminDashboard() {
         }
     };
 
-
-
     return (
         <div className="flex w-screen h-screen overflow-hidden">
             {/* Mobile Sidebar Toggle Button */}
@@ -49,7 +47,9 @@ export default function AdminDashboard() {
                     isOpen ? "text-black bg-white" : "bg-fuchsia-500 text-white"
                 } focus:outline-none`}
             >
-                {isOpen ? <PanelRightClose size={30} className="text-black" /> : <PanelLeftClose size={30} className="text-white" />}
+                {isOpen
+                    ? <PanelRightClose size={30} className="text-black" />
+                    : <PanelLeftClose size={30} className="text-white" />}
             </button>
 
             {/* Mobile Sidebar */}
@@ -58,7 +58,12 @@ export default function AdminDashboard() {
                     <div className="mt-16 p-4">
                         <RequesterSidebarItem icon={UsersRound} label="Users" isOpen={true} />
                         <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={true} />
-                        <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={true} onClick={handleLogout} />
+                        <RequesterSidebarItem
+                            icon={LogOut}
+                            label="Log Out"
+                            isOpen={true}
+                            onClick={handleLogout}
+                        />
                     </div>
                 </div>
             )}
@@ -79,27 +84,64 @@ export default function AdminDashboard() {
                         : "group mx-auto p-0 w-max mt-8 bg-white focus:outline-none"}
                 >
                     {isOpen
-                        ? <PanelLeftClose size={30} className="text-black group-hover:text-fuchsia-900" />
-                        : <PanelRightClose size={30} className="text-black group-hover:text-fuchsia-900" />}
+                        ? (
+                            <PanelLeftClose
+                                size={30}
+                                className="text-black group-hover:text-fuchsia-900"
+                            />
+                        )
+                        : (
+                            <PanelRightClose
+                                size={30}
+                                className="text-black group-hover:text-fuchsia-900"
+                            />
+                        )}
                 </button>
-
-
 
                 {/* Sidebar Elements */}
                 <div className="m-4">
-                    <RequesterSidebarItem icon={UsersRound} label="Users" isOpen={isOpen} onClick={() => setView("overview")} />
-                    <RequesterSidebarItem icon={ChartArea} label="Statistics" isOpen={isOpen} onClick={() => setView("statistics")} />
-                    <RequesterSidebarItem icon={LogOut} label="Log Out" isOpen={isOpen} onClick={handleLogout} />
+                    <RequesterSidebarItem
+                        icon={UsersRound}
+                        label="Users"
+                        isOpen={isOpen}
+                        onClick={() => setView("overview")}
+                    />
+                    <RequesterSidebarItem
+                        icon={ChartArea}
+                        label="Statistics"
+                        isOpen={isOpen}
+                        onClick={() => setView("statistics")}
+                    />
+                    <RequesterSidebarItem
+                        icon={LogOut}
+                        label="Log Out"
+                        isOpen={isOpen}
+                        onClick={handleLogout}
+                    />
                 </div>
             </div>
 
             {/* Dashboard Content */}
-            <div className={`flex-1 overflow-auto p-5 transition-all duration-300 ${isOpen ? "md:ml-64" : "md:ml-16"}`}>
+            <div
+                className={`flex-1 overflow-auto p-5 transition-all duration-300 ${
+                    isOpen ? "md:ml-64" : "md:ml-16"
+                }`}
+            >
                 {view === "statistics" && <StatisticsPage />}
-                {view === "overview" &&   <AdminOverview setView={setView} setMaxUserId={setMaxUserId} setSelectedUserId={setSelectedUserId}/>}
-                {view === "userCreate" && <CreateUserForm setView={setView} maxUserId={maxUserId}/>}
-                {view === "userModify" && selectedUserId !== null && <ModifyUserForm setView={setView} userId={selectedUserId} />}
-
+                {view === "overview" && (
+                    <AdminOverview
+                        setView={setView}
+                        setMaxUserId={setMaxUserId}
+                        setSelectedUserId={setSelectedUserId}
+                    />
+                )}
+                {view === "userCreate" && <CreateUserForm
+                    setView={setView}
+                    maxUserId={maxUserId}
+                />}
+                {view === "userModify" && selectedUserId !== null && (
+                    <ModifyUserForm setView={setView} userId={selectedUserId} />
+                )}
             </div>
         </div>
     );

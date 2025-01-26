@@ -13,20 +13,17 @@ import {
 import {
     S_ServerDepartment,
     S_ServersideRole,
-    S_ServersideUser,
     S_ServerTicket,
 } from "@backend/schemes_and_types/serverside_schemas.ts";
 import * as dbController from "./dbController.ts";
-import { ServersideRole, ServersideUser } from "@backend/schemes_and_types/serverside_types.ts";
+import { ServersideRole } from "@backend/schemes_and_types/serverside_types.ts";
 import {
     AdminActionPreset,
-    // ManagerActionPreset,
     RequesterActionPreset,
-    S_User,
     S_UserAdmin,
     SupporterActionPreset,
 } from "@shared/shared_schemas.ts";
-import { Tag, TagCreate } from "@shared/shared_types.ts";
+import { TagCreate } from "@shared/shared_types.ts";
 import { default as TagModel } from "../model/Tag.ts";
 
 export async function prefillDB() {
@@ -155,7 +152,7 @@ export async function prefillDB() {
     await dbController.addUser(user2_create);
     await dbController.addUser(user3_create);
     await setAdminEnv();
-    // await testDB();
+    // await _testDB();
 }
 export async function setAdminEnv() {
     const admin_department =
@@ -173,7 +170,7 @@ export async function setAdminEnv() {
     Deno.env.set("ADMIN_USER_ID", admin_user.user_id);
 }
 
-async function testDB() {
+async function _testDB() {
     //test department creation
     const test_create_d: DepartmentCreate = {
         department_name: "IT",
@@ -299,7 +296,7 @@ async function testDB() {
         author_id: u_update.user_id,
     });
     const t_create = user_t_create[user_t_create.length - 1];
-    const t_create_parsed = S_ServerTicket.parse(t_create!.toJSON());
+    const t_create_parsed = t_create;
     console.info("> created ticket: " + JSON.stringify(t_create_parsed));
 
     const tag_on_ticket = await dbController.addTagToTicket(
@@ -311,19 +308,18 @@ async function testDB() {
     const t_all_of_user = await dbController.getAllTicketsOf({
         author_id: test_create_t.author.user_id,
     });
-    const t_all_of_user_parsed = t_all_of_user?.map((ticket) =>
-        S_ServerTicket.parse(ticket.toJSON())
-    );
     console.info(
         "> all tickets of " + test_create_t.author.user_name + ": " +
-            JSON.stringify(t_all_of_user_parsed),
+            JSON.stringify(t_all_of_user),
     );
     // test add event
     const test_create_e: TicketEvent = {
         author: t_create_parsed.author,
         ticket_id: t_create_parsed.ticket_id,
         // created_at: t_create.toJSON().created_at,
-        event_type: EventType.createTicket,
+        event_type: EventType.statusChange,
+        new_status: TicketStatus.OPEN,
+        description: t_create_parsed.departments[0].department_id.toString(),
     };
     await dbController.addEvent(test_create_e);
     const u_create_e2 = (await dbController.getUser({ user_name: "Administrator" }))!;

@@ -199,40 +199,6 @@ const S_DTOTicketHistory = z.object({
     events: S_DTOTicketHistoryEvent.array(),
 });
 
-// const S_TicketEvent_Create = S_DTOTicketHistoryEventBase.extend({
-// 	event_type: z.literal(zEventType.enum.createTicket),
-// });
-
-// const S_TicketEvent_StatusChange = S_DTOTicketHistoryEventBase.extend({
-// 	event_type: z.literal(zEventType.enum.statusChange),
-// }).transform(({ pk_event_id, event_content, ...rest }) => {
-// 	return {
-// 		event_id: pk_event_id,
-// 		...rest,
-// 		new_status: Number(event_content) as TicketStatus,
-// 	};
-// });
-// const S_TicketEvent_DepartmentAdded = S_DTOTicketHistoryEventBase.extend({
-// 	event_type: z.literal(zEventType.enum.departmentAdded),
-// 	department_id: ID,
-// });
-// const S_TicketEvent_DepartmentForwarded = S_DTOTicketHistoryEventBase.extend({
-// 	event_type: z.literal(zEventType.enum.departmentForwarded),
-// 	department_id: ID,
-// });
-// const S_TicketEvent_Comment = S_DTOTicketHistoryEventBase.extend({
-// 	event_type: z.literal(zEventType.enum.comment),
-// 	comment: z.string(),
-// 	images: z.string().array().optional().nullable(),
-// });
-// const S_DTOTicketHistoryEvent = z.discriminatedUnion("event_type", [
-// 	S_TicketEvent_Create,
-// 	S_TicketEvent_StatusChange,
-// 	S_TicketEvent_DepartmentAdded,
-// 	S_TicketEvent_DepartmentForwarded,
-// 	S_TicketEvent_Comment,
-// ]);
-
 export type DTOStatus = z.infer<typeof S_DTOStatus>;
 export type DTOTag = z.infer<typeof S_DTOTag>;
 export type DTOTagCreate = z.infer<typeof S_DTOTagCreate>;

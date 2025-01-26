@@ -154,26 +154,15 @@ export default class Ticket extends Model<DTOTicket, DTOTicketCreate> implements
                 attributes: ["pk_user_id", "user_name"],
             }, {
                 model: StatusModel,
-                // as: "ticket_status",
                 required: true,
                 attributes: ["pk_status_id"],
-                // through: {
-                // 	attributes: [],
-                // },
             }, {
                 model: TagModel,
-                // as: "tags",
-                // required: false,
                 through: {
                     attributes: [],
                 },
             }, {
                 model: ImageModel,
-                // as: "images",
-                // required: false,
-                // through: {
-                // 	attributes: [],
-                // },
             }],
         }) as unknown as (ServerTicketModel);
         if (!ticket) return null;

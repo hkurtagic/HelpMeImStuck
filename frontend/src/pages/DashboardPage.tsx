@@ -47,7 +47,7 @@ export default function DashboardPage() {
                 )!,
             );
         }
-    }, []);
+    }, [fetchUser, selectedDepartment?.department_id, user.user_id]);
 
     function dashboardSelection() {
         if (
@@ -73,9 +73,9 @@ export default function DashboardPage() {
         }
     }
 
-    if (!userRole) {
-        return <p>Loading...</p>;
-    }
+    // if (!userRole) {
+    //     return <p>Loading...</p>;
+    // }
 
     return (
         <div className="w-screen min-h-screen overflow-auto bg-gradient-to-bl from-fuchsia-800 to-blue-700 bg-fixed">

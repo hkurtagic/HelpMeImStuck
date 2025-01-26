@@ -5,7 +5,7 @@ import {
     departmentEndpoindAuth,
     JWTAuthController,
 } from "@backend/controller/AuthenticationController.ts";
-import * as db2 from "@backend/service/dbController.ts";
+import * as dbController from "@backend/service/dbController.ts";
 import {
     DepartmentIDValidator,
     DepartmentObjectValidator,
@@ -17,26 +17,9 @@ const department = new Hono();
 
 // get all departments
 department.get("/", JWTAuthController, async (c) => {
-    const depts = await db2.getAllDepartments();
+    const depts = await dbController.getAllDepartments();
     return c.json(depts, 200);
 });
-// // get all departments of acting user
-// department.get("/own", JWTAuthController, async (c) => {
-// 	const user = await db2.getUser({user_id: c.var.user_id})
-// 	if (!user) {
-// 		return c.redirect("/user/logout");
-// 	}
-//     const u_parsed = S_ServersideUser.safeParse(user.toJSON());
-//     if (!u_parsed.success) {
-// 		console.error(u_parsed.error);
-// 		return c.json({ message: "Serverside error" }, 500);
-// 	}
-// 	const own_dept_ids = u_parsed.data.roles.map((r) => {
-// 		return r.department.department_id;
-// 	});
-
-// 	return c.json(own_dept_ids, 200);
-// });
 // create a new department
 department.post(
     "/",
@@ -52,7 +35,7 @@ department.post(
         return parsed.data;
     }),
     async (c) => {
-        const dept = await db2.addDepartment(c.req.valid("json"));
+        const dept = await dbController.addDepartment(c.req.valid("json"));
         return c.json(dept, 200);
     },
 );
@@ -68,7 +51,7 @@ department.put(
         if (c.req.valid("param") != c.req.valid("json").department_id) {
             return c.json({ message: "Department ID of path and body does not match!" }, 400);
         }
-        const updated_dept_model = await db2.editDepartment(c.req.valid("json"));
+        const updated_dept_model = await dbController.editDepartment(c.req.valid("json"));
         if (!updated_dept_model) {
             return c.json({ message: "Department modification failed" }, 500);
         }
@@ -89,7 +72,7 @@ department.delete(
     departmentEndpoindAuth,
     DepartmentIDValidator(),
     async (c) => {
-        const dept_delete_success = await db2.deleteDepartment(c.req.valid("param"));
+        const dept_delete_success = await dbController.deleteDepartment(c.req.valid("param"));
         if (!dept_delete_success) {
             return c.json({ message: "Department deletion failed" }, 500);
         }

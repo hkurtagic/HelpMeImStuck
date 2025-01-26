@@ -5,7 +5,7 @@ import {
     JWTAuthController,
     roleEndpoindAuth,
 } from "@backend/controller/AuthenticationController.ts";
-import * as db2 from "@backend/service/dbController.ts";
+import * as dbController from "@backend/service/dbController.ts";
 import {
     DepartmentIDValidator,
     RoleIDValidator,
@@ -22,25 +22,19 @@ role.get(
     roleEndpoindAuth,
     DepartmentIDValidator(),
     async (c) => {
-        const roles = await db2.getAllRolesInDepartment(c.req.valid("param"));
+        const roles = await dbController.getAllRolesInDepartment(c.req.valid("param"));
         return c.json(roles, 200);
     },
 );
 
 // get all roles of acting user
 role.get("/", JWTAuthController, async (c) => {
-    const user = await db2.getUser({ user_id: c.var.user_id });
+    const user = await dbController.getUser({ user_id: c.var.user_id });
     if (!user) {
         return c.redirect("/user/logout");
     }
-    // const u_parsed = S_ServersideUser.safeParse(user.toJSON());
-    // if (!u_parsed.success) {
-    //     console.error(u_parsed.error);
-    //     return c.json({ message: "Serverside error" }, 500);
-    // }
     const roles = user.roles.map((r) => {
         const new_r = S_Role.parse(r);
-        // r.actions = [];
         return new_r;
     });
 
@@ -62,7 +56,7 @@ role.post(
         return parsed.data;
     }),
     async (c) => {
-        const role_create_success = await db2.addRole(c.req.valid("json"));
+        const role_create_success = await dbController.addRole(c.req.valid("json"));
         if (!role_create_success) {
             return c.json({ message: "Role creation failed" }, 500);
         }
@@ -89,7 +83,7 @@ role.put(
         if (c.req.valid("param") != c.req.valid("json").role_id) {
             return c.json({ message: "Role ID of path and body does not match!" }, 400);
         }
-        const updated_role_model = await db2.editRole(c.req.valid("json"));
+        const updated_role_model = await dbController.editRole(c.req.valid("json"));
 
         if (!updated_role_model) {
             return c.json({ message: "Role modification failed" }, 500);
@@ -111,7 +105,7 @@ role.delete(
     roleEndpoindAuth,
     RoleIDValidator(),
     async (c) => {
-        const role_delete_success = await db2.deleteRole(c.req.valid("param"));
+        const role_delete_success = await dbController.deleteRole(c.req.valid("param"));
         if (!role_delete_success) {
             return c.json({ message: "Role deletion failed" }, 500);
         }
